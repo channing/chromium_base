@@ -67,6 +67,12 @@ BASE_EXPORT bool IsAltPressed();
 // if the OS is Vista or later.
 BASE_EXPORT bool UserAccountControlIsEnabled();
 
+// Sets the string value for given key in given IPropertyStore.
+BASE_EXPORT bool SetStringValueForPropertyStore(
+    IPropertyStore* property_store,
+    const PROPERTYKEY& property_key,
+    const wchar_t* property_string_value);
+
 // Sets the application id in given IPropertyStore. The function is intended
 // for tagging application/chromium shortcut, browser window and jump list for
 // Win7.
@@ -86,6 +92,13 @@ BASE_EXPORT bool RemoveCommandFromAutoRun(HKEY root_key, const string16& name);
 BASE_EXPORT bool ReadCommandFromAutoRun(HKEY root_key,
                                         const string16& name,
                                         string16* command);
+
+// Get the size of a struct up to and including the specified member.
+// This is necessary to set compatible struct sizes for different versions
+// of certain Windows APIs (e.g. SystemParametersInfo).
+#define SIZEOF_STRUCT_WITH_SPECIFIED_LAST_MEMBER(struct_name, member) \
+    offsetof(struct_name, member) + \
+    (sizeof static_cast<struct_name*>(NULL)->member)
 
 }  // namespace win
 }  // namespace base
