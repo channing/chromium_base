@@ -95,6 +95,7 @@
         'message_pump_win.h',
         'metrics/histogram.cc',
         'metrics/histogram.h',
+		'move.h',
         'observer_list.h',
         'observer_list_threadsafe.h',
         'path_service.cc',
