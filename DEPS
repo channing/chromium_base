@@ -15,10 +15,10 @@ deps = {
     'testing/gtest':
         Var('git_url') + '/external/googletest.git@a2965825b1953c7b8ad292f726eb5c3f2659d5d3',
 	
-  'tools/grit':
-    Var('git_url') + '/external/grit-i18n.git@5bc811df33323380e4ac89af5df8cc65ae8265c0',
-  'tools/gyp':
-    Var('git_url') + '/external/gyp.git@68058475eca882224d56ce7d24130cdff5be6501',
+    'tools/grit':
+        Var('git_url') + '/external/grit-i18n.git@0bb959423818266efea82162f48ad83e5eb2e8b2',
+    'tools/gyp':
+        Var('git_url') + '/external/gyp.git@811299f068ed8c40b1da72eca2fcc1ecc00304ba',
 	
   'third_party/skia/gpu':
     Var('git_url') + '/external/skia/gpu.git@efaf1d70f51be4e48e91af7ceed897b37c18b916',
