@@ -128,7 +128,7 @@ BASE_I18N_EXPORT string16 GetDisplayStringInLTRDirectionality(
 // return the text itself. Explicit bidi control characters display and have
 // semantic effect. They can be deleted so they might not always appear in a
 // pair.
-BASE_I18N_EXPORT const string16 StripWrappingBidiControlCharacters(
+BASE_I18N_EXPORT string16 StripWrappingBidiControlCharacters(
     const string16& text) WARN_UNUSED_RESULT;
 
 }  // namespace i18n

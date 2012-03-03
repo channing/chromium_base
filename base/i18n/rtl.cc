@@ -373,7 +373,7 @@ string16 GetDisplayStringInLTRDirectionality(const string16& text) {
   return text_mutable;
 }
 
-const string16 StripWrappingBidiControlCharacters(const string16& text) {
+string16 StripWrappingBidiControlCharacters(const string16& text) {
   if (text.empty())
     return text;
   size_t begin_index = 0;
