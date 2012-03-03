@@ -15,11 +15,11 @@ namespace base {
 
 namespace {
 
-LazyInstance<ThreadLocalBoolean, LeakyLazyInstanceTraits<ThreadLocalBoolean> >
-    g_io_disallowed(LINKER_INITIALIZED);
+LazyInstance<ThreadLocalBoolean>::Leaky
+    g_io_disallowed = LAZY_INSTANCE_INITIALIZER;
 
-LazyInstance<ThreadLocalBoolean, LeakyLazyInstanceTraits<ThreadLocalBoolean> >
-    g_singleton_disallowed(LINKER_INITIALIZED);
+LazyInstance<ThreadLocalBoolean>::Leaky
+    g_singleton_disallowed = LAZY_INSTANCE_INITIALIZER;
 
 }  // anonymous namespace
 
