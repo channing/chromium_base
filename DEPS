@@ -20,12 +20,10 @@ deps = {
     'tools/gyp':
         Var('git_url') + '/external/gyp.git@811299f068ed8c40b1da72eca2fcc1ecc00304ba',
 	
-  'third_party/skia/gpu':
-    Var('git_url') + '/external/skia/gpu.git@efaf1d70f51be4e48e91af7ceed897b37c18b916',
-  'third_party/skia/include':
-    Var('git_url') + '/external/skia/include.git@fd6805b881d45050ebc74863666187f5df093f3f',
-  'third_party/skia/src':
-    Var('git_url') + '/external/skia/src.git@94edbff71593dde2de7138340fb6d1068c9e7315',
-  'third_party/skia/third_party/glu':
-    Var('git_url') + '/external/skia/third_party/glu.git@c988402115946ed3cb7fb347f6eef4a8cec543e2',
+    'src/third_party/skia/include':
+        Var('git_url') + '/external/skia/include.git@143c0a8d747a8c347108f5126cd495dfee55ef38',
+    'src/third_party/skia/src':
+        Var('git_url') + '/external/skia/src.git@7e65f4db3d63fd2ebf2754f01eebe86da1f42428',
+    'src/third_party/skia/third_party/glu':
+        Var('git_url') + '/external/skia/third_party/glu.git@53680310e174393579d8946c84c78625e6ac133c',
 }

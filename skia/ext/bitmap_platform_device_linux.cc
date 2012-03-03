@@ -1,4 +1,4 @@
-// Copyright (c) 2011 The Chromium Authors. All rights reserved.
+// Copyright (c) 2012 The Chromium Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -6,7 +6,11 @@
 
 #include "skia/ext/bitmap_platform_device_data.h"
 
+#if defined(OS_OPENBSD)
+#include <cairo.h>
+#else
 #include <cairo/cairo.h>
+#endif
 
 namespace skia {
 
@@ -40,7 +44,8 @@ void LoadClipToContext(cairo_t* context, const SkRegion& clip) {
 BitmapPlatformDevice::BitmapPlatformDeviceData::BitmapPlatformDeviceData(
     cairo_surface_t* surface)
     : surface_(surface),
-      config_dirty_(true) {  // Want to load the config next time.
+      config_dirty_(true),
+      transform_(SkMatrix::I()) {  // Want to load the config next time.
   bitmap_context_ = cairo_create(surface);
 }
 
@@ -91,9 +96,9 @@ BitmapPlatformDevice* BitmapPlatformDevice::Create(int width, int height,
 
 BitmapPlatformDevice* BitmapPlatformDevice::Create(int width, int height,
                                                    bool is_opaque) {
-  cairo_surface_t* surface =
-      cairo_image_surface_create(CAIRO_FORMAT_ARGB32,
-                                 width, height);
+  // This initializes the bitmap to all zeros.
+  cairo_surface_t* surface = cairo_image_surface_create(CAIRO_FORMAT_ARGB32,
+                                                        width, height);
 
   BitmapPlatformDevice* device = Create(width, height, is_opaque, surface);
 
