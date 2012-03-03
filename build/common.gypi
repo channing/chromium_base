@@ -68,6 +68,8 @@
     'armv7%': '<(armv7)',
 
     'grit_defines': ['-D', 'toolkit_views'],
+	
+	'clang': 0,
   },
 
   'target_defaults': {
