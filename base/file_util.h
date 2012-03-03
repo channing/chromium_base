@@ -20,6 +20,7 @@
 
 #include <stdio.h>
 
+#include <set>
 #include <stack>
 #include <string>
 #include <vector>
@@ -258,7 +259,7 @@ BASE_EXPORT bool IsDirectoryEmpty(const FilePath& dir_path);
 BASE_EXPORT bool GetTempDir(FilePath* path);
 // Get a temporary directory for shared memory files.
 // Only useful on POSIX; redirects to GetTempDir() on Windows.
-BASE_EXPORT bool GetShmemTempDir(FilePath* path);
+BASE_EXPORT bool GetShmemTempDir(FilePath* path, bool executable);
 
 // Get the home directory.  This is more complicated than just getenv("HOME")
 // as it knows to fall back on getpwent() etc.
@@ -278,7 +279,10 @@ BASE_EXPORT bool CreateTemporaryFileInDir(const FilePath& dir,
 // Returns a handle to the opened file or NULL if an error occured.
 BASE_EXPORT FILE* CreateAndOpenTemporaryFile(FilePath* path);
 // Like above but for shmem files.  Only useful for POSIX.
-BASE_EXPORT FILE* CreateAndOpenTemporaryShmemFile(FilePath* path);
+// The executable flag says the file needs to support using
+// mprotect with PROT_EXEC after mapping.
+BASE_EXPORT FILE* CreateAndOpenTemporaryShmemFile(FilePath* path,
+                                                  bool executable);
 // Similar to CreateAndOpenTemporaryFile, but the file is created in |dir|.
 BASE_EXPORT FILE* CreateAndOpenTemporaryFileInDir(const FilePath& dir,
                                                   FilePath* path);
@@ -320,10 +324,17 @@ BASE_EXPORT bool IsDotDot(const FilePath& path);
 BASE_EXPORT bool NormalizeFilePath(const FilePath& path, FilePath* real_path);
 
 #if defined(OS_WIN)
-// Given an existing file in |path|, it returns in |real_path| the path
-// in the native NT format, of the form "\Device\HarddiskVolumeXX\..".
-// Returns false it it fails. Empty files cannot be resolved with this
-// function.
+
+// Given a path in NT native form ("\Device\HarddiskVolumeXX\..."),
+// return in |drive_letter_path| the equivalent path that starts with
+// a drive letter ("C:\...").  Return false if no such path exists.
+BASE_EXPORT bool DevicePathToDriveLetterPath(const FilePath& device_path,
+                                             FilePath* drive_letter_path);
+
+// Given an existing file in |path|, set |real_path| to the path
+// in native NT format, of the form "\Device\HarddiskVolumeXX\..".
+// Returns false if the path can not be found. Empty files cannot
+// be resolved with this function.
 BASE_EXPORT bool NormalizeToNativeFilePath(const FilePath& path,
                                            FilePath* nt_path);
 #endif
@@ -378,18 +389,21 @@ BASE_EXPORT bool GetCurrentDirectory(FilePath* path);
 BASE_EXPORT bool SetCurrentDirectory(const FilePath& path);
 
 #if defined(OS_POSIX)
-// Test that |path| can only be changed by a specific user and group.
+// Test that |path| can only be changed by a given user and members of
+// a given set of groups.
 // Specifically, test that all parts of |path| under (and including) |base|:
 // * Exist.
-// * Are owned by a specific user and group.
+// * Are owned by a specific user.
 // * Are not writable by all users.
+// * Are owned by a memeber of a given set of groups, or are not writable by
+//   their group.
 // * Are not symbolic links.
 // This is useful for checking that a config file is administrator-controlled.
 // |base| must contain |path|.
 BASE_EXPORT bool VerifyPathControlledByUser(const FilePath& base,
                                             const FilePath& path,
                                             uid_t owner_uid,
-                                            gid_t group_gid);
+                                            const std::set<gid_t>& group_gids);
 #endif  // defined(OS_POSIX)
 
 #if defined(OS_MACOSX)
@@ -422,7 +436,7 @@ class ScopedFDClose {
   inline void operator()(int* x) const {
     if (x && *x >= 0) {
       if (HANDLE_EINTR(close(*x)) < 0)
-        PLOG(ERROR) << "close";
+        DPLOG(ERROR) << "close";
     }
   }
 };
