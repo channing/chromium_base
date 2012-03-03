@@ -1,4 +1,4 @@
-// Copyright (c) 2011 The Chromium Authors. All rights reserved.
+// Copyright (c) 2012 The Chromium Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -19,7 +19,6 @@ typedef HANDLE MutexHandle;
 #include <mach-o/dyld.h>
 #elif defined(OS_POSIX)
 #if defined(OS_NACL)
-#include <sys/nacl_syscalls.h>
 #include <sys/time.h> // timespec doesn't seem to be in <time.h>
 #else
 #include <sys/syscall.h>
@@ -52,6 +51,7 @@ typedef pthread_mutex_t* MutexHandle;
 #include "base/eintr_wrapper.h"
 #include "base/string_piece.h"
 #include "base/synchronization/lock_impl.h"
+#include "base/threading/platform_thread.h"
 #include "base/utf_string_conversions.h"
 #include "base/vlog.h"
 #if defined(OS_POSIX)
@@ -65,7 +65,11 @@ typedef pthread_mutex_t* MutexHandle;
 namespace logging {
 
 DcheckState g_dcheck_state = DISABLE_DCHECK_FOR_NON_OFFICIAL_RELEASE_BUILDS;
+
+namespace {
+
 VlogInfo* g_vlog_info = NULL;
+VlogInfo* g_vlog_info_prev = NULL;
 
 const char* const log_severity_names[LOG_NUM_SEVERITIES] = {
   "INFO", "WARNING", "ERROR", "ERROR_REPORT", "FATAL" };
@@ -123,23 +127,6 @@ int32 CurrentProcessId() {
   return GetCurrentProcessId();
 #elif defined(OS_POSIX)
   return getpid();
-#endif
-}
-
-int32 CurrentThreadId() {
-#if defined(OS_WIN)
-  return GetCurrentThreadId();
-#elif defined(OS_MACOSX)
-  return mach_thread_self();
-#elif defined(OS_LINUX)
-  return syscall(__NR_gettid);
-#elif defined(OS_ANDROID)
-  return gettid();
-#elif defined(OS_FREEBSD)
-  // TODO(BSD): find a better thread ID
-  return reinterpret_cast<int64>(pthread_self());
-#elif defined(OS_NACL)
-  return pthread_self();
 #endif
 }
 
@@ -352,6 +339,9 @@ bool InitializeLogFileHandle() {
   return true;
 }
 
+}  // namespace
+
+
 bool BaseInitLoggingImpl(const PathChar* new_log_file,
                          LoggingDestination logging_dest,
                          LogLockingState lock_log,
@@ -359,12 +349,17 @@ bool BaseInitLoggingImpl(const PathChar* new_log_file,
                          DcheckState dcheck_state) {
   CommandLine* command_line = CommandLine::ForCurrentProcess();
   g_dcheck_state = dcheck_state;
-  delete g_vlog_info;
-  g_vlog_info = NULL;
+
   // Don't bother initializing g_vlog_info unless we use one of the
   // vlog switches.
   if (command_line->HasSwitch(switches::kV) ||
       command_line->HasSwitch(switches::kVModule)) {
+    // NOTE: If g_vlog_info has already been initialized, it might be in use
+    // by another thread. Don't delete the old VLogInfo, just create a second
+    // one. We keep track of both to avoid memory leak warnings.
+    CHECK(!g_vlog_info_prev);
+    g_vlog_info_prev = g_vlog_info;
+
     g_vlog_info =
         new VlogInfo(command_line->GetSwitchValueASCII(switches::kV),
                      command_line->GetSwitchValueASCII(switches::kVModule),
@@ -412,8 +407,11 @@ int GetVlogVerbosity() {
 
 int GetVlogLevelHelper(const char* file, size_t N) {
   DCHECK_GT(N, 0U);
-  return g_vlog_info ?
-      g_vlog_info->GetVlogLevel(base::StringPiece(file, N - 1)) :
+  // Note: g_vlog_info may change on a different thread during startup
+  // (but will always be valid or NULL).
+  VlogInfo* vlog_info = g_vlog_info;
+  return vlog_info ?
+      vlog_info->GetVlogLevel(base::StringPiece(file, N - 1)) :
       GetVlogVerbosity();
 }
 
@@ -677,7 +675,7 @@ void LogMessage::Init(const char* file, int line) {
   if (log_process_id)
     stream_ << CurrentProcessId() << ':';
   if (log_thread_id)
-    stream_ << CurrentThreadId() << ':';
+    stream_ << base::PlatformThread::CurrentId() << ':';
   if (log_timestamp) {
     time_t t = time(NULL);
     struct tm local_time = {0};
@@ -837,20 +835,11 @@ void RawLog(int level, const char* message) {
     base::debug::BreakDebugger();
 }
 
+// This was defined at the beginning of this file.
+#undef write
+
 }  // namespace logging
 
 std::ostream& operator<<(std::ostream& out, const wchar_t* wstr) {
   return out << WideToUTF8(std::wstring(wstr));
 }
-
-namespace base {
-
-// This was defined at the beginnig of this file.
-#undef write
-
-std::ostream& operator<<(std::ostream& o, const StringPiece& piece) {
-  o.write(piece.data(), static_cast<std::streamsize>(piece.size()));
-  return o;
-}
-
-}  // namespace base
