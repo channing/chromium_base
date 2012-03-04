@@ -5,9 +5,11 @@
 #include "base/message_pump_default.h"
 
 #include "base/logging.h"
+
 #if defined(OS_MACOSX)
 #include "base/mac/scoped_nsautorelease_pool.h"
 #endif
+
 namespace base {
 
 MessagePumpDefault::MessagePumpDefault()
@@ -21,7 +23,8 @@ void MessagePumpDefault::Run(Delegate* delegate) {
   for (;;) {
 #if defined(OS_MACOSX)
     mac::ScopedNSAutoreleasePool autorelease_pool;
-#endif    
+#endif
+
     bool did_work = delegate->DoWork();
     if (!keep_running_)
       break;
