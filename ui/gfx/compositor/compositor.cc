@@ -1,4 +1,4 @@
-// Copyright (c) 2011 The Chromium Authors. All rights reserved.
+// Copyright (c) 2012 The Chromium Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -9,6 +9,13 @@
 
 namespace ui {
 
+TextureDrawParams::TextureDrawParams()
+    : blend(false),
+      has_valid_alpha_channel(false),
+      opacity(1.0f),
+      vertically_flipped(false) {
+}
+
 Compositor::Compositor(CompositorDelegate* delegate, const gfx::Size& size)
     : delegate_(delegate),
       size_(size),
@@ -16,6 +23,23 @@ Compositor::Compositor(CompositorDelegate* delegate, const gfx::Size& size)
 }
 
 Compositor::~Compositor() {
+  if (root_layer_)
+    root_layer_->SetCompositor(NULL);
+}
+
+void Compositor::ScheduleDraw() {
+  delegate_->ScheduleDraw();
+}
+
+void Compositor::SetRootLayer(Layer* root_layer) {
+  if (root_layer_ == root_layer)
+    return;
+  if (root_layer_)
+    root_layer_->SetCompositor(NULL);
+  root_layer_ = root_layer;
+  if (root_layer_ && !root_layer_->GetCompositor())
+    root_layer_->SetCompositor(this);
+  OnRootLayerChanged();
 }
 
 void Compositor::Draw(bool force_clear) {
@@ -23,8 +47,10 @@ void Compositor::Draw(bool force_clear) {
     return;
 
   NotifyStart(force_clear);
-  root_layer_->DrawTree();
-  NotifyEnd();
+  DrawTree();
+  if (!CompositesAsynchronously()) {
+    NotifyEnd();
+  }
 }
 
 void Compositor::AddObserver(CompositorObserver* observer) {
@@ -39,8 +65,38 @@ bool Compositor::HasObserver(CompositorObserver* observer) {
   return observer_list_.HasObserver(observer);
 }
 
-void Compositor::NotifyStart(bool clear) {
-  OnNotifyStart(clear);
+void Compositor::OnRootLayerChanged() {
+  ScheduleDraw();
+}
+
+void Compositor::DrawTree() {
+}
+
+bool Compositor::CompositesAsynchronously() {
+  return false;
+}
+
+void Compositor::SwizzleRGBAToBGRAAndFlip(unsigned char* pixels,
+                                          const gfx::Size& image_size) {
+  // Swizzle from RGBA to BGRA
+  size_t bitmap_size = 4 * image_size.width() * image_size.height();
+  for(size_t i = 0; i < bitmap_size; i += 4)
+    std::swap(pixels[i], pixels[i + 2]);
+
+  // Vertical flip to transform from GL co-ords
+  size_t row_size = 4 * image_size.width();
+  scoped_array<unsigned char> tmp_row(new unsigned char[row_size]);
+  for(int row = 0; row < image_size.height() / 2; row++) {
+    memcpy(tmp_row.get(),
+           &pixels[row * row_size],
+           row_size);
+    memcpy(&pixels[row * row_size],
+           &pixels[bitmap_size - (row + 1) * row_size],
+           row_size);
+    memcpy(&pixels[bitmap_size - (row + 1) * row_size],
+           tmp_row.get(),
+           row_size);
+  }
 }
 
 void Compositor::NotifyEnd() {
@@ -48,6 +104,10 @@ void Compositor::NotifyEnd() {
   FOR_EACH_OBSERVER(CompositorObserver,
                     observer_list_,
                     OnCompositingEnded(this));
+}
+
+void Compositor::NotifyStart(bool clear) {
+  OnNotifyStart(clear);
 }
 
 }  // namespace ui

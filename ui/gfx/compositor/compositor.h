@@ -1,4 +1,4 @@
-// Copyright (c) 2011 The Chromium Authors. All rights reserved.
+// Copyright (c) 2012 The Chromium Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -13,10 +13,12 @@
 #include "ui/gfx/native_widget_types.h"
 #include "ui/gfx/size.h"
 
+class SkBitmap;
 class SkCanvas;
 namespace gfx {
 class Point;
 class Rect;
+class ScopedMakeCurrent;
 }
 
 namespace ui {
@@ -24,12 +26,19 @@ namespace ui {
 class CompositorObserver;
 class Layer;
 
+class SharedResources {
+ public:
+  virtual ~SharedResources() {}
+
+  // Creates an instance of ScopedMakeCurrent.
+  // Note: Caller is responsible for managing lifetime of returned pointer.
+  virtual gfx::ScopedMakeCurrent* GetScopedMakeCurrent() = 0;
+
+  virtual void* GetDisplay() = 0;
+};
+
 struct TextureDrawParams {
-  TextureDrawParams()
-      : blend(false),
-        has_valid_alpha_channel(false),
-        opacity(1.0f) {
-  }
+  TextureDrawParams();
 
   // The transform to be applied to the texture.
   ui::Transform transform;
@@ -44,6 +53,10 @@ struct TextureDrawParams {
   // This multiplier is applied to all pixels before blending. The intent is to
   // allow alpha to be animated (for effects such as cross fades).
   float opacity;
+
+  // Sometimes the texture is vertically flipped. In this case we have to
+  // draw the texture differently.
+  bool vertically_flipped;
 
   // The size of the surface that the texture is drawn to.
   gfx::Size compositor_size;
@@ -81,8 +94,8 @@ class COMPOSITOR_EXPORT Texture : public base::RefCounted<Texture> {
 // An interface to allow the compositor to communicate with its owner.
 class COMPOSITOR_EXPORT CompositorDelegate {
  public:
-  // Requests the owner to schedule a paint.
-  virtual void ScheduleCompositorPaint() = 0;
+  // Requests the owner to schedule a redraw of the layer tree.
+  virtual void ScheduleDraw() = 0;
 
  protected:
   virtual ~CompositorDelegate() {}
@@ -106,25 +119,33 @@ class COMPOSITOR_EXPORT Compositor : public base::RefCounted<Compositor> {
   // Blurs the specific region in the compositor.
   virtual void Blur(const gfx::Rect& bounds) = 0;
 
-  // Schedules a paint on the widget this Compositor was created for.
-  void SchedulePaint() {
-    delegate_->ScheduleCompositorPaint();
-  }
+  // Schedules a redraw of the layer tree associated with this compositor.
+  virtual void ScheduleDraw();
 
-  // Sets the root of the layer tree drawn by this Compositor.
+  // Sets the root of the layer tree drawn by this Compositor. The root layer
+  // must have no parent. The compositor's root layer is reset if the root layer
+  // is destroyed. NULL can be passed to reset the root layer, in which case the
+  // compositor will stop drawing anything.
   // The Compositor does not own the root layer.
-  void set_root_layer(Layer* root_layer) {
-    root_layer_ = root_layer;
-  }
+  const Layer* root_layer() const { return root_layer_; }
+  Layer* root_layer() { return root_layer_; }
+  void SetRootLayer(Layer* root_layer);
 
   // Draws the scene created by the layer tree and any visual effects. If
   // |force_clear| is true, this will cause the compositor to clear before
   // compositing.
   void Draw(bool force_clear);
 
+  // Reads the region |bounds| of the contents of the last rendered frame
+  // into the given bitmap.
+  // Returns false if the pixels could not be read.
+  virtual bool ReadPixels(SkBitmap* bitmap, const gfx::Rect& bounds) = 0;
+
   // Notifies the compositor that the size of the widget that it is
   // drawing to has changed.
   void WidgetSizeChanged(const gfx::Size& size) {
+    if (size.IsEmpty())
+      return;
     size_ = size;
     OnWidgetSizeChanged();
   }
@@ -149,16 +170,24 @@ class COMPOSITOR_EXPORT Compositor : public base::RefCounted<Compositor> {
   virtual void OnNotifyEnd() = 0;
 
   virtual void OnWidgetSizeChanged() = 0;
+  virtual void OnRootLayerChanged();
+  virtual void DrawTree();
+  virtual bool CompositesAsynchronously();
 
   CompositorDelegate* delegate() { return delegate_; }
+
+  // When reading back pixel data we often get RGBA rather than BGRA pixels and
+  // and the image often needs to be flipped vertically.
+  static void SwizzleRGBAToBGRAAndFlip(unsigned char* pixels,
+                                       const gfx::Size& image_size);
+
+  // Notifies the compositor that compositing is complete.
+  void NotifyEnd();
 
  private:
   // Notifies the compositor that compositing is about to start. See Draw() for
   // notes about |force_clear|.
   void NotifyStart(bool force_clear);
-
-  // Notifies the compositor that compositing is complete.
-  void NotifyEnd();
 
   CompositorDelegate* delegate_;
   gfx::Size size_;
