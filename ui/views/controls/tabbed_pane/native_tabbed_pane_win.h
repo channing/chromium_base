@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef VIEWS_CONTROLS_TABBED_PANE_NATIVE_TABBED_PANE_WIN_H_
-#define VIEWS_CONTROLS_TABBED_PANE_NATIVE_TABBED_PANE_WIN_H_
+#ifndef UI_VIEWS_CONTROLS_TABBED_PANE_NATIVE_TABBED_PANE_WIN_H_
+#define UI_VIEWS_CONTROLS_TABBED_PANE_NATIVE_TABBED_PANE_WIN_H_
 #pragma once
 
 #include <vector>
@@ -23,9 +23,9 @@ class NativeTabbedPaneWin : public NativeControlWin,
   virtual ~NativeTabbedPaneWin();
 
   // NativeTabbedPaneWrapper implementation:
-  virtual void AddTab(const std::wstring& title, View* contents);
+  virtual void AddTab(const string16& title, View* contents);
   virtual void AddTabAtIndex(int index,
-                             const std::wstring& title,
+                             const string16& title,
                              View* contents,
                              bool select_if_first_tab);
   virtual View* RemoveTabAtIndex(int index);
@@ -56,7 +56,7 @@ class NativeTabbedPaneWin : public NativeControlWin,
   void InitializeTabs();
 
   // Adds a tab with the given content to native control at the given index.
-  void AddNativeTab(int index, const std::wstring& title);
+  void AddNativeTab(int index, const string16& title);
 
   // Changes the contents view to the view associated with the tab at |index|.
   // |invoke_listener| controls if this methold should invoke the
@@ -76,7 +76,7 @@ class NativeTabbedPaneWin : public NativeControlWin,
   std::vector<View*> tab_views_;
 
   // The tab's title strings.
-  std::vector<const std::wstring> tab_titles_;
+  std::vector<const string16> tab_titles_;
 
   // The index of the selected tab.
   int selected_index_;
@@ -89,4 +89,4 @@ class NativeTabbedPaneWin : public NativeControlWin,
 
 }  // namespace views
 
-#endif  // VIEWS_CONTROLS_TABBED_PANE_NATIVE_TABBED_PANE_WIN_H_
+#endif  // UI_VIEWS_CONTROLS_TABBED_PANE_NATIVE_TABBED_PANE_WIN_H_

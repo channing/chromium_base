@@ -1,9 +1,9 @@
-// Copyright (c) 2010 The Chromium Authors. All rights reserved.
+// Copyright (c) 2011 The Chromium Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef VIEWS_CONTROLS_MENU_MENU_SCROLL_VIEW_CONTAINER_H_
-#define VIEWS_CONTROLS_MENU_MENU_SCROLL_VIEW_CONTAINER_H_
+#ifndef UI_VIEWS_CONTROLS_MENU_MENU_SCROLL_VIEW_CONTAINER_H_
+#define UI_VIEWS_CONTROLS_MENU_MENU_SCROLL_VIEW_CONTAINER_H_
 #pragma once
 
 #include "ui/views/view.h"
@@ -51,4 +51,4 @@ class MenuScrollViewContainer : public View {
 
 }  // namespace views
 
-#endif  // VIEWS_CONTROLS_MENU_MENU_SCROLL_VIEW_CONTAINER_H_
+#endif  // UI_VIEWS_CONTROLS_MENU_MENU_SCROLL_VIEW_CONTAINER_H_

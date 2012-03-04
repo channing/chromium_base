@@ -2,12 +2,14 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef VIEWS_CONTROLS_BUTTON_CHECKBOX_H_
-#define VIEWS_CONTROLS_BUTTON_CHECKBOX_H_
+#ifndef UI_VIEWS_CONTROLS_BUTTON_CHECKBOX_H_
+#define UI_VIEWS_CONTROLS_BUTTON_CHECKBOX_H_
 #pragma once
 
 #include <string>
 
+#include "base/compiler_specific.h"
+#include "base/string16.h"
 #include "ui/views/controls/button/text_button.h"
 
 namespace views {
@@ -16,10 +18,9 @@ namespace views {
 // platform specific objects to replicate the native platforms looks and feel.
 class VIEWS_EXPORT Checkbox : public TextButtonBase {
  public:
-  // The button's class name.
   static const char kViewClassName[];
 
-  explicit Checkbox(const std::wstring& label);
+  explicit Checkbox(const string16& label);
   virtual ~Checkbox();
 
   // Sets a listener for this checkbox. Checkboxes aren't required to have them
@@ -56,4 +57,4 @@ class VIEWS_EXPORT Checkbox : public TextButtonBase {
 
 }  // namespace views
 
-#endif  // VIEWS_CONTROLS_BUTTON_CHECKBOX_H_
+#endif  // UI_VIEWS_CONTROLS_BUTTON_CHECKBOX_H_

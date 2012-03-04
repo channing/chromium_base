@@ -2,10 +2,11 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef VIEWS_CONTROLS_BUTTON_RADIO_BUTTON_H_
-#define VIEWS_CONTROLS_BUTTON_RADIO_BUTTON_H_
+#ifndef UI_VIEWS_CONTROLS_BUTTON_RADIO_BUTTON_H_
+#define UI_VIEWS_CONTROLS_BUTTON_RADIO_BUTTON_H_
 #pragma once
 
+#include "base/string16.h"
 #include "ui/views/controls/button/checkbox.h"
 
 namespace views {
@@ -17,7 +18,7 @@ class VIEWS_EXPORT RadioButton : public Checkbox {
   // The button's class name.
   static const char kViewClassName[];
 
-  RadioButton(const std::wstring& label, int group_id);
+  RadioButton(const string16& label, int group_id);
   virtual ~RadioButton();
 
   // Overridden from View:
@@ -36,9 +37,10 @@ class VIEWS_EXPORT RadioButton : public Checkbox {
   // Overridden from Checkbox:
   virtual void SetChecked(bool checked) OVERRIDE;
 
+ private:
   DISALLOW_COPY_AND_ASSIGN(RadioButton);
 };
 
 }  // namespace views
 
-#endif  // VIEWS_CONTROLS_BUTTON_RADIO_BUTTON_H_
+#endif  // UI_VIEWS_CONTROLS_BUTTON_RADIO_BUTTON_H_

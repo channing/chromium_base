@@ -2,13 +2,14 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef CONTROLS_MENU_VIEWS_MENU_H_
-#define CONTROLS_MENU_VIEWS_MENU_H_
+#ifndef UI_VIEWS_CONTROLS_MENU_MENU_H_
+#define UI_VIEWS_CONTROLS_MENU_MENU_H_
 #pragma once
 
 #include <string>
 
 #include "base/basictypes.h"
+#include "base/string16.h"
 #include "ui/gfx/native_widget_types.h"
 #include "ui/views/views_export.h"
 
@@ -18,9 +19,11 @@ namespace gfx {
 class Point;
 }
 
-namespace views {
-
+namespace ui {
 class Accelerator;
+}
+
+namespace views {
 
 class VIEWS_EXPORT Menu {
  public:
@@ -48,14 +51,14 @@ class VIEWS_EXPORT Menu {
     }
 
     // The string shown for the menu item.
-    virtual std::wstring GetLabel(int id) const {
-      return std::wstring();
+    virtual string16 GetLabel(int id) const {
+      return string16();
     }
 
     // The delegate needs to implement this function if it wants to display
     // the shortcut text next to each menu item. If there is an accelerator
     // for a given item id, the implementor must return it.
-    virtual bool GetAcceleratorInfo(int id, views::Accelerator* accel) {
+    virtual bool GetAcceleratorInfo(int id, ui::Accelerator* accel) {
       return false;
     }
 
@@ -113,7 +116,7 @@ class VIEWS_EXPORT Menu {
     virtual bool IsCommandEnabled(int id) const {
       return true;
     }
-    virtual bool GetContextualLabel(int id, std::wstring* out) const {
+    virtual bool GetContextualLabel(int id, string16* out) const {
       return false;
     }
     virtual void ExecuteCommand(int id) {
@@ -172,35 +175,35 @@ class VIEWS_EXPORT Menu {
   // label      The text label shown.
   // type       The type of item.
   void AppendMenuItem(int item_id,
-                      const std::wstring& label,
+                      const string16& label,
                       MenuItemType type);
   void AddMenuItem(int index,
                    int item_id,
-                   const std::wstring& label,
+                   const string16& label,
                    MenuItemType type);
 
   // Append a submenu to this menu.
   // The returned pointer is owned by this menu.
   Menu* AppendSubMenu(int item_id,
-                      const std::wstring& label);
-  Menu* AddSubMenu(int index, int item_id, const std::wstring& label);
+                      const string16& label);
+  Menu* AddSubMenu(int index, int item_id, const string16& label);
 
   // Append a submenu with an icon to this menu
   // The returned pointer is owned by this menu.
   // Unless the icon is empty, calling this function forces the Menu class
   // to draw the menu, instead of relying on Windows.
   Menu* AppendSubMenuWithIcon(int item_id,
-                              const std::wstring& label,
+                              const string16& label,
                               const SkBitmap& icon);
   virtual Menu* AddSubMenuWithIcon(int index,
                                    int item_id,
-                                   const std::wstring& label,
+                                   const string16& label,
                                    const SkBitmap& icon) = 0;
 
   // This is a convenience for standard text label menu items where the label
   // is provided with this call.
-  void AppendMenuItemWithLabel(int item_id, const std::wstring& label);
-  void AddMenuItemWithLabel(int index, int item_id, const std::wstring& label);
+  void AppendMenuItemWithLabel(int item_id, const string16& label);
+  void AddMenuItemWithLabel(int index, int item_id, const string16& label);
 
   // This is a convenience for text label menu items where the label is
   // provided by the delegate.
@@ -215,11 +218,11 @@ class VIEWS_EXPORT Menu {
   // needs an icon. Calling this function forces the Menu class to draw
   // the menu, instead of relying on Windows.
   void AppendMenuItemWithIcon(int item_id,
-                              const std::wstring& label,
+                              const string16& label,
                               const SkBitmap& icon);
   virtual void AddMenuItemWithIcon(int index,
                                    int item_id,
-                                   const std::wstring& label,
+                                   const string16& label,
                                    const SkBitmap& icon);
 
   // Enables or disables the item with the specified id.
@@ -227,7 +230,7 @@ class VIEWS_EXPORT Menu {
   virtual void EnableMenuItemAt(int index, bool enabled) = 0;
 
   // Sets menu label at specified index.
-  virtual void SetMenuLabel(int item_id, const std::wstring& label) = 0;
+  virtual void SetMenuLabel(int item_id, const string16& label) = 0;
 
   // Sets an icon for an item with a given item_id. Calling this function
   // also forces the Menu class to draw the menu, instead of relying on Windows.
@@ -255,7 +258,7 @@ class VIEWS_EXPORT Menu {
 
   virtual void AddMenuItemInternal(int index,
                                    int item_id,
-                                   const std::wstring& label,
+                                   const string16& label,
                                    const SkBitmap& icon,
                                    MenuItemType type) = 0;
 
@@ -271,4 +274,4 @@ class VIEWS_EXPORT Menu {
 
 }  // namespace views
 
-#endif  // CONTROLS_MENU_VIEWS_MENU_H_
+#endif  // UI_VIEWS_CONTROLS_MENU_MENU_H_

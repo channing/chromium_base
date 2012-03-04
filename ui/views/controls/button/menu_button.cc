@@ -46,7 +46,7 @@ const char MenuButton::kViewClassName[] = "views/MenuButton";
 ////////////////////////////////////////////////////////////////////////////////
 
 MenuButton::MenuButton(ButtonListener* listener,
-                       const std::wstring& text,
+                       const string16& text,
                        ViewMenuDelegate* menu_delegate,
                        bool show_menu_marker)
     : TextButton(listener, text),

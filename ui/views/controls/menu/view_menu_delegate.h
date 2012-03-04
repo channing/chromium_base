@@ -1,9 +1,9 @@
-// Copyright (c) 2006-2009 The Chromium Authors. All rights reserved.
+// Copyright (c) 2011 The Chromium Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef VIEWS_CONTROLS_MENU_VIEW_MENU_DELEGATE_H_
-#define VIEWS_CONTROLS_MENU_VIEW_MENU_DELEGATE_H_
+#ifndef UI_VIEWS_CONTROLS_MENU_VIEW_MENU_DELEGATE_H_
+#define UI_VIEWS_CONTROLS_MENU_VIEW_MENU_DELEGATE_H_
 #pragma once
 
 #include "ui/gfx/native_widget_types.h"
@@ -37,4 +37,4 @@ class ViewMenuDelegate {
 
 }  // namespace views
 
-#endif  // VIEWS_CONTROLS_MENU_VIEW_MENU_DELEGATE_H_
+#endif  // UI_VIEWS_CONTROLS_MENU_VIEW_MENU_DELEGATE_H_

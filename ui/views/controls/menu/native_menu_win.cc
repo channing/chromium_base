@@ -6,12 +6,14 @@
 
 #include <Windowsx.h>
 
+#include "base/bind.h"
 #include "base/logging.h"
 #include "base/message_loop.h"
 #include "base/stl_util.h"
 #include "base/string_util.h"
 #include "base/win/wrapped_window_proc.h"
 #include "third_party/skia/include/core/SkBitmap.h"
+#include "ui/base/accelerators/accelerator.h"
 #include "ui/base/keycodes/keyboard_codes.h"
 #include "ui/base/l10n/l10n_util.h"
 #include "ui/base/l10n/l10n_util_win.h"
@@ -20,7 +22,6 @@
 #include "ui/gfx/font.h"
 #include "ui/gfx/native_theme.h"
 #include "ui/gfx/rect.h"
-#include "ui/views/accelerator.h"
 #include "ui/views/controls/menu/menu_2.h"
 #include "ui/views/controls/menu/menu_config.h"
 #include "ui/views/controls/menu/menu_listener.h"
@@ -47,7 +48,7 @@ struct NativeMenuWin::ItemData {
   // The Windows API requires that whoever creates the menus must own the
   // strings used for labels, and keep them around for the lifetime of the
   // created menu. So be it.
-  std::wstring label;
+  string16 label;
 
   // Someone needs to own submenus, it may as well be us.
   scoped_ptr<Menu2> submenu;
@@ -167,7 +168,7 @@ class NativeMenuWin::MenuHostWindow {
       if (data->submenu.get())
         measure_item_struct->itemWidth += kArrowWidth;
       // If the label contains an accelerator, make room for tab.
-      if (data->label.find(L'\t') != std::wstring::npos)
+      if (data->label.find(L'\t') != string16::npos)
         measure_item_struct->itemWidth += font.GetStringWidth(L" ");
       measure_item_struct->itemHeight =
           font.GetHeight() + kItemBottomMargin + kItemTopMargin;
@@ -217,17 +218,16 @@ class NativeMenuWin::MenuHostWindow {
       gfx::Font font;
       HGDIOBJ old_font =
           static_cast<HFONT>(SelectObject(dc, font.GetNativeFont()));
-      int fontsize = font.GetFontSize();
 
       // If an accelerator is specified (with a tab delimiting the rest of the
       // label from the accelerator), we have to justify the fist part on the
       // left and the accelerator on the right.
       // TODO(jungshik): This will break in RTL UI. Currently, he/ar use the
       //                 window system UI font and will not hit here.
-      std::wstring label = data->label;
-      std::wstring accel;
-      std::wstring::size_type tab_pos = label.find(L'\t');
-      if (tab_pos != std::wstring::npos) {
+      string16 label = data->label;
+      string16 accel;
+      string16::size_type tab_pos = label.find(L'\t');
+      if (tab_pos != string16::npos) {
         accel = label.substr(tab_pos);
         label = label.substr(0, tab_pos);
       }
@@ -248,11 +248,10 @@ class NativeMenuWin::MenuHostWindow {
       if (data->native_menu_win->model_->GetIconAt(data->model_index, &icon)) {
         // We currently don't support items with both icons and checkboxes.
         DCHECK(type != ui::MenuModel::TYPE_CHECK);
-        gfx::CanvasSkia canvas(icon.width(), icon.height(), false);
-        canvas.drawColor(SK_ColorBLACK, SkXfermode::kClear_Mode);
-        canvas.DrawBitmapInt(icon, 0, 0);
+        gfx::CanvasSkia canvas(icon, false);
         skia::DrawToNativeContext(
-            &canvas, dc, draw_item_struct->rcItem.left + kItemLeftMargin,
+            canvas.sk_canvas(), dc,
+            draw_item_struct->rcItem.left + kItemLeftMargin,
             draw_item_struct->rcItem.top + (draw_item_struct->rcItem.bottom -
                 draw_item_struct->rcItem.top - icon.height()) / 2, NULL);
       } else if (type == ui::MenuModel::TYPE_CHECK &&
@@ -272,19 +271,21 @@ class NativeMenuWin::MenuHostWindow {
         int icon_y = kItemTopMargin +
             (height - kItemTopMargin - kItemBottomMargin -
              config.check_height) / 2;
-        gfx::CanvasSkia canvas(config.check_width, config.check_height, false);
+        gfx::CanvasSkia canvas(gfx::Size(config.check_width,
+                                         config.check_height), false);
         NativeTheme::ExtraParams extra;
         extra.menu_check.is_radio = false;
         gfx::Rect bounds(0, 0, config.check_width, config.check_height);
 
         // Draw the background and the check.
         NativeTheme::instance()->Paint(
-            &canvas, NativeTheme::kMenuCheckBackground, state, bounds, extra);
+            canvas.sk_canvas(), NativeTheme::kMenuCheckBackground,
+            state, bounds, extra);
         NativeTheme::instance()->Paint(
-            &canvas, NativeTheme::kMenuCheck, state, bounds, extra);
+            canvas.sk_canvas(), NativeTheme::kMenuCheck, state, bounds, extra);
 
         // Draw checkbox to menu.
-        skia::DrawToNativeContext(&canvas, dc,
+        skia::DrawToNativeContext(canvas.sk_canvas(), dc,
             draw_item_struct->rcItem.left + kItemLeftMargin,
             draw_item_struct->rcItem.top + (draw_item_struct->rcItem.bottom -
                 draw_item_struct->rcItem.top - config.check_height) / 2, NULL);
@@ -421,7 +422,7 @@ void NativeMenuWin::RunMenuAt(const gfx::Point& point, int alignment) {
   HWND hwnd = host_window_->hwnd();
   menu_to_select_ = NULL;
   position_to_select_ = -1;
-  menu_to_select_factory_.RevokeAll();
+  menu_to_select_factory_.InvalidateWeakPtrs();
   bool destroyed = false;
   destroyed_flag_ = &destroyed;
   model_->MenuWillShow();
@@ -437,11 +438,11 @@ void NativeMenuWin::RunMenuAt(const gfx::Point& point, int alignment) {
     // the delegate can cause destruction leaving the stack in a weird
     // state. Instead post a task, then notify. This mirrors what WM_MENUCOMMAND
     // does.
-    menu_to_select_factory_.RevokeAll();
+    menu_to_select_factory_.InvalidateWeakPtrs();
     MessageLoop::current()->PostTask(
         FROM_HERE,
-        menu_to_select_factory_.NewRunnableMethod(
-            &NativeMenuWin::DelayedSelect));
+        base::Bind(&NativeMenuWin::DelayedSelect,
+                   menu_to_select_factory_.GetWeakPtr()));
     menu_action_ = MENU_ACTION_SELECTED;
   }
   // Send MenuClosed after we schedule the select, otherwise MenuClosed is
@@ -610,7 +611,7 @@ void NativeMenuWin::AddMenuItemAt(int menu_index, int model_index) {
     mii.fType = MFT_OWNERDRAW;
 
   ItemData* item_data = new ItemData;
-  item_data->label = std::wstring();
+  item_data->label = string16();
   ui::MenuModel::ItemType type = model_->GetTypeAt(model_index);
   if (type == ui::MenuModel::TYPE_SUBMENU) {
     item_data->submenu.reset(new Menu2(model_->GetSubmenuModelAt(model_index)));
@@ -662,7 +663,7 @@ void NativeMenuWin::SetMenuItemState(int menu_index, bool enabled, bool checked,
 
 void NativeMenuWin::SetMenuItemLabel(int menu_index,
                                      int model_index,
-                                     const std::wstring& label) {
+                                     const string16& label) {
   if (IsSeparatorItemAt(menu_index))
     return;
 
@@ -672,18 +673,17 @@ void NativeMenuWin::SetMenuItemLabel(int menu_index,
   SetMenuItemInfo(menu_, menu_index, MF_BYPOSITION, &mii);
 }
 
-void NativeMenuWin::UpdateMenuItemInfoForString(
-    MENUITEMINFO* mii,
-    int model_index,
-    const std::wstring& label) {
-  std::wstring formatted = label;
+void NativeMenuWin::UpdateMenuItemInfoForString(MENUITEMINFO* mii,
+                                                int model_index,
+                                                const string16& label) {
+  string16 formatted = label;
   ui::MenuModel::ItemType type = model_->GetTypeAt(model_index);
   // Strip out any tabs, otherwise they get interpreted as accelerators and can
   // lead to weird behavior.
   ReplaceSubstringsAfterOffset(&formatted, 0, L"\t", L" ");
   if (type != ui::MenuModel::TYPE_SUBMENU) {
     // Add accelerator details to the label if provided.
-    views::Accelerator accelerator(ui::VKEY_UNKNOWN, false, false, false);
+    ui::Accelerator accelerator(ui::VKEY_UNKNOWN, false, false, false);
     if (model_->GetAcceleratorAt(model_index, &accelerator)) {
       formatted += L"\t";
       formatted += accelerator.GetShortcutText();

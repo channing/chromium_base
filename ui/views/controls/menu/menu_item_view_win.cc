@@ -17,22 +17,6 @@ using gfx::NativeTheme;
 
 namespace views {
 
-gfx::Size MenuItemView::CalculatePreferredSize() {
-  gfx::Size child_size = GetChildPreferredSize();
-  if (child_count() == 1 && title_.empty()) {
-    return gfx::Size(
-        child_size.width(),
-        child_size.height() + GetBottomMargin() + GetTopMargin());
-  }
-
-  const gfx::Font& font = GetFont();
-  return gfx::Size(
-      font.GetStringWidth(title_) + label_start_ + item_right_margin_ +
-          child_size.width(),
-      std::max(child_size.height(), font.GetHeight()) + GetBottomMargin() +
-          GetTopMargin());
-}
-
 void MenuItemView::PaintButton(gfx::Canvas* canvas, PaintButtonMode mode) {
   const MenuConfig& config = MenuConfig::instance();
   bool render_selection =
@@ -43,7 +27,7 @@ void MenuItemView::PaintButton(gfx::Canvas* canvas, PaintButtonMode mode) {
   int state;
   NativeTheme::State control_state;
 
-  if (IsEnabled()) {
+  if (enabled()) {
     if (render_selection) {
       control_state = NativeTheme::kHovered;
       state = MPI_HOT;
@@ -66,7 +50,7 @@ void MenuItemView::PaintButton(gfx::Canvas* canvas, PaintButtonMode mode) {
                             height());
     AdjustBoundsForRTLUI(&gutter_bounds);
     NativeTheme::ExtraParams extra;
-    NativeTheme::instance()->Paint(canvas->AsCanvasSkia(),
+    NativeTheme::instance()->Paint(canvas->GetSkCanvas(),
                                    NativeTheme::kMenuPopupGutter,
                                    NativeTheme::kNormal,
                                    gutter_bounds,
@@ -79,7 +63,7 @@ void MenuItemView::PaintButton(gfx::Canvas* canvas, PaintButtonMode mode) {
     NativeTheme::ExtraParams extra;
     extra.menu_item.is_selected = render_selection;
     AdjustBoundsForRTLUI(&item_bounds);
-    NativeTheme::instance()->Paint(canvas->AsCanvasSkia(),
+    NativeTheme::instance()->Paint(canvas->GetSkCanvas(),
         NativeTheme::kMenuItemBackground, control_state, item_bounds, extra);
   }
 
@@ -109,11 +93,11 @@ void MenuItemView::PaintButton(gfx::Canvas* canvas, PaintButtonMode mode) {
     // halo. Instead, just draw black on white, which will look good in most
     // cases.
     canvas->AsCanvasSkia()->DrawStringWithHalo(
-        GetTitle(), font, 0x00000000, 0xFFFFFFFF, text_bounds.x(),
+        title(), font, 0x00000000, 0xFFFFFFFF, text_bounds.x(),
         text_bounds.y(), text_bounds.width(), text_bounds.height(),
         GetRootMenuItem()->GetDrawStringFlags());
   } else {
-    canvas->DrawStringInt(GetTitle(), font, fg_color,
+    canvas->DrawStringInt(title(), font, fg_color,
                           text_bounds.x(), text_bounds.y(), text_bounds.width(),
                           text_bounds.height(),
                           GetRootMenuItem()->GetDrawStringFlags());
@@ -132,7 +116,7 @@ void MenuItemView::PaintButton(gfx::Canvas* canvas, PaintButtonMode mode) {
   }
 
   if (HasSubmenu()) {
-    int state_id = IsEnabled() ? MSM_NORMAL : MSM_DISABLED;
+    int state_id = enabled() ? MSM_NORMAL : MSM_DISABLED;
     gfx::Rect arrow_bounds(this->width() - item_right_margin_ +
                            config.label_to_arrow_padding, 0,
                            config.arrow_width, height());
@@ -144,7 +128,7 @@ void MenuItemView::PaintButton(gfx::Canvas* canvas, PaintButtonMode mode) {
     gfx::NativeTheme::ExtraParams extra;
     extra.menu_arrow.pointing_right = !base::i18n::IsRTL();
     extra.menu_arrow.is_selected = render_selection;
-    gfx::NativeTheme::instance()->Paint(canvas->AsCanvasSkia(),
+    gfx::NativeTheme::instance()->Paint(canvas->GetSkCanvas(),
         gfx::NativeTheme::kMenuPopupArrow, control_state, arrow_bounds, extra);
   }
 }
@@ -174,13 +158,13 @@ void MenuItemView::PaintCheck(gfx::Canvas* canvas,
   // Draw the background.
   gfx::Rect bg_bounds(0, 0, icon_x + icon_width, height());
   AdjustBoundsForRTLUI(&bg_bounds);
-  NativeTheme::instance()->Paint(canvas->AsCanvasSkia(),
+  NativeTheme::instance()->Paint(canvas->GetSkCanvas(),
       NativeTheme::kMenuCheckBackground, state, bg_bounds, extra);
 
   // And the check.
   gfx::Rect icon_bounds(icon_x / 2, icon_y, icon_width, icon_height);
   AdjustBoundsForRTLUI(&icon_bounds);
-  NativeTheme::instance()->Paint(canvas->AsCanvasSkia(),
+  NativeTheme::instance()->Paint(canvas->GetSkCanvas(),
       NativeTheme::kMenuCheck, state, bg_bounds, extra);
 }
 

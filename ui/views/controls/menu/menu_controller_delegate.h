@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef VIEWS_CONTROLS_MENU_MENU_CONTROLLER_DELEGATE_H_
-#define VIEWS_CONTROLS_MENU_MENU_CONTROLLER_DELEGATE_H_
+#ifndef UI_VIEWS_CONTROLS_MENU_MENU_CONTROLLER_DELEGATE_H_
+#define UI_VIEWS_CONTROLS_MENU_MENU_CONTROLLER_DELEGATE_H_
 #pragma once
 
 namespace views {
@@ -38,4 +38,4 @@ class MenuControllerDelegate {
 
 }  // namespace view
 
-#endif  // VIEWS_CONTROLS_MENU_MENU_CONTROLLER_DELEGATE_H_
+#endif  // UI_VIEWS_CONTROLS_MENU_MENU_CONTROLLER_DELEGATE_H_

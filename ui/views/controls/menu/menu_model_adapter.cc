@@ -14,8 +14,8 @@ namespace views {
 
 MenuModelAdapter::MenuModelAdapter(ui::MenuModel* menu_model)
     : menu_model_(menu_model),
-      triggerable_event_flags_(ui::EF_LEFT_BUTTON_DOWN |
-                               ui::EF_RIGHT_BUTTON_DOWN) {
+      triggerable_event_flags_(ui::EF_LEFT_MOUSE_BUTTON |
+                               ui::EF_RIGHT_MOUSE_BUTTON) {
   DCHECK(menu_model);
 }
 
@@ -80,7 +80,7 @@ bool MenuModelAdapter::IsTriggerableEvent(MenuItemView* source,
 }
 
 bool MenuModelAdapter::GetAccelerator(int id,
-                                      views::Accelerator* accelerator) {
+                                      ui::Accelerator* accelerator) {
   ui::MenuModel* model = menu_model_;
   int index = 0;
   if (ui::MenuModel::GetModelAndIndexForCommandId(id, &model, &index))
@@ -90,14 +90,14 @@ bool MenuModelAdapter::GetAccelerator(int id,
   return false;
 }
 
-std::wstring MenuModelAdapter::GetLabel(int id) const {
+string16 MenuModelAdapter::GetLabel(int id) const {
   ui::MenuModel* model = menu_model_;
   int index = 0;
   if (ui::MenuModel::GetModelAndIndexForCommandId(id, &model, &index))
-    return UTF16ToWide(model->GetLabelAt(index));
+    return model->GetLabelAt(index);
 
   NOTREACHED();
-  return std::wstring();
+  return string16();
 }
 
 const gfx::Font& MenuModelAdapter::GetLabelFont(int id) const {

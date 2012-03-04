@@ -1,4 +1,4 @@
-// Copyright (c) 2011 The Chromium Authors. All rights reserved.
+// Copyright (c) 2012 The Chromium Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -13,7 +13,6 @@
 #include "ui/base/models/menu_model.h"
 #include "ui/gfx/canvas.h"
 #include "ui/views/controls/button/menu_button.h"
-#include "ui/views/controls/button/text_button.h"
 #include "ui/views/controls/menu/menu_config.h"
 #include "ui/views/controls/menu/menu_controller.h"
 #include "ui/views/controls/menu/menu_separator.h"
@@ -35,12 +34,12 @@ class EmptyMenuMenuItem : public MenuItemView {
       : MenuItemView(parent, 0, EMPTY) {
     // Set this so that we're not identified as a normal menu item.
     set_id(kEmptyMenuItemViewID);
-    SetTitle(UTF16ToWide(
-        l10n_util::GetStringUTF16(IDS_APP_MENU_EMPTY_SUBMENU)));
+    SetTitle(l10n_util::GetStringUTF16(IDS_APP_MENU_EMPTY_SUBMENU));
     SetEnabled(false);
   }
 
-  virtual bool GetTooltipText(const gfx::Point& p, string16* tooltip) OVERRIDE {
+  virtual bool GetTooltipText(const gfx::Point& p,
+                              string16* tooltip) const OVERRIDE {
     // Empty menu items shouldn't have a tooltip.
     return false;
   }
@@ -101,7 +100,8 @@ void MenuItemView::ChildPreferredSizeChanged(View* child) {
   PreferredSizeChanged();
 }
 
-bool MenuItemView::GetTooltipText(const gfx::Point& p, string16* tooltip) {
+bool MenuItemView::GetTooltipText(const gfx::Point& p,
+                                  string16* tooltip) const {
   *tooltip = tooltip_;
   if (!tooltip->empty())
     return true;
@@ -109,14 +109,14 @@ bool MenuItemView::GetTooltipText(const gfx::Point& p, string16* tooltip) {
   if (GetType() == SEPARATOR)
     return false;
 
-  MenuController* controller = GetMenuController();
+  const MenuController* controller = GetMenuController();
   if (!controller || controller->exit_type() != MenuController::EXIT_NONE) {
     // Either the menu has been closed or we're in the process of closing the
     // menu. Don't attempt to query the delegate as it may no longer be valid.
     return false;
   }
 
-  MenuItemView* root_menu_item = GetRootMenuItem();
+  const MenuItemView* root_menu_item = GetRootMenuItem();
   if (root_menu_item->canceled_) {
     // TODO(sky): if |canceled_| is true, controller->exit_type() should be
     // something other than EXIT_NONE, but crash reports seem to indicate
@@ -124,16 +124,30 @@ bool MenuItemView::GetTooltipText(const gfx::Point& p, string16* tooltip) {
     return false;
   }
 
-  CHECK(GetDelegate());
+  const MenuDelegate* delegate = GetDelegate();
+  CHECK(delegate);
   gfx::Point location(p);
   ConvertPointToScreen(this, &location);
-  *tooltip = GetDelegate()->GetTooltipText(command_, location);
+  *tooltip = delegate->GetTooltipText(command_, location);
   return !tooltip->empty();
 }
 
 void MenuItemView::GetAccessibleState(ui::AccessibleViewState* state) {
   state->role = ui::AccessibilityTypes::ROLE_MENUITEM;
-  state->name = accessible_name_;
+
+  string16 item_text;
+  if (IsContainer()) {
+    // The first child is taking over, just use its accessible name instead of
+    // |title_|.
+    View* child = child_at(0);
+    ui::AccessibleViewState state;
+    child->GetAccessibleState(&state);
+    item_text = state.name;
+  } else {
+    item_text = title_;
+  }
+  state->name = GetAccessibleNameForMenuItem(item_text, GetAcceleratorText());
+
   switch (GetType()) {
     case SUBMENU:
       state->state |= ui::AccessibilityTypes::STATE_HASPOPUP;
@@ -187,7 +201,7 @@ void MenuItemView::Cancel() {
 
 MenuItemView* MenuItemView::AddMenuItemAt(int index,
                                           int item_id,
-                                          const std::wstring& label,
+                                          const string16& label,
                                           const SkBitmap& icon,
                                           Type type) {
   DCHECK_NE(type, EMPTY);
@@ -226,26 +240,62 @@ void MenuItemView::RemoveMenuItemAt(int index) {
   removed_items_.push_back(item);
 }
 
+MenuItemView* MenuItemView::AppendMenuItem(int item_id,
+                                           const string16& label,
+                                           Type type) {
+  return AppendMenuItemImpl(item_id, label, SkBitmap(), type);
+}
+
+MenuItemView* MenuItemView::AppendSubMenu(int item_id,
+                                          const string16& label) {
+  return AppendMenuItemImpl(item_id, label, SkBitmap(), SUBMENU);
+}
+
+MenuItemView* MenuItemView::AppendSubMenuWithIcon(int item_id,
+                                                  const string16& label,
+                                                  const SkBitmap& icon) {
+  return AppendMenuItemImpl(item_id, label, icon, SUBMENU);
+}
+
+MenuItemView* MenuItemView::AppendMenuItemWithLabel(int item_id,
+                                                    const string16& label) {
+  return AppendMenuItem(item_id, label, NORMAL);
+}
+
+MenuItemView* MenuItemView::AppendDelegateMenuItem(int item_id) {
+  return AppendMenuItem(item_id, string16(), NORMAL);
+}
+
+void MenuItemView::AppendSeparator() {
+  AppendMenuItemImpl(0, string16(), SkBitmap(), SEPARATOR);
+}
+
+MenuItemView* MenuItemView::AppendMenuItemWithIcon(int item_id,
+                                                   const string16& label,
+                                                   const SkBitmap& icon) {
+  return AppendMenuItemImpl(item_id, label, icon, NORMAL);
+}
+
 MenuItemView* MenuItemView::AppendMenuItemFromModel(ui::MenuModel* model,
                                                     int index,
                                                     int id) {
   SkBitmap icon;
-  std::wstring label;
+  string16 label;
   MenuItemView::Type type;
   ui::MenuModel::ItemType menu_type = model->GetTypeAt(index);
   switch (menu_type) {
     case ui::MenuModel::TYPE_COMMAND:
       model->GetIconAt(index, &icon);
       type = MenuItemView::NORMAL;
-      label = UTF16ToWide(model->GetLabelAt(index));
+      label = model->GetLabelAt(index);
       break;
     case ui::MenuModel::TYPE_CHECK:
       type = MenuItemView::CHECKBOX;
-      label = UTF16ToWide(model->GetLabelAt(index));
+      label = model->GetLabelAt(index);
       break;
     case ui::MenuModel::TYPE_RADIO:
       type = MenuItemView::RADIO;
-      label = UTF16ToWide(model->GetLabelAt(index));
+      label = model->GetLabelAt(index);
       break;
     case ui::MenuModel::TYPE_SEPARATOR:
       type = MenuItemView::SEPARATOR;
@@ -253,7 +303,7 @@ MenuItemView* MenuItemView::AppendMenuItemFromModel(ui::MenuModel* model,
     case ui::MenuModel::TYPE_SUBMENU:
       model->GetIconAt(index, &icon);
       type = MenuItemView::SUBMENU;
-      label = UTF16ToWide(model->GetLabelAt(index));
+      label = model->GetLabelAt(index);
       break;
     default:
       NOTREACHED();
@@ -265,7 +315,7 @@ MenuItemView* MenuItemView::AppendMenuItemFromModel(ui::MenuModel* model,
 }
 
 MenuItemView* MenuItemView::AppendMenuItemImpl(int item_id,
-                                               const std::wstring& label,
+                                               const string16& label,
                                                const SkBitmap& icon,
                                                Type type) {
   const int index = submenu_ ? submenu_->child_count() : 0;
@@ -286,9 +336,8 @@ SubmenuView* MenuItemView::GetSubmenu() const {
   return submenu_;
 }
 
-void MenuItemView::SetTitle(const std::wstring& title) {
-  title_ = WideToUTF16Hack(title);
-  accessible_name_ = GetAccessibleNameForMenuItem(title_, GetAcceleratorText());
+void MenuItemView::SetTitle(const string16& title) {
+  title_ = title;
   pref_size_.SetSize(0, 0);  // Triggers preferred size recalculation.
 }
 
@@ -328,33 +377,41 @@ MenuController* MenuItemView::GetMenuController() {
   return GetRootMenuItem()->controller_;
 }
 
+const MenuController* MenuItemView::GetMenuController() const {
+  return GetRootMenuItem()->controller_;
+}
+
 MenuDelegate* MenuItemView::GetDelegate() {
   return GetRootMenuItem()->delegate_;
 }
 
+const MenuDelegate* MenuItemView::GetDelegate() const {
+  return GetRootMenuItem()->delegate_;
+}
+
 MenuItemView* MenuItemView::GetRootMenuItem() {
-  MenuItemView* item = this;
-  while (item) {
-    MenuItemView* parent = item->GetParentMenuItem();
-    if (!parent)
-      return item;
+  return const_cast<MenuItemView*>(
+      static_cast<const MenuItemView*>(this)->GetRootMenuItem());
+}
+
+const MenuItemView* MenuItemView::GetRootMenuItem() const {
+  const MenuItemView* item = this;
+  for (const MenuItemView* parent = GetParentMenuItem(); parent;
+       parent = item->GetParentMenuItem())
     item = parent;
-  }
-  NOTREACHED();
-  return NULL;
+  return item;
 }
 
 char16 MenuItemView::GetMnemonic() {
   if (!GetRootMenuItem()->has_mnemonics_)
     return 0;
 
-  string16 title = WideToUTF16(GetTitle());
   size_t index = 0;
   do {
-    index = title.find('&', index);
+    index = title_.find('&', index);
     if (index != string16::npos) {
-      if (index + 1 != title.size() && title[index + 1] != '&') {
-        char16 char_array[] = { title[index + 1], 0 };
+      if (index + 1 != title_.size() && title_[index + 1] != '&') {
+        char16 char_array[] = { title_[index + 1], 0 };
         // TODO(jshin): What about Turkish locale? See http://crbug.com/81719.
         // If the mnemonic is capital I and the UI language is Turkish,
         // lowercasing it results in 'small dotless i', which is different
@@ -401,6 +458,8 @@ void MenuItemView::ChildrenChanged() {
       // change to the submenu's size and no layout.
       submenu_->Layout();
       submenu_->SchedulePaint();
+      // Update the menu selection after layout.
+      controller->UpdateSubmenuSelection(submenu_);
     }
   }
 
@@ -411,9 +470,7 @@ void MenuItemView::Layout() {
   if (!has_children())
     return;
 
-  if (child_count() == 1 && GetTitle().size() == 0) {
-    // We only have one child and no title so let the view take over all the
-    // space.
+  if (IsContainer()) {
     View* child = child_at(0);
     gfx::Size size = child->GetPreferredSize();
     child->SetBounds(0, GetTopMargin(), size.width(), size.height());
@@ -495,7 +552,7 @@ void MenuItemView::UpdateMenuPartSizes(bool has_icons) {
     label_start_ += config.gutter_width + config.gutter_to_label;
 
   MenuItemView menu_item(NULL);
-  menu_item.SetTitle(L"blah");  // Text doesn't matter here.
+  menu_item.SetTitle(ASCIIToUTF16("blah"));  // Text doesn't matter here.
   pref_menu_height_ = menu_item.GetPreferredSize().height();
 }
 
@@ -565,10 +622,8 @@ int MenuItemView::GetDrawStringFlags() {
 const gfx::Font& MenuItemView::GetFont() {
   // Check for item-specific font.
   const MenuDelegate* delegate = GetDelegate();
-  if (delegate)
-    return delegate->GetLabelFont(GetCommand());
-  else
-    return MenuConfig::instance().font;
+  return delegate ?
+      delegate->GetLabelFont(GetCommand()) : MenuConfig::instance().font;
 }
 
 void MenuItemView::AddEmptyMenus() {
@@ -627,7 +682,8 @@ void MenuItemView::PaintAccelerator(gfx::Canvas* canvas) {
   else
     flags |= gfx::Canvas::TEXT_ALIGN_RIGHT;
   canvas->DrawStringInt(
-      accel_text, font, TextButton::kDisabledColor,
+      accel_text, font, gfx::NativeTheme::instance()->GetSystemColor(
+          gfx::NativeTheme::kColorId_TextButtonDisabledColor),
       accel_bounds.x(), accel_bounds.y(), accel_bounds.width(),
       accel_bounds.height(), flags);
 }
@@ -667,7 +723,7 @@ gfx::Size MenuItemView::GetChildPreferredSize() {
   if (!has_children())
     return gfx::Size();
 
-  if (GetTitle().size() == 0 && child_count() == 1) {
+  if (IsContainer()) {
     View* child = child_at(0);
     return child->GetPreferredSize();
   }
@@ -683,6 +739,23 @@ gfx::Size MenuItemView::GetChildPreferredSize() {
   return gfx::Size(width, 0);
 }
 
+gfx::Size MenuItemView::CalculatePreferredSize() {
+  gfx::Size child_size = GetChildPreferredSize();
+  if (IsContainer()) {
+    return gfx::Size(
+        child_size.width(),
+        child_size.height() + GetBottomMargin() + GetTopMargin());
+  }
+
+  const gfx::Font& font = GetFont();
+  int height = font.GetHeight();
+  return gfx::Size(
+      font.GetStringWidth(title_) + label_start_ +
+          item_right_margin_ + child_size.width(),
+      std::max(height, child_size.height()) + GetBottomMargin() +
+          GetTopMargin());
+}
+
 string16 MenuItemView::GetAcceleratorText() {
   if (id() == kEmptyMenuItemViewID) {
     // Don't query the delegate for menus that represent no children.
@@ -692,10 +765,17 @@ string16 MenuItemView::GetAcceleratorText() {
   if(!MenuConfig::instance().show_accelerators)
     return string16();
 
-  Accelerator accelerator;
+  ui::Accelerator accelerator;
   return (GetDelegate() &&
           GetDelegate()->GetAccelerator(GetCommand(), &accelerator)) ?
       accelerator.GetShortcutText() : string16();
+}
+
+bool MenuItemView::IsContainer() const {
+  // Let the first child take over |this| when we only have one child and no
+  // title.  Note that what child_count() returns is the number of children,
+  // not the number of menu items.
+  return child_count() == 1 && title_.empty();
 }
 
 }  // namespace views

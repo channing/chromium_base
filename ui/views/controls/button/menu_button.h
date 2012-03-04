@@ -2,12 +2,13 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef VIEWS_CONTROLS_BUTTON_MENU_BUTTON_H_
-#define VIEWS_CONTROLS_BUTTON_MENU_BUTTON_H_
+#ifndef UI_VIEWS_CONTROLS_BUTTON_MENU_BUTTON_H_
+#define UI_VIEWS_CONTROLS_BUTTON_MENU_BUTTON_H_
 #pragma once
 
 #include <string>
 
+#include "base/string16.h"
 #include "base/time.h"
 #include "ui/gfx/font.h"
 #include "ui/views/background.h"
@@ -28,12 +29,11 @@ class ViewMenuDelegate;
 ////////////////////////////////////////////////////////////////////////////////
 class VIEWS_EXPORT MenuButton : public TextButton {
  public:
-  // The menu button's class name.
   static const char kViewClassName[];
 
   // Create a Button.
   MenuButton(ButtonListener* listener,
-             const std::wstring& text,
+             const string16& text,
              ViewMenuDelegate* menu_delegate,
              bool show_menu_marker);
   virtual ~MenuButton();
@@ -102,4 +102,4 @@ class VIEWS_EXPORT MenuButton : public TextButton {
 
 }  // namespace views
 
-#endif  // VIEWS_CONTROLS_BUTTON_MENU_BUTTON_H_
+#endif  // UI_VIEWS_CONTROLS_BUTTON_MENU_BUTTON_H_

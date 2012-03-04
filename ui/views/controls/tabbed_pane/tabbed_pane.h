@@ -2,12 +2,13 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef VIEWS_CONTROLS_TABBED_PANE_H_
-#define VIEWS_CONTROLS_TABBED_PANE_H_
+#ifndef UI_VIEWS_CONTROLS_TABBED_PANE_TABBED_PANE_H_
+#define UI_VIEWS_CONTROLS_TABBED_PANE_TABBED_PANE_H_
 #pragma once
 
 #include "base/basictypes.h"
 #include "base/compiler_specific.h"
+#include "base/string16.h"
 #include "ui/views/view.h"
 
 namespace views {
@@ -41,7 +42,7 @@ class VIEWS_EXPORT TabbedPane : public View {
   // Adds a new tab at the end of this TabbedPane with the specified |title|.
   // |contents| is the view displayed when the tab is selected and is owned by
   // the TabbedPane.
-  void AddTab(const std::wstring& title, View* contents);
+  void AddTab(const string16& title, View* contents);
 
   // Adds a new tab at |index| with |title|.
   // |contents| is the view displayed when the tab is selected and is owned by
@@ -50,7 +51,7 @@ class VIEWS_EXPORT TabbedPane : public View {
   // |select_if_first_tab| you need to explicitly invoke SelectTabAt, otherwise
   // the tabbed pane will not have a valid selection.
   void AddTabAtIndex(int index,
-                     const std::wstring& title,
+                     const string16& title,
                      View* contents,
                      bool select_if_first_tab);
 
@@ -84,8 +85,7 @@ class VIEWS_EXPORT TabbedPane : public View {
                                     View* parent,
                                     View* child) OVERRIDE;
   // Handles Ctrl+Tab and Ctrl+Shift+Tab navigation of pages.
-  virtual bool AcceleratorPressed(
-      const views::Accelerator& accelerator) OVERRIDE;
+  virtual bool AcceleratorPressed(const ui::Accelerator& accelerator) OVERRIDE;
   virtual std::string GetClassName() const OVERRIDE;
   virtual void OnFocus() OVERRIDE;
   virtual void OnPaintFocusBorder(gfx::Canvas* canvas) OVERRIDE;
@@ -102,4 +102,4 @@ class VIEWS_EXPORT TabbedPane : public View {
 
 }  // namespace views
 
-#endif  // VIEWS_CONTROLS_TABBED_PANE_H_
+#endif  // UI_VIEWS_CONTROLS_TABBED_PANE_TABBED_PANE_H_

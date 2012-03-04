@@ -1,15 +1,15 @@
-// Copyright (c) 2011 The Chromium Authors. All rights reserved.
+// Copyright (c) 2012 The Chromium Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef VIEWS_CONTROLS_BUTTON_TEXT_BUTTON_H_
-#define VIEWS_CONTROLS_BUTTON_TEXT_BUTTON_H_
+#ifndef UI_VIEWS_CONTROLS_BUTTON_TEXT_BUTTON_H_
+#define UI_VIEWS_CONTROLS_BUTTON_TEXT_BUTTON_H_
 #pragma once
 
 #include <string>
 
-// TODO(avi): remove when not needed
-#include "base/utf_string_conversions.h"
+#include "base/compiler_specific.h"
+#include "base/string16.h"
 #include "third_party/skia/include/core/SkBitmap.h"
 #include "third_party/skia/include/core/SkColor.h"
 #include "ui/gfx/font.h"
@@ -96,8 +96,8 @@ class VIEWS_EXPORT TextButtonNativeThemeBorder : public Border {
   virtual ~TextButtonNativeThemeBorder();
 
   // Implementation of Border:
-  virtual void Paint(const View& view, gfx::Canvas* canvas) const;
-  virtual void GetInsets(gfx::Insets* insets) const;
+  virtual void Paint(const View& view, gfx::Canvas* canvas) const OVERRIDE;
+  virtual void GetInsets(gfx::Insets* insets) const OVERRIDE;
 
  private:
   // The delegate the controls the appearance of this border.
@@ -111,8 +111,8 @@ class VIEWS_EXPORT TextButtonNativeThemeBorder : public Border {
 //
 // TextButtonBase
 //
-//  A base ckass for different types of buttons, like push buttons, radio
-//  buttons, and checkboxes, that do not depende on native components for
+//  A base class for different types of buttons, like push buttons, radio
+//  buttons, and checkboxes, that do not depend on native components for
 //  look and feel. TextButton reserves space for the largest string
 //  passed to SetText. To reset the cached max size invoke ClearMaxTextSize.
 //
@@ -141,8 +141,8 @@ class VIEWS_EXPORT TextButtonBase : public CustomButton,
   // Call SetText once per string in your set of possible values at button
   // creation time, so that it can contain the largest of them and avoid
   // resizing the button when the text changes.
-  virtual void SetText(const std::wstring& text);
-  std::wstring text() const { return UTF16ToWideHack(text_); }
+  virtual void SetText(const string16& text);
+  const string16& text() const { return text_; }
 
   enum TextAlignment {
     ALIGN_LEFT,
@@ -207,17 +207,11 @@ class VIEWS_EXPORT TextButtonBase : public CustomButton,
   virtual void OnEnabledChanged() OVERRIDE;
   virtual void OnPaint(gfx::Canvas* canvas) OVERRIDE;
 
-  // Text colors.
-  static const SkColor kEnabledColor;
-  static const SkColor kHighlightColor;
-  static const SkColor kDisabledColor;
-  static const SkColor kHoverColor;
-
   // Returns views/TextButton.
   virtual std::string GetClassName() const OVERRIDE;
 
  protected:
-  TextButtonBase(ButtonListener* listener, const std::wstring& text);
+  TextButtonBase(ButtonListener* listener, const string16& text);
 
   // Called when enabled or disabled state changes, or the colors for those
   // states change.
@@ -319,7 +313,7 @@ class VIEWS_EXPORT TextButton : public TextButtonBase {
   // The button's class name.
   static const char kViewClassName[];
 
-  TextButton(ButtonListener* listener, const std::wstring& text);
+  TextButton(ButtonListener* listener, const string16& text);
   virtual ~TextButton();
 
   void set_icon_text_spacing(int icon_text_spacing) {
@@ -349,6 +343,7 @@ class VIEWS_EXPORT TextButton : public TextButtonBase {
   // Overridden from View:
   virtual gfx::Size GetPreferredSize() OVERRIDE;
   virtual std::string GetClassName() const OVERRIDE;
+  virtual void OnPaintFocusBorder(gfx::Canvas* canvas) OVERRIDE;
 
   // Overridden from TextButtonBase:
   virtual void PaintButton(gfx::Canvas* canvas, PaintButtonMode mode) OVERRIDE;
@@ -405,7 +400,7 @@ class VIEWS_EXPORT NativeTextButton : public TextButton {
   static const char kViewClassName[];
 
   NativeTextButton(ButtonListener* listener);
-  NativeTextButton(ButtonListener* listener, const std::wstring& text);
+  NativeTextButton(ButtonListener* listener, const string16& text);
 
   // Overridden from TextButton:
   virtual gfx::Size GetMinimumSize() OVERRIDE;
@@ -427,4 +422,4 @@ class VIEWS_EXPORT NativeTextButton : public TextButton {
 
 }  // namespace views
 
-#endif  // VIEWS_CONTROLS_BUTTON_TEXT_BUTTON_H_
+#endif  // UI_VIEWS_CONTROLS_BUTTON_TEXT_BUTTON_H_

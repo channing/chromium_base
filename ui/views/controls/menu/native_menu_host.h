@@ -2,17 +2,16 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef VIEWS_CONTROLS_MENU_NATIVE_MENU_HOST_H_
-#define VIEWS_CONTROLS_MENU_NATIVE_MENU_HOST_H_
+#ifndef UI_VIEWS_CONTROLS_MENU_NATIVE_MENU_HOST_H_
+#define UI_VIEWS_CONTROLS_MENU_NATIVE_MENU_HOST_H_
+#pragma once
 
 #include "ui/gfx/native_widget_types.h"
 
-namespace gfx {
-class Rect;
-}
-
 namespace views {
+
 class NativeWidget;
+
 namespace internal {
 class NativeMenuHostDelegate;
 }
@@ -32,4 +31,4 @@ class NativeMenuHost {
 
 }  // namespace views
 
-#endif  // VIEWS_CONTROLS_MENU_NATIVE_MENU_HOST_H_
+#endif  // UI_VIEWS_CONTROLS_MENU_NATIVE_MENU_HOST_H_

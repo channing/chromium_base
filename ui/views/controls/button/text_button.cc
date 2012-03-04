@@ -1,4 +1,4 @@
-// Copyright (c) 2011 The Chromium Authors. All rights reserved.
+// Copyright (c) 2012 The Chromium Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -7,7 +7,6 @@
 #include <algorithm>
 
 #include "base/logging.h"
-#include "base/utf_string_conversions.h"
 #include "grit/ui_resources.h"
 #include "ui/base/animation/throb_animation.h"
 #include "ui/base/resource/resource_bundle.h"
@@ -35,23 +34,21 @@ static const int kMinHeightDLUs = 14;
 // Default space between the icon and text.
 static const int kDefaultIconTextSpacing = 5;
 
-// Preferred padding between text and edge
+// Preferred padding between text and edge.
 static const int kPreferredPaddingHorizontal = 6;
 static const int kPreferredPaddingVertical = 5;
 
-// Preferred padding between text and edge for NativeTheme border
+// Preferred padding between text and edge for NativeTheme border.
 static const int kPreferredNativeThemePaddingHorizontal = 12;
 static const int kPreferredNativeThemePaddingVertical = 5;
 
-// static
-const SkColor TextButtonBase::kEnabledColor = SkColorSetRGB(6, 45, 117);
-// static
-const SkColor TextButtonBase::kHighlightColor =
-    SkColorSetARGB(200, 255, 255, 255);
-// static
-const SkColor TextButtonBase::kDisabledColor = SkColorSetRGB(161, 161, 146);
-// static
-const SkColor TextButtonBase::kHoverColor = TextButton::kEnabledColor;
+// By default the focus rect is drawn at the border of the view.
+// For a button, we inset the focus rect by 3 pixels so that it
+// doesn't draw on top of the button's border. This roughly matches
+// how the Windows native focus rect for buttons looks. A subclass
+// that draws a button with different padding may need to
+// override OnPaintFocusBorder and do something different.
+static const int kFocusRectInset = 3;
 
 // How long the hover fade animation should last.
 static const int kHoverAnimationDurationMs = 170;
@@ -141,8 +138,8 @@ void TextButtonBorder::Paint(const View& view, gfx::Canvas* canvas) const {
       // handle the case of having a non-NULL |normal_set_|.
       canvas->SaveLayerAlpha(static_cast<uint8>(
           button->GetAnimation()->CurrentValueBetween(0, 255)));
-      canvas->AsCanvasSkia()->drawARGB(0, 255, 255, 255,
-                                       SkXfermode::kClear_Mode);
+      canvas->GetSkCanvas()->drawARGB(0, 255, 255, 255,
+                                      SkXfermode::kClear_Mode);
       Paint(view, canvas, *set);
       canvas->Restore();
     } else {
@@ -213,7 +210,6 @@ void TextButtonNativeThemeBorder::Paint(const View& view,
   const TextButtonBase* tb = static_cast<const TextButton*>(&view);
   const gfx::NativeTheme* native_theme = gfx::NativeTheme::instance();
   gfx::NativeTheme::Part part = delegate_->GetThemePart();
-  gfx::CanvasSkia* skia_canvas = canvas->AsCanvasSkia();
   gfx::Rect rect(delegate_->GetThemePaintRect());
 
   if (tb->show_multiple_icon_states() &&
@@ -223,19 +219,20 @@ void TextButtonNativeThemeBorder::Paint(const View& view,
     gfx::NativeTheme::ExtraParams prev_extra;
     gfx::NativeTheme::State prev_state =
         delegate_->GetBackgroundThemeState(&prev_extra);
-    native_theme->Paint(skia_canvas, part, prev_state, rect, prev_extra);
+    native_theme->Paint(
+        canvas->GetSkCanvas(), part, prev_state, rect, prev_extra);
 
     // Composite foreground state above it.
     gfx::NativeTheme::ExtraParams extra;
     gfx::NativeTheme::State state = delegate_->GetForegroundThemeState(&extra);
     int alpha = delegate_->GetThemeAnimation()->CurrentValueBetween(0, 255);
-    skia_canvas->SaveLayerAlpha(static_cast<uint8>(alpha));
-    native_theme->Paint(skia_canvas, part, state, rect, extra);
-    skia_canvas->Restore();
+    canvas->SaveLayerAlpha(static_cast<uint8>(alpha));
+    native_theme->Paint(canvas->GetSkCanvas(), part, state, rect, extra);
+    canvas->Restore();
   } else {
     gfx::NativeTheme::ExtraParams extra;
     gfx::NativeTheme::State state = delegate_->GetThemeState(&extra);
-    native_theme->Paint(skia_canvas, part, state, rect, extra);
+    native_theme->Paint(canvas->GetSkCanvas(), part, state, rect, extra);
   }
 }
 
@@ -250,17 +247,21 @@ void TextButtonNativeThemeBorder::GetInsets(gfx::Insets* insets) const {
 ////////////////////////////////////////////////////////////////////////////////
 // TextButtonBase, public:
 
-TextButtonBase::TextButtonBase(ButtonListener* listener,
-                               const std::wstring& text)
+TextButtonBase::TextButtonBase(ButtonListener* listener, const string16& text)
     : CustomButton(listener),
       alignment_(ALIGN_LEFT),
       font_(ResourceBundle::GetSharedInstance().GetFont(
           ResourceBundle::BaseFont)),
-      color_(kEnabledColor),
-      color_enabled_(kEnabledColor),
-      color_disabled_(kDisabledColor),
-      color_highlight_(kHighlightColor),
-      color_hover_(kHoverColor),
+      color_(gfx::NativeTheme::instance()->GetSystemColor(
+          gfx::NativeTheme::kColorId_TextButtonEnabledColor)),
+      color_enabled_(gfx::NativeTheme::instance()->GetSystemColor(
+          gfx::NativeTheme::kColorId_TextButtonEnabledColor)),
+      color_disabled_(gfx::NativeTheme::instance()->GetSystemColor(
+          gfx::NativeTheme::kColorId_TextButtonDisabledColor)),
+      color_highlight_(gfx::NativeTheme::instance()->GetSystemColor(
+          gfx::NativeTheme::kColorId_TextButtonHighlightColor)),
+      color_hover_(gfx::NativeTheme::instance()->GetSystemColor(
+          gfx::NativeTheme::kColorId_TextButtonHoverColor)),
       text_halo_color_(0),
       has_text_halo_(false),
       active_text_shadow_color_(0),
@@ -284,15 +285,15 @@ void TextButtonBase::SetIsDefault(bool is_default) {
     return;
   is_default_ = is_default;
   if (is_default_)
-    AddAccelerator(Accelerator(ui::VKEY_RETURN, false, false, false));
+    AddAccelerator(ui::Accelerator(ui::VKEY_RETURN, false, false, false));
   else
-    RemoveAccelerator(Accelerator(ui::VKEY_RETURN, false, false, false));
+    RemoveAccelerator(ui::Accelerator(ui::VKEY_RETURN, false, false, false));
   SchedulePaint();
 }
 
-void TextButtonBase::SetText(const std::wstring& text) {
-  text_ = WideToUTF16Hack(text);
-  SetAccessibleName(WideToUTF16Hack(text));
+void TextButtonBase::SetText(const string16& text) {
+  text_ = text;
+  SetAccessibleName(text);
   UpdateTextSize();
 }
 
@@ -391,7 +392,7 @@ const ui::Animation* TextButtonBase::GetAnimation() const {
 }
 
 void TextButtonBase::UpdateColor() {
-  color_ = View::IsEnabled() ? color_enabled_ : color_disabled_;
+  color_ = enabled() ? color_enabled_ : color_disabled_;
 }
 
 void TextButtonBase::UpdateTextSize() {
@@ -449,7 +450,9 @@ void TextButtonBase::GetExtraParams(
   params->button.is_default = false;
   params->button.has_border = false;
   params->button.classic_state = 0;
-  params->button.background_color = kEnabledColor;
+  params->button.background_color =
+      gfx::NativeTheme::instance()->GetSystemColor(
+          gfx::NativeTheme::kColorId_TextButtonBackgroundColor);
 }
 
 gfx::Rect TextButtonBase::GetContentBounds(int extra_width) const {
@@ -609,7 +612,9 @@ gfx::NativeTheme::State TextButtonBase::GetThemeState(
 }
 
 const ui::Animation* TextButtonBase::GetThemeAnimation() const {
-#if defined(OS_WIN)
+#if defined(USE_AURA)
+  return hover_animation_.get();
+#elif defined(OS_WIN)
   return gfx::NativeThemeWin::instance()->IsThemingActive()
       ? hover_animation_.get() : NULL;
 #else
@@ -635,8 +640,7 @@ gfx::NativeTheme::State TextButtonBase::GetForegroundThemeState(
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-TextButton::TextButton(ButtonListener* listener,
-                       const std::wstring& text)
+TextButton::TextButton(ButtonListener* listener, const string16& text)
     : TextButtonBase(listener, text),
       icon_placement_(ICON_ON_LEFT),
       has_hover_icon_(false),
@@ -651,16 +655,19 @@ TextButton::~TextButton() {
 
 void TextButton::SetIcon(const SkBitmap& icon) {
   icon_ = icon;
+  SchedulePaint();
 }
 
 void TextButton::SetHoverIcon(const SkBitmap& icon) {
   icon_hover_ = icon;
   has_hover_icon_ = true;
+  SchedulePaint();
 }
 
 void TextButton::SetPushedIcon(const SkBitmap& icon) {
   icon_pushed_ = icon;
   has_pushed_icon_ = true;
+  SchedulePaint();
 }
 
 gfx::Size TextButton::GetPreferredSize() {
@@ -728,6 +735,14 @@ std::string TextButton::GetClassName() const {
   return kViewClassName;
 }
 
+void TextButton::OnPaintFocusBorder(gfx::Canvas* canvas) {
+  if (HasFocus() && (focusable() || IsAccessibilityFocusable())) {
+    gfx::Rect rect(GetLocalBounds());
+    rect.Inset(kFocusRectInset, kFocusRectInset);
+    canvas->DrawFocusRect(rect);
+  }
+}
+
 gfx::NativeTheme::Part TextButton::GetThemePart() const {
   return gfx::NativeTheme::kPushButton;
 }
@@ -775,12 +790,12 @@ const SkBitmap& TextButton::GetImageToPaint() const {
 ////////////////////////////////////////////////////////////////////////////////
 
 NativeTextButton::NativeTextButton(ButtonListener* listener)
-    : TextButton(listener, std::wstring()) {
+    : TextButton(listener, string16()) {
   Init();
 }
 
 NativeTextButton::NativeTextButton(ButtonListener* listener,
-                                   const std::wstring& text)
+                                   const string16& text)
     : TextButton(listener, text) {
   Init();
 }
@@ -809,12 +824,10 @@ std::string NativeTextButton::GetClassName() const {
 
 void NativeTextButton::OnPaintFocusBorder(gfx::Canvas* canvas) {
 #if defined(OS_WIN)
-  // On windows, make sure the focus border is inset wrt the entire button so
-  // that the native text button appears more like a windows button.
-  if ((IsFocusable() || IsAccessibilityFocusableInRootView()) && HasFocus()) {
+  if (HasFocus() && (focusable() || IsAccessibilityFocusable())) {
     gfx::Rect rect(GetLocalBounds());
-    rect.Inset(3, 3);
-    canvas->DrawFocusRect(rect.x(), rect.y(), rect.width(), rect.height());
+    rect.Inset(kFocusRectInset, kFocusRectInset);
+    canvas->DrawFocusRect(rect);
   }
 #else
   TextButton::OnPaintFocusBorder(canvas);

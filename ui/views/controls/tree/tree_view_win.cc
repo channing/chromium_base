@@ -1,8 +1,8 @@
-// Copyright (c) 2011 The Chromium Authors. All rights reserved.
+// Copyright (c) 2012 The Chromium Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "ui/views/controls/tree/tree_view.h"
+#include "ui/views/controls/tree/tree_view_win.h"
 
 #include <vector>
 
@@ -11,6 +11,7 @@
 #include "base/stl_util.h"
 #include "base/win/win_util.h"
 #include "grit/ui_resources.h"
+#include "ui/base/accelerators/accelerator.h"
 #include "ui/base/accessibility/accessible_view_state.h"
 #include "ui/base/keycodes/keyboard_code_conversion_win.h"
 #include "ui/base/keycodes/keyboard_codes.h"
@@ -22,6 +23,7 @@
 #include "ui/gfx/favicon_size.h"
 #include "ui/gfx/icon_util.h"
 #include "ui/gfx/point.h"
+#include "ui/views/controls/tree/tree_view_controller.h"
 #include "ui/views/focus/focus_manager.h"
 #include "ui/views/widget/widget.h"
 
@@ -53,6 +55,10 @@ TreeView::TreeView()
 
 TreeView::~TreeView() {
   Cleanup();
+}
+
+View* TreeView::CreateParentIfNecessary() {
+  return this;
 }
 
 void TreeView::GetAccessibleState(ui::AccessibleViewState* state) {
@@ -366,9 +372,9 @@ LRESULT TreeView::OnNotify(int w_param, LPNMHDR l_param) {
         if (info->item.mask & TVIF_CHILDREN)
           info->item.cChildren = model_->GetChildCount(details->node);
         if (info->item.mask & TVIF_TEXT) {
-          std::wstring text = details->node->GetTitle();
           DCHECK(info->item.cchTextMax);
 
+          string16 text = details->node->GetTitle();
           // Adjust the string direction if such adjustment is required.
           base::i18n::AdjustStringForLocaleDirection(&text);
 
@@ -444,15 +450,6 @@ LRESULT TreeView::OnNotify(int w_param, LPNMHDR l_param) {
       return 0;
     }
 
-    case TVN_KEYDOWN:
-      if (controller_) {
-        NMTVKEYDOWN* key_down_message =
-            reinterpret_cast<NMTVKEYDOWN*>(l_param);
-        controller_->OnTreeViewKeyDown(
-            ui::KeyboardCodeForWindowsKeyCode(key_down_message->wVKey));
-      }
-      break;
-
     default:
       break;
   }
@@ -474,10 +471,10 @@ bool TreeView::OnKeyDown(ui::KeyboardCode virtual_key_code) {
   } else if (virtual_key_code == ui::VKEY_RETURN && !process_enter_) {
     Widget* widget = GetWidget();
     DCHECK(widget);
-    Accelerator accelerator(Accelerator(virtual_key_code,
-                                        base::win::IsShiftPressed(),
-                                        base::win::IsCtrlPressed(),
-                                        base::win::IsAltPressed()));
+    ui::Accelerator accelerator(ui::Accelerator(virtual_key_code,
+                                                base::win::IsShiftPressed(),
+                                                base::win::IsCtrlPressed(),
+                                                base::win::IsAltPressed()));
     GetFocusManager()->ProcessAccelerator(accelerator);
     return true;
   }
@@ -697,9 +694,7 @@ HIMAGELIST TreeView::CreateImageList() {
       // IDR_FOLDER_CLOSED if they aren't already.
       if (model_images[i].width() != width ||
           model_images[i].height() != height) {
-        gfx::CanvasSkia canvas(width, height, false);
-        // Make the background completely transparent.
-        canvas.drawColor(SK_ColorBLACK, SkXfermode::kClear_Mode);
+        gfx::CanvasSkia canvas(gfx::Size(width, height), false);
 
         // Draw our icons into this canvas.
         int height_offset = (height - model_images[i].height()) / 2;
@@ -752,7 +747,7 @@ LRESULT CALLBACK TreeView::TreeWndProc(HWND window,
       if (canvas.isEmpty())
         return 0;
 
-      HDC dc = skia::BeginPlatformPaint(&canvas);
+      HDC dc = skia::BeginPlatformPaint(canvas.sk_canvas());
       if (base::i18n::IsRTL()) {
         // gfx::CanvasSkia ends up configuring the DC with a mode of
         // GM_ADVANCED. For some reason a graphics mode of ADVANCED triggers
@@ -786,7 +781,7 @@ LRESULT CALLBACK TreeView::TreeWndProc(HWND window,
         // over we copy the right bits.
         SetViewportOrgEx(dc, 0, 0, NULL);
       }
-      skia::EndPlatformPaint(&canvas);
+      skia::EndPlatformPaint(canvas.sk_canvas());
       return 0;
     }
 

@@ -11,15 +11,15 @@
 
 namespace views {
 
+const int kCheckboxLabelSpacing = 4;
+
 // static
 const char Checkbox::kViewClassName[] = "views/Checkbox";
-
-static const int kCheckboxLabelSpacing = 4;
 
 ////////////////////////////////////////////////////////////////////////////////
 // Checkbox, public:
 
-Checkbox::Checkbox(const std::wstring& label)
+Checkbox::Checkbox(const string16& label)
     : TextButtonBase(NULL, label),
       checked_(false) {
   set_border(new TextButtonNativeThemeBorder(this));
@@ -61,13 +61,12 @@ void Checkbox::GetAccessibleState(ui::AccessibleViewState* state) {
 }
 
 void Checkbox::OnPaintFocusBorder(gfx::Canvas* canvas) {
-  if (HasFocus() && (IsFocusable() || IsAccessibilityFocusableInRootView())) {
+  if (HasFocus() && (focusable() || IsAccessibilityFocusable())) {
     gfx::Rect bounds(GetTextBounds());
     // Increate the bounding box by one on each side so that that focus border
     // does not draw on top of the letters.
     bounds.Inset(-1, -1, -1, -1);
-    canvas->DrawFocusRect(bounds.x(), bounds.y(), bounds.width(),
-                          bounds.height());
+    canvas->DrawFocusRect(bounds);
   }
 }
 

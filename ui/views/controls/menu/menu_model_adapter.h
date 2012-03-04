@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef VIEWS_CONTROLS_MENU_MENU_MODEL_ADAPTER_H_
-#define VIEWS_CONTROLS_MENU_MENU_MODEL_ADAPTER_H_
+#ifndef UI_VIEWS_CONTROLS_MENU_MENU_MODEL_ADAPTER_H_
+#define UI_VIEWS_CONTROLS_MENU_MENU_MODEL_ADAPTER_H_
 #pragma once
 
 #include <map>
@@ -46,8 +46,8 @@ class VIEWS_EXPORT MenuModelAdapter : public MenuDelegate {
   virtual bool IsTriggerableEvent(MenuItemView* source,
                                   const MouseEvent& e) OVERRIDE;
   virtual bool GetAccelerator(int id,
-                              views::Accelerator* accelerator) OVERRIDE;
-  virtual std::wstring GetLabel(int id) const OVERRIDE;
+                              ui::Accelerator* accelerator) OVERRIDE;
+  virtual string16 GetLabel(int id) const OVERRIDE;
   virtual const gfx::Font& GetLabelFont(int id) const OVERRIDE;
   virtual bool IsCommandEnabled(int id) const OVERRIDE;
   virtual bool IsItemChecked(int id) const OVERRIDE;
@@ -77,4 +77,4 @@ class VIEWS_EXPORT MenuModelAdapter : public MenuDelegate {
 
 }  // namespace views
 
-#endif  // VIEWS_CONTROLS_MENU_MENU_MODEL_ADAPTER_H_
+#endif  // UI_VIEWS_CONTROLS_MENU_MENU_MODEL_ADAPTER_H_

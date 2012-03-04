@@ -1,9 +1,9 @@
-// Copyright (c) 2011 The Chromium Authors. All rights reserved.
+// Copyright (c) 2012 The Chromium Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef VIEWS_CONTROLS_MENU_MENU_HOST_ROOT_VIEW_H_
-#define VIEWS_CONTROLS_MENU_MENU_HOST_ROOT_VIEW_H_
+#ifndef UI_VIEWS_CONTROLS_MENU_MENU_HOST_ROOT_VIEW_H_
+#define UI_VIEWS_CONTROLS_MENU_MENU_HOST_ROOT_VIEW_H_
 #pragma once
 
 #include "ui/views/widget/root_view.h"
@@ -31,6 +31,7 @@ class MenuHostRootView : public internal::RootView {
   virtual void OnMouseReleased(const MouseEvent& event) OVERRIDE;
   virtual void OnMouseMoved(const MouseEvent& event) OVERRIDE;
   virtual bool OnMouseWheel(const MouseWheelEvent& event) OVERRIDE;
+  virtual ui::GestureStatus OnGestureEvent(const GestureEvent& event) OVERRIDE;
 
  private:
   // Returns the MenuController for this MenuHostRootView.
@@ -47,4 +48,4 @@ class MenuHostRootView : public internal::RootView {
 
 }  // namespace views
 
-#endif  // VIEWS_CONTROLS_MENU_MENU_HOST_ROOT_VIEW_H_
+#endif  // UI_VIEWS_CONTROLS_MENU_MENU_HOST_ROOT_VIEW_H_

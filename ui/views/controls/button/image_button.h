@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef VIEWS_CONTROLS_BUTTON_IMAGE_BUTTON_H_
-#define VIEWS_CONTROLS_BUTTON_IMAGE_BUTTON_H_
+#ifndef UI_VIEWS_CONTROLS_BUTTON_IMAGE_BUTTON_H_
+#define UI_VIEWS_CONTROLS_BUTTON_IMAGE_BUTTON_H_
 #pragma once
 
 #include "third_party/skia/include/core/SkBitmap.h"
@@ -96,10 +96,11 @@ class VIEWS_EXPORT ToggleImageButton : public ImageButton {
   void SetToggledTooltipText(const string16& tooltip);
 
   // Overridden from ImageButton:
-  virtual void SetImage(ButtonState aState, const SkBitmap* anImage);
+  virtual void SetImage(ButtonState aState, const SkBitmap* anImage) OVERRIDE;
 
   // Overridden from View:
-  virtual bool GetTooltipText(const gfx::Point& p, string16* tooltip);
+  virtual bool GetTooltipText(const gfx::Point& p,
+                              string16* tooltip) const OVERRIDE;
 
  private:
   // The parent class's images_ member is used for the current images,
@@ -119,4 +120,4 @@ class VIEWS_EXPORT ToggleImageButton : public ImageButton {
 
 }  // namespace views
 
-#endif  // VIEWS_CONTROLS_BUTTON_IMAGE_BUTTON_H_
+#endif  // UI_VIEWS_CONTROLS_BUTTON_IMAGE_BUTTON_H_

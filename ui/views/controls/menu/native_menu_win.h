@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef VIEWS_CONTROLS_MENU_NATIVE_MENU_WIN_H_
-#define VIEWS_CONTROLS_MENU_NATIVE_MENU_WIN_H_
+#ifndef UI_VIEWS_CONTROLS_MENU_NATIVE_MENU_WIN_H_
+#define UI_VIEWS_CONTROLS_MENU_NATIVE_MENU_WIN_H_
 #pragma once
 
 #include <vector>
@@ -11,6 +11,7 @@
 #include "base/basictypes.h"
 #include "base/compiler_specific.h"
 #include "base/memory/scoped_ptr.h"
+#include "base/memory/weak_ptr.h"
 #include "base/observer_list.h"
 #include "ui/base/models/simple_menu_model.h"
 #include "ui/views/controls/menu/menu_wrapper.h"
@@ -70,7 +71,7 @@ class VIEWS_EXPORT NativeMenuWin : public MenuWrapper {
   // Sets the label of the item at the specified index.
   void SetMenuItemLabel(int menu_index,
                         int model_index,
-                        const std::wstring& label);
+                        const string16& label);
 
   // Updates the local data structure with the correctly formatted version of
   // |label| at the specified model_index, and adds string data to |mii| if
@@ -78,7 +79,7 @@ class VIEWS_EXPORT NativeMenuWin : public MenuWrapper {
   // of the peculiarities of the Windows menu API.
   void UpdateMenuItemInfoForString(MENUITEMINFO* mii,
                                    int model_index,
-                                   const std::wstring& label);
+                                   const string16& label);
 
   // Returns the alignment flags to be passed to TrackPopupMenuEx, based on the
   // supplied alignment and the UI text direction.
@@ -142,7 +143,7 @@ class VIEWS_EXPORT NativeMenuWin : public MenuWrapper {
   // See comment in MenuMessageHook for details on these.
   NativeMenuWin* menu_to_select_;
   int position_to_select_;
-  ScopedRunnableMethodFactory<NativeMenuWin> menu_to_select_factory_;
+  base::WeakPtrFactory<NativeMenuWin> menu_to_select_factory_;
 
   // If we're a submenu, this is our parent.
   NativeMenuWin* parent_;
@@ -180,4 +181,4 @@ class VIEWS_EXPORT SystemMenuModel : public ui::SimpleMenuModel {
 
 }  // namespace views
 
-#endif  // VIEWS_CONTROLS_MENU_NATIVE_MENU_WIN_H_
+#endif  // UI_VIEWS_CONTROLS_MENU_NATIVE_MENU_WIN_H_

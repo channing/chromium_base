@@ -13,18 +13,14 @@
 #include "ui/base/accessibility/accessible_view_state.h"
 #include "ui/gfx/canvas_skia.h"
 #include "ui/gfx/color_utils.h"
+#include "ui/gfx/native_theme.h"
 #include "ui/views/border.h"
-#include "third_party/skia/include/effects/SkGradientShader.h"
 #include "ui/views/controls/menu/menu_config.h"
 #include "ui/views/controls/menu/menu_controller.h"
 #include "ui/views/controls/menu/menu_item_view.h"
 #include "ui/views/controls/menu/submenu_view.h"
 
-#if defined(OS_WIN)
-#include "ui/gfx/native_theme.h"
-
 using gfx::NativeTheme;
-#endif
 
 // Height of the scroll arrow.
 // This goes up to 4 with large fonts, but this is close enough for now.
@@ -81,14 +77,14 @@ class MenuScrollButton : public View {
   virtual void OnPaint(gfx::Canvas* canvas) {
     const MenuConfig& config = MenuConfig::instance();
 
-#if defined(OS_WIN)
     // The background.
     gfx::Rect item_bounds(0, 0, width(), height());
     NativeTheme::ExtraParams extra;
     extra.menu_item.is_selected = false;
-    NativeTheme::instance()->Paint(canvas->AsCanvasSkia(),
+    NativeTheme::instance()->Paint(canvas->GetSkCanvas(),
                                    NativeTheme::kMenuItemBackground,
                                    NativeTheme::kNormal, item_bounds, extra);
+#if defined(OS_WIN)
     SkColor arrow_color = color_utils::GetSysSkColor(COLOR_MENUTEXT);
 #else
     SkColor arrow_color = SK_ColorBLACK;
@@ -103,7 +99,7 @@ class MenuScrollButton : public View {
       y += config.scroll_arrow_height;
     }
     for (int i = 0; i < config.scroll_arrow_height; ++i, --x, y += delta_y)
-      canvas->FillRectInt(arrow_color, x, y, (i * 2) + 1, 1);
+      canvas->FillRect(arrow_color, gfx::Rect(x, y, (i * 2) + 1, 1));
   }
 
  private:
@@ -184,43 +180,13 @@ void MenuScrollViewContainer::OnPaintBackground(gfx::Canvas* canvas) {
 
 #if defined(OS_WIN)
   HDC dc = canvas->BeginPlatformPaint();
+#endif
   gfx::Rect bounds(0, 0, width(), height());
   NativeTheme::ExtraParams extra;
-  NativeTheme::instance()->Paint(canvas->AsCanvasSkia(),
+  NativeTheme::instance()->Paint(canvas->GetSkCanvas(),
       NativeTheme::kMenuPopupBackground, NativeTheme::kNormal, bounds, extra);
+#if defined(OS_WIN)
   canvas->EndPlatformPaint();
-#elif defined(OS_CHROMEOS)
-  static const SkColor kGradientColors[2] = {
-      SK_ColorWHITE,
-      SkColorSetRGB(0xF0, 0xF0, 0xF0)
-  };
-
-  static const SkScalar kGradientPoints[2] = {
-      SkIntToScalar(0),
-      SkIntToScalar(1)
-  };
-
-  SkPoint points[2];
-  points[0].set(SkIntToScalar(0), SkIntToScalar(0));
-  points[1].set(SkIntToScalar(0), SkIntToScalar(height()));
-
-  SkShader* shader = SkGradientShader::CreateLinear(points,
-      kGradientColors, kGradientPoints, arraysize(kGradientPoints),
-      SkShader::kRepeat_TileMode);
-  DCHECK(shader);
-
-  SkPaint paint;
-  paint.setShader(shader);
-  shader->unref();
-
-  paint.setStyle(SkPaint::kFill_Style);
-  paint.setXfermodeMode(SkXfermode::kSrc_Mode);
-
-  canvas->DrawRectInt(0, 0, width(), height(), paint);
-#else
-  // This is the same as COLOR_TOOLBAR.
-  canvas->AsCanvasSkia()->drawColor(SkColorSetRGB(210, 225, 246),
-                                    SkXfermode::kSrc_Mode);
 #endif
 }
 
@@ -230,7 +196,7 @@ void MenuScrollViewContainer::Layout() {
   int y = insets.top();
   int width = View::width() - insets.width();
   int content_height = height() - insets.height();
-  if (!scroll_up_button_->IsVisible()) {
+  if (!scroll_up_button_->visible()) {
     scroll_view_->SetBounds(x, y, width, content_height);
     scroll_view_->Layout();
     return;
