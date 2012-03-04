@@ -9,6 +9,7 @@
 #include "ui/gfx/native_widget_types.h"
 #include "ui/gfx/point.h"
 #include "ui/gfx/rect.h"
+#include "ui/gfx/size.h"
 
 namespace gfx {
 
@@ -17,6 +18,16 @@ namespace gfx {
 // TODO(erikkay) add more of those methods here
 class UI_EXPORT Screen {
  public:
+  virtual ~Screen() {}
+
+#if defined(USE_AURA)
+  // Sets the instance to use. This takes owernship of |screen|, deleting the
+  // old instance. This is used on aura to avoid circular dependencies between
+  // ui and aura.
+  static void SetInstance(Screen* screen);
+#endif
+
+  // Returns the current absolute position of the mouse pointer.
   static gfx::Point GetCursorScreenPoint();
 
   // Returns the work area of the monitor nearest the specified window.
@@ -32,8 +43,46 @@ class UI_EXPORT Screen {
   // the monitor nearest the specified point.
   static gfx::Rect GetMonitorAreaNearestPoint(const gfx::Point& point);
 
+  // Returns the bounds of the work area of the primary monitor.
+  static gfx::Rect GetPrimaryMonitorWorkArea();
+
+  // Returns the bounds of the primary monitor.
+  static gfx::Rect GetPrimaryMonitorBounds();
+
+  // Returns the bounds of the work area of the monitor that most closely
+  // intersects the provided bounds.
+  static gfx::Rect GetMonitorWorkAreaMatching(
+      const gfx::Rect& match_rect);
+
   // Returns the window under the cursor.
   static gfx::NativeWindow GetWindowAtCursorScreenPoint();
+
+  // Returns the dimensions of the primary monitor in pixels.
+  static gfx::Size GetPrimaryMonitorSize();
+
+  // Returns the number of monitors.
+  // Mirrored displays are excluded; this method is intended to return the
+  // number of distinct, usable displays.
+  static int GetNumMonitors();
+
+ protected:
+  virtual gfx::Point GetCursorScreenPointImpl() = 0;
+  virtual gfx::Rect GetMonitorWorkAreaNearestWindowImpl(
+      gfx::NativeView view) = 0;
+  virtual gfx::Rect GetMonitorAreaNearestWindowImpl(
+      gfx::NativeView view) = 0;
+  virtual gfx::Rect GetMonitorWorkAreaNearestPointImpl(
+      const gfx::Point& point) = 0;
+  virtual gfx::Rect GetMonitorAreaNearestPointImpl(const gfx::Point& point) = 0;
+  virtual gfx::NativeWindow GetWindowAtCursorScreenPointImpl() = 0;
+  virtual gfx::Size GetPrimaryMonitorSizeImpl() = 0;
+  virtual int GetNumMonitorsImpl() = 0;
+
+private:
+#if defined(USE_AURA)
+  // The singleton screen instance. Only used on aura.
+  static Screen* instance_;
+#endif
 };
 
 }  // namespace gfx

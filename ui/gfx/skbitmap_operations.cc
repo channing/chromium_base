@@ -1,4 +1,4 @@
-// Copyright (c) 2009 The Chromium Authors. All rights reserved.
+// Copyright (c) 2011 The Chromium Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -149,7 +149,8 @@ SkBitmap SkBitmapOperations::CreateMaskedBitmap(const SkBitmap& rgb,
 
     for (int x = 0; x < masked.width(); ++x) {
       SkColor rgb_pixel = SkUnPreMultiply::PMColorToColor(rgb_row[x]);
-      int alpha = SkAlphaMul(SkColorGetA(rgb_pixel), SkColorGetA(alpha_row[x]));
+      SkColor alpha_pixel = SkUnPreMultiply::PMColorToColor(alpha_row[x]);
+      int alpha = SkAlphaMul(SkColorGetA(rgb_pixel), SkColorGetA(alpha_pixel));
       dst_row[x] = SkColorSetARGB(alpha,
                                   SkAlphaMul(SkColorGetR(rgb_pixel), alpha),
                                   SkAlphaMul(SkColorGetG(rgb_pixel), alpha),
@@ -718,13 +719,13 @@ SkBitmap SkBitmapOperations::UnPreMultiply(const SkBitmap& bitmap) {
 SkBitmap SkBitmapOperations::CreateTransposedBtmap(const SkBitmap& image) {
   DCHECK(image.config() == SkBitmap::kARGB_8888_Config);
 
-  SkAutoLockPixels lock_image(image);
-
   SkBitmap transposed;
   transposed.setConfig(
       SkBitmap::kARGB_8888_Config, image.height(), image.width(), 0);
   transposed.allocPixels();
-  transposed.eraseARGB(0, 0, 0, 0);
+
+  SkAutoLockPixels lock_image(image);
+  SkAutoLockPixels lock_transposed(transposed);
 
   for (int y = 0; y < image.height(); ++y) {
     uint32* image_row = image.getAddr32(0, y);
