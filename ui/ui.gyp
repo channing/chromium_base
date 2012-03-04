@@ -105,6 +105,8 @@
         'base/ime/composition_text.h',
         'base/ime/composition_underline.h',
         'base/ime/text_input_type.h',
+        'base/keycodes/keyboard_code_conversion.cc',
+        'base/keycodes/keyboard_code_conversion.h',
         'base/keycodes/keyboard_code_conversion_win.cc',
         'base/keycodes/keyboard_code_conversion_win.h',
         'base/keycodes/keyboard_codes.h',
