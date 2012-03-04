@@ -145,6 +145,7 @@
         'gfx/color_analysis.cc',
         'gfx/color_analysis.h',
         'gfx/empty.cc',
+        'gfx/favicon_size.cc',
         'gfx/favicon_size.h',
         'gfx/gdi_util.cc',
         'gfx/gdi_util.h',
