@@ -1,4 +1,4 @@
-// Copyright (c) 2011 The Chromium Authors. All rights reserved.
+// Copyright (c) 2012 The Chromium Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -281,16 +281,6 @@ void DivideRect(const gfx::Rect& rect,
 
 namespace gfx {
 
-CanvasSkia::CanvasSkia(int width, int height, bool is_opaque)
-    : skia::PlatformCanvas(width, height, is_opaque) {
-}
-
-CanvasSkia::CanvasSkia() : skia::PlatformCanvas() {
-}
-
-CanvasSkia::~CanvasSkia() {
-}
-
 // static
 void CanvasSkia::SizeStringInt(const string16& text,
                                const gfx::Font& font,
@@ -309,7 +299,9 @@ void CanvasSkia::SizeStringInt(const string16& text,
     // DrawText() can run extremely slowly (e.g. several seconds).  So in this
     // case, we turn character breaking off to get a more accurate "desired"
     // width and avoid the slowdown.
-    if (flags & (gfx::Canvas::MULTI_LINE | gfx::Canvas::CHARACTER_BREAK))
+    int multiline_charbreak =
+        gfx::Canvas::MULTI_LINE | gfx::Canvas::CHARACTER_BREAK;
+    if ((flags & multiline_charbreak) == multiline_charbreak)
       flags &= ~gfx::Canvas::CHARACTER_BREAK;
 
     // Weird undocumented behavior: if the width is 0, DoDrawText() won't
@@ -336,7 +328,7 @@ void CanvasSkia::DrawStringInt(const string16& text,
                                int x, int y, int w, int h,
                                int flags) {
   SkRect fclip;
-  if (!getClipBounds(&fclip))
+  if (!canvas_->getClipBounds(&fclip))
     return;
   RECT text_bounds = { x, y, x + w, y + h };
   SkIRect clip;
@@ -354,7 +346,7 @@ void CanvasSkia::DrawStringInt(const string16& text,
   HDC dc;
   HFONT old_font;
   {
-    skia::ScopedPlatformPaint scoped_platform_paint(this);
+    skia::ScopedPlatformPaint scoped_platform_paint(canvas_);
     dc = scoped_platform_paint.GetPlatformSurface();
     SetBkMode(dc, TRANSPARENT);
     old_font = (HFONT)SelectObject(dc, font);
@@ -373,7 +365,7 @@ void CanvasSkia::DrawStringInt(const string16& text,
   // Windows will have cleared the alpha channel of the text we drew. Assume
   // we're drawing to an opaque surface, or at least the text rect area is
   // opaque.
-  skia::MakeOpaque(this, clip.fLeft, clip.fTop, clip.width(),
+  skia::MakeOpaque(canvas_, clip.fLeft, clip.fTop, clip.width(),
                    clip.height());
 }
 
@@ -425,10 +417,11 @@ void CanvasSkia::DrawStringWithHalo(const string16& text,
 
   // Create a temporary buffer filled with the halo color. It must leave room
   // for the 1-pixel border around the text.
-  CanvasSkia text_canvas(w + 2, h + 2, true);
+  gfx::Size size(w + 2, h + 2);
+  CanvasSkia text_canvas(size, true);
   SkPaint bkgnd_paint;
   bkgnd_paint.setColor(halo_color);
-  text_canvas.DrawRectInt(0, 0, w + 2, h + 2, bkgnd_paint);
+  text_canvas.DrawRect(gfx::Rect(gfx::Point(), size), bkgnd_paint);
 
   // Draw the text into the temporary buffer. This will have correct
   // ClearType since the background color is the same as the halo color.
@@ -438,11 +431,11 @@ void CanvasSkia::DrawStringWithHalo(const string16& text,
   // opaque. We have to do this first since pixelShouldGetHalo will check for
   // 0 to see if a pixel has been modified to transparent, and black text that
   // Windows draw will look transparent to it!
-  skia::MakeOpaque(&text_canvas, 0, 0, w + 2, h + 2);
+  skia::MakeOpaque(text_canvas.sk_canvas(), 0, 0, size.width(), size.height());
 
   uint32_t halo_premul = SkPreMultiplyColor(halo_color);
   SkBitmap& text_bitmap = const_cast<SkBitmap&>(
-      skia::GetTopDevice(text_canvas)->accessBitmap(true));
+      skia::GetTopDevice(*text_canvas.sk_canvas())->accessBitmap(true));
   for (int cur_y = 0; cur_y < h + 2; cur_y++) {
     uint32_t* text_row = text_bitmap.getAddr32(0, cur_y);
     for (int cur_x = 0; cur_x < w + 2; cur_x++) {
@@ -461,11 +454,6 @@ void CanvasSkia::DrawStringWithHalo(const string16& text,
   DrawBitmapInt(text_bitmap, x - 1, y - 1);
 }
 
-ui::TextureID CanvasSkia::GetTextureID() {
-  // TODO(wjmaclean)
-  return 0;
-}
-
 void CanvasSkia::DrawFadeTruncatingString(
       const string16& text,
       CanvasSkia::TruncateFadeMode truncate_mode,
@@ -476,8 +464,8 @@ void CanvasSkia::DrawFadeTruncatingString(
   int flags = NO_ELLIPSIS;
 
   // If the whole string fits in the destination then just draw it directly.
-  int total_string_width;
-  int total_string_height;
+  int total_string_width = 0;
+  int total_string_height = 0;
   SizeStringInt(text, font, &total_string_width, &total_string_height,
                 flags | TEXT_VALIGN_TOP);
 
@@ -541,8 +529,8 @@ void CanvasSkia::DrawFadeTruncatingString(
 
   // Move the origin to |display_rect.origin()|. This simplifies all the
   // drawing so that both the source and destination can be (0,0).
-  save(kMatrix_SaveFlag);
-  TranslateInt(display_rect.x(), display_rect.y());
+  canvas_->save(SkCanvas::kMatrix_SaveFlag);
+  Translate(display_rect.origin());
 
   gfx::Rect solid_part(gfx::Point(), display_rect.size());
   gfx::Rect head_part;
@@ -565,7 +553,7 @@ void CanvasSkia::DrawFadeTruncatingString(
       display_rect.width(), display_rect.height(), false));
 
   {
-    skia::ScopedPlatformPaint scoped_platform_paint(this);
+    skia::ScopedPlatformPaint scoped_platform_paint(canvas_);
     HDC hdc = scoped_platform_paint.GetPlatformSurface();
     if (is_truncating_head)
       DrawTextGradientPart(hdc, gradient_canvas.get(), text, color,
@@ -578,15 +566,14 @@ void CanvasSkia::DrawFadeTruncatingString(
   }
 
   // Draw the solid part.
-  save(kClip_SaveFlag);
-  ClipRectInt(solid_part.x(), solid_part.y(),
-              solid_part.width(), solid_part.height());
+  canvas_->save(SkCanvas::kClip_SaveFlag);
+  ClipRect(solid_part);
   DrawStringInt(text, font, color,
                 text_rect.x(), text_rect.y(),
                 text_rect.width(), text_rect.height(),
                 flags);
-  restore();
-  restore();
+  canvas_->restore();
+  canvas_->restore();
 }
 
 }  // namespace gfx
