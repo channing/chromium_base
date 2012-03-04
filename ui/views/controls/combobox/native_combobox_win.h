@@ -6,8 +6,8 @@
 #define VIEWS_CONTROLS_COMBOBOX_NATIVE_COMBOBOX_WIN_H_
 #pragma once
 
-#include "views/controls/combobox/native_combobox_wrapper.h"
-#include "views/controls/native_control_win.h"
+#include "ui/views/controls/combobox/native_combobox_wrapper.h"
+#include "ui/views/controls/native_control_win.h"
 
 namespace views {
 

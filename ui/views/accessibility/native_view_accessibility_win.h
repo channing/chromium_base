@@ -13,8 +13,8 @@
 
 #include "base/memory/scoped_ptr.h"
 #include "ui/base/accessibility/accessible_view_state.h"
-#include "views/controls/native/native_view_host.h"
-#include "views/view.h"
+#include "ui/views/controls/native/native_view_host.h"
+#include "ui/views/view.h"
 
 // Note: do not put NativeViewAccessibilityWin in the namespace "views";
 // Visual Studio 2005 does not allow an ATL::CComObject symbol in a namespace.

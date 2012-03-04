@@ -7,9 +7,9 @@
 #pragma once
 
 #include "ui/gfx/size.h"
-#include "views/controls/button/custom_button.h"
-#include "views/controls/scrollbar/scroll_bar.h"
-#include "views/view.h"
+#include "ui/views/controls/button/custom_button.h"
+#include "ui/views/controls/scrollbar/scroll_bar.h"
+#include "ui/views/view.h"
 
 namespace gfx {
 class Canvas;

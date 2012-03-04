@@ -2,12 +2,12 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "views/widget/default_theme_provider.h"
+#include "ui/views/widget/default_theme_provider.h"
 
 #include "ui/base/resource/resource_bundle.h"
 
 #if defined(OS_WIN) && !defined(USE_AURA)
-#include "views/widget/native_widget_win.h"
+#include "ui/views/widget/native_widget_win.h"
 #endif
 
 namespace views {

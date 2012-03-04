@@ -9,7 +9,7 @@
 #include <string>
 
 #include "base/file_path.h"
-#include "views/views_export.h"
+#include "ui/views/views_export.h"
 
 class GURL;
 class SkBitmap;

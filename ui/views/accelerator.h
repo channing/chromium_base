@@ -16,8 +16,8 @@
 
 #include "base/string16.h"
 #include "ui/base/models/accelerator.h"
-#include "views/events/event.h"
-#include "views/views_export.h"
+#include "ui/views/events/event.h"
+#include "ui/views/views_export.h"
 
 namespace views {
 

@@ -12,7 +12,7 @@
 #include "base/basictypes.h"
 #include "base/observer_list.h"
 #include "ui/gfx/native_widget_types.h"
-#include "views/accelerator.h"
+#include "ui/views/accelerator.h"
 
 // The FocusManager class is used to handle focus traversal, store/restore
 // focused views and handle keyboard accelerators.

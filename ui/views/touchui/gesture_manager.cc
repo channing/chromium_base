@@ -2,16 +2,16 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "views/touchui/gesture_manager.h"
+#include "ui/views/touchui/gesture_manager.h"
 #ifndef NDEBUG
 #include <ostream>
 #endif
 
 #include "base/logging.h"
-#include "views/events/event.h"
-#include "views/view.h"
-#include "views/views_delegate.h"
-#include "views/widget/widget.h"
+#include "ui/views/events/event.h"
+#include "ui/views/view.h"
+#include "ui/views/views_delegate.h"
+#include "ui/views/widget/widget.h"
 
 namespace views {
 

@@ -2,14 +2,14 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "views/controls/menu/menu_runner.h"
+#include "ui/views/controls/menu/menu_runner.h"
 
 #include <set>
 
-#include "views/controls/button/menu_button.h"
-#include "views/controls/menu/menu_controller.h"
-#include "views/controls/menu/menu_controller_delegate.h"
-#include "views/controls/menu/menu_delegate.h"
+#include "ui/views/controls/button/menu_button.h"
+#include "ui/views/controls/menu/menu_controller.h"
+#include "ui/views/controls/menu/menu_controller_delegate.h"
+#include "ui/views/controls/menu/menu_delegate.h"
 
 #if defined(OS_WIN)
 #include "base/win/win_util.h"

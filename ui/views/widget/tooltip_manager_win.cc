@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "views/widget/tooltip_manager_win.h"
+#include "ui/views/widget/tooltip_manager_win.h"
 
 #include <windowsx.h>
 #include <limits>
@@ -15,9 +15,9 @@
 #include "ui/base/win/hwnd_util.h"
 #include "ui/gfx/font.h"
 #include "ui/gfx/screen.h"
-#include "views/view.h"
-#include "views/widget/monitor_win.h"
-#include "views/widget/widget.h"
+#include "ui/views/view.h"
+#include "ui/views/widget/monitor_win.h"
+#include "ui/views/widget/widget.h"
 
 namespace views {
 

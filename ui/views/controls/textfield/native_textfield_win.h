@@ -18,7 +18,7 @@
 #include "base/win/scoped_comptr.h"
 #include "ui/base/models/simple_menu_model.h"
 #include "ui/gfx/insets.h"
-#include "views/controls/textfield/native_textfield_wrapper.h"
+#include "ui/views/controls/textfield/native_textfield_wrapper.h"
 
 namespace views {
 

@@ -2,10 +2,10 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "views/controls/scrollbar/bitmap_scroll_bar.h"
+#include "ui/views/controls/scrollbar/bitmap_scroll_bar.h"
 
 #if defined(OS_LINUX)
-#include "views/screen.h"
+#include "ui/views/screen.h"
 #endif
 
 #include "base/callback.h"
@@ -18,10 +18,10 @@
 #include "ui/base/keycodes/keyboard_codes.h"
 #include "ui/base/l10n/l10n_util.h"
 #include "ui/gfx/canvas.h"
-#include "views/controls/menu/menu.h"
-#include "views/controls/scrollbar/base_scroll_bar_thumb.h"
-#include "views/controls/scroll_view.h"
-#include "views/widget/widget.h"
+#include "ui/views/controls/menu/menu.h"
+#include "ui/views/controls/scrollbar/base_scroll_bar_thumb.h"
+#include "ui/views/controls/scroll_view.h"
+#include "ui/views/widget/widget.h"
 
 #undef min
 #undef max

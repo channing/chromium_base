@@ -8,7 +8,7 @@
 
 #include "base/task.h"
 #include "ui/base/models/table_model.h"
-#include "views/controls/table/table_view.h"
+#include "ui/views/controls/table/table_view.h"
 
 // The GroupTableView adds grouping to the TableView class.
 // It allows to have groups of rows that act as a single row from the selection

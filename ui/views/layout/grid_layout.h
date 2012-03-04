@@ -9,8 +9,8 @@
 #include <string>
 #include <vector>
 
-#include "views/layout/layout_manager.h"
-#include "views/view.h"
+#include "ui/views/layout/layout_manager.h"
+#include "ui/views/view.h"
 
 namespace gfx {
 class Insets;

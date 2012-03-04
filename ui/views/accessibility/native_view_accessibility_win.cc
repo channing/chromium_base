@@ -2,12 +2,12 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "views/accessibility/native_view_accessibility_win.h"
+#include "ui/views/accessibility/native_view_accessibility_win.h"
 
 #include "ui/base/accessibility/accessible_view_state.h"
 #include "ui/base/view_prop.h"
-#include "views/widget/native_widget_win.h"
-#include "views/widget/widget.h"
+#include "ui/views/widget/native_widget_win.h"
+#include "ui/views/widget/widget.h"
 
 using ui::AccessibilityTypes;
 

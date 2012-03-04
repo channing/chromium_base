@@ -2,19 +2,19 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "views/focus/accelerator_handler.h"
+#include "ui/views/focus/accelerator_handler.h"
 
 #include <bitset>
 #include <gtk/gtk.h>
 #include <X11/extensions/XInput2.h>
 
-#include "views/accelerator.h"
-#include "views/events/event.h"
-#include "views/focus/focus_manager.h"
-#include "views/ime/input_method.h"
-#include "views/touchui/touch_factory.h"
-#include "views/view.h"
-#include "views/widget/native_widget.h"
+#include "ui/views/accelerator.h"
+#include "ui/views/events/event.h"
+#include "ui/views/focus/focus_manager.h"
+#include "ui/views/ime/input_method.h"
+#include "ui/views/touchui/touch_factory.h"
+#include "ui/views/view.h"
+#include "ui/views/widget/native_widget.h"
 
 namespace views {
 

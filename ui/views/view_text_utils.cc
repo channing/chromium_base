@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "views/view_text_utils.h"
+#include "ui/views/view_text_utils.h"
 
 // #include "base/i18n/bidi_line_iterator.h"
 // #include "base/i18n/break_iterator.h"
@@ -11,8 +11,8 @@
 #include "ui/gfx/canvas_skia.h"
 #include "ui/gfx/color_utils.h"
 #include "ui/gfx/size.h"
-#include "views/controls/label.h"
-#include "views/controls/link.h"
+#include "ui/views/controls/label.h"
+#include "ui/views/controls/link.h"
 
 namespace view_text_utils {
 

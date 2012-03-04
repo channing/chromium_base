@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "views/widget/root_view.h"
+#include "ui/views/widget/root_view.h"
 
 #include <algorithm>
 
@@ -12,10 +12,10 @@
 #include "ui/base/dragdrop/drag_drop_types.h"
 #include "ui/base/keycodes/keyboard_codes.h"
 #include "ui/gfx/canvas_skia.h"
-#include "views/focus/view_storage.h"
-#include "views/layout/fill_layout.h"
-#include "views/touchui/gesture_manager.h"
-#include "views/widget/widget.h"
+#include "ui/views/focus/view_storage.h"
+#include "ui/views/layout/fill_layout.h"
+#include "ui/views/touchui/gesture_manager.h"
+#include "ui/views/widget/widget.h"
 
 namespace views {
 namespace internal {

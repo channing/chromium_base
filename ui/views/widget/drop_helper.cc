@@ -2,11 +2,11 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "views/widget/drop_helper.h"
+#include "ui/views/widget/drop_helper.h"
 
 #include "ui/base/dragdrop/drag_drop_types.h"
-#include "views/view.h"
-#include "views/widget/widget.h"
+#include "ui/views/view.h"
+#include "ui/views/widget/widget.h"
 
 namespace views {
 

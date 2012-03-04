@@ -13,8 +13,8 @@
 #include "base/memory/scoped_ptr.h"
 #include "base/observer_list.h"
 #include "ui/base/models/simple_menu_model.h"
-#include "views/controls/menu/menu_wrapper.h"
-#include "views/views_export.h"
+#include "ui/views/controls/menu/menu_wrapper.h"
+#include "ui/views/views_export.h"
 
 namespace views {
 

@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "views/controls/label.h"
+#include "ui/views/controls/label.h"
 
 #include <cmath>
 #include <limits>
@@ -19,7 +19,7 @@
 #include "ui/gfx/color_utils.h"
 #include "ui/gfx/font.h"
 #include "ui/gfx/insets.h"
-#include "views/background.h"
+#include "ui/views/background.h"
 
 namespace views {
 

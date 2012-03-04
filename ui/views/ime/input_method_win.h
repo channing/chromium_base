@@ -13,9 +13,9 @@
 #include "base/basictypes.h"
 #include "base/compiler_specific.h"
 #include "ui/base/win/ime_input.h"
-#include "views/ime/input_method_base.h"
-#include "views/view.h"
-#include "views/widget/widget.h"
+#include "ui/views/ime/input_method_base.h"
+#include "ui/views/view.h"
+#include "ui/views/widget/widget.h"
 
 namespace views {
 

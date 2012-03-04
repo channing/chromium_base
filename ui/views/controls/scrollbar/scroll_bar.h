@@ -8,8 +8,8 @@
 
 #include "base/basictypes.h"
 #include "base/compiler_specific.h"
-#include "views/view.h"
-#include "views/views_export.h"
+#include "ui/views/view.h"
+#include "ui/views/views_export.h"
 
 namespace views {
 

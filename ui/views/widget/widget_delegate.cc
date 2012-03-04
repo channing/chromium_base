@@ -2,12 +2,12 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "views/widget/widget_delegate.h"
+#include "ui/views/widget/widget_delegate.h"
 
-#include "views/view.h"
-#include "views/views_delegate.h"
-#include "views/widget/widget.h"
-#include "views/window/client_view.h"
+#include "ui/views/view.h"
+#include "ui/views/views_delegate.h"
+#include "ui/views/widget/widget.h"
+#include "ui/views/window/client_view.h"
 #include "third_party/skia/include/core/SkBitmap.h"
 
 namespace views {

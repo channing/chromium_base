@@ -12,7 +12,7 @@
 
 #include "ui/gfx/font.h"
 #include "ui/gfx/rect.h"
-#include "views/views_export.h"
+#include "ui/views/views_export.h"
 
 namespace gfx {
 class Canvas;

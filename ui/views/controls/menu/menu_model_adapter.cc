@@ -2,13 +2,13 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "views/controls/menu/menu_model_adapter.h"
+#include "ui/views/controls/menu/menu_model_adapter.h"
 
 #include "base/logging.h"
 #include "ui/base/l10n/l10n_util.h"
 #include "ui/base/models/menu_model.h"
-#include "views/controls/menu/submenu_view.h"
-#include "views/views_delegate.h"
+#include "ui/views/controls/menu/submenu_view.h"
+#include "ui/views/views_delegate.h"
 
 namespace views {
 

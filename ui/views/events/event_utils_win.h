@@ -7,7 +7,7 @@
 #pragma once
 
 #include "ui/gfx/native_widget_types.h"
-#include "views/views_export.h"
+#include "ui/views/views_export.h"
 
 // Windows-specific Event utilities. Add functionality here rather than adding
 // #ifdefs to event.h

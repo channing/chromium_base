@@ -2,14 +2,14 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "views/controls/native/native_view_host_views.h"
+#include "ui/views/controls/native/native_view_host_views.h"
 
 #include "base/logging.h"
 #include "ui/gfx/canvas.h"
-#include "views/controls/native/native_view_host.h"
-#include "views/focus/focus_manager.h"
-#include "views/widget/root_view.h"
-#include "views/widget/widget.h"
+#include "ui/views/controls/native/native_view_host.h"
+#include "ui/views/focus/focus_manager.h"
+#include "ui/views/widget/root_view.h"
+#include "ui/views/widget/widget.h"
 
 namespace views {
 

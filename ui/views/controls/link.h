@@ -8,7 +8,7 @@
 
 #include <string>
 
-#include "views/controls/label.h"
+#include "ui/views/controls/label.h"
 
 namespace views {
 

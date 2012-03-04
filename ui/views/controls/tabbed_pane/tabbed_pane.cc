@@ -2,17 +2,17 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "views/controls/tabbed_pane/tabbed_pane.h"
+#include "ui/views/controls/tabbed_pane/tabbed_pane.h"
 
 #include "base/logging.h"
 #include "ui/base/accessibility/accessible_view_state.h"
 // TODO(avi): remove when not needed
 #include "base/utf_string_conversions.h"
 #include "ui/base/keycodes/keyboard_codes.h"
-#include "views/controls/native/native_view_host.h"
-#include "views/controls/tabbed_pane/native_tabbed_pane_wrapper.h"
-#include "views/controls/tabbed_pane/tabbed_pane_listener.h"
-#include "views/widget/widget.h"
+#include "ui/views/controls/native/native_view_host.h"
+#include "ui/views/controls/tabbed_pane/native_tabbed_pane_wrapper.h"
+#include "ui/views/controls/tabbed_pane/tabbed_pane_listener.h"
+#include "ui/views/widget/widget.h"
 
 namespace views {
 

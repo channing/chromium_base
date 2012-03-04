@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "views/controls/textfield/native_textfield_win.h"
+#include "ui/views/controls/textfield/native_textfield_win.h"
 
 #include <algorithm>
 
@@ -23,17 +23,17 @@
 #include "ui/base/range/range.h"
 #include "ui/base/win/mouse_wheel_util.h"
 #include "ui/gfx/native_theme_win.h"
-#include "views/controls/label.h"
-#include "views/controls/menu/menu_2.h"
-#include "views/controls/menu/menu_win.h"
-#include "views/controls/native/native_view_host.h"
-// #include "views/controls/textfield/native_textfield_views.h"
-#include "views/controls/textfield/textfield.h"
-#include "views/controls/textfield/textfield_controller.h"
-#include "views/focus/focus_manager.h"
-#include "views/metrics.h"
-#include "views/views_delegate.h"
-#include "views/widget/widget.h"
+#include "ui/views/controls/label.h"
+#include "ui/views/controls/menu/menu_2.h"
+#include "ui/views/controls/menu/menu_win.h"
+#include "ui/views/controls/native/native_view_host.h"
+// #include "ui/views/controls/textfield/native_textfield_views.h"
+#include "ui/views/controls/textfield/textfield.h"
+#include "ui/views/controls/textfield/textfield_controller.h"
+#include "ui/views/focus/focus_manager.h"
+#include "ui/views/metrics.h"
+#include "ui/views/views_delegate.h"
+#include "ui/views/widget/widget.h"
 
 namespace views {
 

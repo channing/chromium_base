@@ -6,9 +6,9 @@
 #define VIEWS_WIDGET_NATIVE_WIDGET_VIEW_H_
 #pragma once
 
-#include "views/view.h"
-#include "views/widget/native_widget_delegate.h"
-#include "views/widget/native_widget_views.h"
+#include "ui/views/view.h"
+#include "ui/views/widget/native_widget_delegate.h"
+#include "ui/views/widget/native_widget_views.h"
 
 namespace ui {
 enum TouchStatus;

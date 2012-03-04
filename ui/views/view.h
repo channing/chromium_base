@@ -20,10 +20,10 @@
 #include "ui/gfx/compositor/layer_delegate.h"
 #include "ui/gfx/native_widget_types.h"
 #include "ui/gfx/rect.h"
-#include "views/accelerator.h"
-#include "views/background.h"
-#include "views/border.h"
-#include "views/layer_helper.h"
+#include "ui/views/accelerator.h"
+#include "ui/views/background.h"
+#include "ui/views/border.h"
+#include "ui/views/layer_helper.h"
 
 using ui::OSExchangeData;
 

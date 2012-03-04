@@ -6,9 +6,9 @@
 #define VIEWS_CONTROLS_SCROLLBAR_BASE_SCROLL_BAR_BUTTON_H_
 #pragma once
 
-#include "views/controls/button/custom_button.h"
+#include "ui/views/controls/button/custom_button.h"
 
-#include "views/repeat_controller.h"
+#include "ui/views/repeat_controller.h"
 
 #if defined(OS_LINUX)
 #include "ui/gfx/screen.h"

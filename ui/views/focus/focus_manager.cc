@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "views/focus/focus_manager.h"
+#include "ui/views/focus/focus_manager.h"
 
 #include <algorithm>
 
@@ -10,13 +10,13 @@
 #include "base/logging.h"
 #include "build/build_config.h"
 #include "ui/base/keycodes/keyboard_codes.h"
-#include "views/accelerator.h"
-#include "views/focus/focus_search.h"
-#include "views/focus/view_storage.h"
-#include "views/focus/widget_focus_manager.h"
-#include "views/view.h"
-#include "views/widget/root_view.h"
-#include "views/widget/widget.h"
+#include "ui/views/accelerator.h"
+#include "ui/views/focus/focus_search.h"
+#include "ui/views/focus/view_storage.h"
+#include "ui/views/focus/widget_focus_manager.h"
+#include "ui/views/view.h"
+#include "ui/views/widget/root_view.h"
+#include "ui/views/widget/widget.h"
 
 namespace views {
 

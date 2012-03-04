@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "views/widget/tooltip_manager_views.h"
+#include "ui/views/widget/tooltip_manager_views.h"
 
 #if defined(USE_X11)
 #include <X11/Xlib.h>
@@ -20,13 +20,13 @@
 #include "ui/base/resource/resource_bundle.h"
 #include "ui/gfx/font.h"
 #include "ui/gfx/screen.h"
-#include "views/background.h"
-#include "views/border.h"
-#include "views/events/event.h"
-#include "views/focus/focus_manager.h"
-#include "views/view.h"
-#include "views/widget/native_widget.h"
-#include "views/widget/root_view.h"
+#include "ui/views/background.h"
+#include "ui/views/border.h"
+#include "ui/views/events/event.h"
+#include "ui/views/focus/focus_manager.h"
+#include "ui/views/view.h"
+#include "ui/views/widget/native_widget.h"
+#include "ui/views/widget/root_view.h"
 
 #if defined(USE_WAYLAND)
 #include "ui/wayland/events/wayland_event.h"

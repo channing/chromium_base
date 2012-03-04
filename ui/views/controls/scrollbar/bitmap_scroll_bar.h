@@ -6,7 +6,7 @@
 #define VIEWS_CONTROLS_SCROLLBAR_BITMAP_SCROLL_BAR_H_
 #pragma once
 
-#include "views/controls/scrollbar/base_scroll_bar.h"
+#include "ui/views/controls/scrollbar/base_scroll_bar.h"
 
 namespace views {
 

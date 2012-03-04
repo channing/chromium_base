@@ -14,7 +14,7 @@
 #include "ui/base/ime/composition_text.h"
 #include "ui/base/ime/text_input_type.h"
 #include "ui/base/range/range.h"
-#include "views/views_export.h"
+#include "ui/views/views_export.h"
 
 namespace gfx {
 class Rect;

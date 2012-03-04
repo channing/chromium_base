@@ -2,13 +2,13 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "views/ime/mock_input_method.h"
+#include "ui/views/ime/mock_input_method.h"
 
 #include "base/basictypes.h"
 #include "base/logging.h"
 #include "ui/base/keycodes/keyboard_codes.h"
-#include "views/events/event.h"
-#include "views/widget/widget.h"
+#include "ui/views/events/event.h"
+#include "ui/views/widget/widget.h"
 
 namespace views {
 

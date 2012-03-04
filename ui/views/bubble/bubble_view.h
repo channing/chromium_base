@@ -12,10 +12,10 @@
 #include "base/task.h"
 #include "third_party/skia/include/core/SkColor.h"
 #include "ui/base/animation/animation_delegate.h"
-#include "views/accelerator.h"
-#include "views/focus/focus_manager.h"
-#include "views/view.h"
-#include "views/window/client_view.h"
+#include "ui/views/accelerator.h"
+#include "ui/views/focus/focus_manager.h"
+#include "ui/views/view.h"
+#include "ui/views/window/client_view.h"
 
 namespace ui {
 class SlideAnimation;

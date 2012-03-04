@@ -8,8 +8,8 @@
 
 #include "base/basictypes.h"
 #include "base/compiler_specific.h"
-#include "views/border.h"
-#include "views/view.h"
+#include "ui/views/border.h"
+#include "ui/views/view.h"
 
 namespace gfx {
 class Canvas;

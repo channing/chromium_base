@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "views/controls/menu/menu_item_view.h"
+#include "ui/views/controls/menu/menu_item_view.h"
 
 #include <uxtheme.h>
 #include <Vssym32.h>
@@ -10,8 +10,8 @@
 #include "grit/ui_strings.h"
 #include "ui/gfx/canvas_skia.h"
 #include "ui/gfx/native_theme_win.h"
-#include "views/controls/menu/menu_config.h"
-#include "views/controls/menu/submenu_view.h"
+#include "ui/views/controls/menu/menu_config.h"
+#include "ui/views/controls/menu/submenu_view.h"
 
 using gfx::NativeTheme;
 

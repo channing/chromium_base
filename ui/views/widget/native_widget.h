@@ -6,7 +6,7 @@
 #define VIEWS_WIDGET_NATIVE_WIDGET_H_
 #pragma once
 
-#include "views/widget/widget.h"
+#include "ui/views/widget/widget.h"
 
 namespace views {
 namespace internal {

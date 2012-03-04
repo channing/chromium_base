@@ -2,12 +2,12 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "views/animation/bounds_animator.h"
+#include "ui/views/animation/bounds_animator.h"
 
 #include "base/memory/scoped_ptr.h"
 #include "ui/base/animation/animation_container.h"
 #include "ui/base/animation/slide_animation.h"
-#include "views/view.h"
+#include "ui/views/view.h"
 
 // Duration in milliseconds for animations.
 static const int kAnimationDuration = 200;

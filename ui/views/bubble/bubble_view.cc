@@ -2,21 +2,21 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "views/bubble/bubble_view.h"
+#include "ui/views/bubble/bubble_view.h"
 
 #include "ui/base/animation/slide_animation.h"
-#include "views/bubble/bubble_border.h"
-#include "views/controls/label.h"
-#include "views/layout/box_layout.h"
-#include "views/layout/layout_constants.h"
-#include "views/views_delegate.h"
-#include "views/window/client_view.h"
+#include "ui/views/bubble/bubble_border.h"
+#include "ui/views/controls/label.h"
+#include "ui/views/layout/box_layout.h"
+#include "ui/views/layout/layout_constants.h"
+#include "ui/views/views_delegate.h"
+#include "ui/views/window/client_view.h"
 #if defined(USE_AURA)
-#include "views/widget/native_widget_aura.h"
+#include "ui/views/widget/native_widget_aura.h"
 #elif defined(TOOLKIT_USES_GTK)
-#include "views/widget/native_widget_gtk.h"
+#include "ui/views/widget/native_widget_gtk.h"
 #endif
-#include "views/widget/widget.h"
+#include "ui/views/widget/widget.h"
 
 // How long the fade should last for.
 static const int kHideFadeDurationMS = 1000;

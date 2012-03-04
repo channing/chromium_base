@@ -11,8 +11,8 @@
 #include "base/message_loop.h"
 #include "ui/base/ui_base_types.h"
 #include "ui/gfx/transform.h"
-#include "views/widget/native_widget_private.h"
-#include "views/widget/widget.h"
+#include "ui/views/widget/native_widget_private.h"
+#include "ui/views/widget/widget.h"
 
 namespace views {
 namespace desktop {

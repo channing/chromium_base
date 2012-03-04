@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "views/controls/menu/native_menu_win.h"
+#include "ui/views/controls/menu/native_menu_win.h"
 
 #include <Windowsx.h>
 
@@ -20,10 +20,10 @@
 #include "ui/gfx/font.h"
 #include "ui/gfx/native_theme.h"
 #include "ui/gfx/rect.h"
-#include "views/accelerator.h"
-#include "views/controls/menu/menu_2.h"
-#include "views/controls/menu/menu_config.h"
-#include "views/controls/menu/menu_listener.h"
+#include "ui/views/accelerator.h"
+#include "ui/views/controls/menu/menu_2.h"
+#include "ui/views/controls/menu/menu_config.h"
+#include "ui/views/controls/menu/menu_listener.h"
 
 using gfx::NativeTheme;
 

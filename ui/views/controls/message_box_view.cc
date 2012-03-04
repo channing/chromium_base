@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "views/controls/message_box_view.h"
+#include "ui/views/controls/message_box_view.h"
 
 #include "base/i18n/rtl.h"
 #include "base/message_loop.h"
@@ -11,15 +11,15 @@
 #include "ui/base/clipboard/clipboard.h"
 #include "ui/base/clipboard/scoped_clipboard_writer.h"
 #include "ui/base/message_box_flags.h"
-#include "views/controls/button/checkbox.h"
-#include "views/controls/image_view.h"
-#include "views/controls/label.h"
-#include "views/controls/textfield/textfield.h"
-#include "views/layout/grid_layout.h"
-#include "views/layout/layout_constants.h"
-#include "views/views_delegate.h"
-#include "views/widget/widget.h"
-#include "views/window/client_view.h"
+#include "ui/views/controls/button/checkbox.h"
+#include "ui/views/controls/image_view.h"
+#include "ui/views/controls/label.h"
+#include "ui/views/controls/textfield/textfield.h"
+#include "ui/views/layout/grid_layout.h"
+#include "ui/views/layout/layout_constants.h"
+#include "ui/views/views_delegate.h"
+#include "ui/views/widget/widget.h"
+#include "ui/views/window/client_view.h"
 
 static const int kDefaultMessageWidth = 320;
 

@@ -10,7 +10,7 @@
 #include <windows.h>
 
 #include "base/basictypes.h"
-#include "views/controls/menu/menu.h"
+#include "ui/views/controls/menu/menu.h"
 
 namespace views {
 

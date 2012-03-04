@@ -6,7 +6,7 @@
 #define VIEWS_VIEW_CONSTANTS_H_
 #pragma once
 
-#include "views/views_export.h"
+#include "ui/views/views_export.h"
 
 namespace views {
 

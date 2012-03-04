@@ -11,7 +11,7 @@
 #include "base/basictypes.h"
 #include "base/time.h"
 #include "base/timer.h"
-#include "views/view.h"
+#include "ui/views/view.h"
 
 class SkBitmap;
 

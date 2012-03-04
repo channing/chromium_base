@@ -6,9 +6,9 @@
 #define VIEWS_CONTROLS_COMBOBOX_NATIVE_COMBOBOX_VIEWS_H_
 #pragma once
 
-#include "views/controls/combobox/native_combobox_wrapper.h"
-#include "views/controls/menu/menu_delegate.h"
-#include "views/view.h"
+#include "ui/views/controls/combobox/native_combobox_wrapper.h"
+#include "ui/views/controls/menu/menu_delegate.h"
+#include "ui/views/view.h"
 
 namespace gfx {
 class Canvas;

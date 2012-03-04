@@ -2,15 +2,15 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "views/window/non_client_view.h"
+#include "ui/views/window/non_client_view.h"
 
 #include "ui/base/accessibility/accessible_view_state.h"
-#include "views/widget/root_view.h"
-#include "views/widget/widget.h"
-#include "views/window/client_view.h"
+#include "ui/views/widget/root_view.h"
+#include "ui/views/widget/widget.h"
+#include "ui/views/window/client_view.h"
 
 #if !defined(OS_WIN)
-#include "views/window/hit_test.h"
+#include "ui/views/window/hit_test.h"
 #endif
 
 namespace views {

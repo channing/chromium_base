@@ -2,13 +2,13 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "views/window/native_frame_view.h"
+#include "ui/views/window/native_frame_view.h"
 
-#include "views/widget/native_widget.h"
-#include "views/widget/widget.h"
+#include "ui/views/widget/native_widget.h"
+#include "ui/views/widget/widget.h"
 
 #if defined(OS_WIN) && !defined(USE_AURA)
-#include "views/widget/native_widget_win.h"
+#include "ui/views/widget/native_widget_win.h"
 #endif
 
 namespace views {

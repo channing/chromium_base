@@ -5,14 +5,14 @@
 #include "ui/base/resource/resource_bundle.h"
 #include "ui/base/ui_base_paths.h"
 #include "ui/gfx/canvas_skia.h"
-#include "views/focus/accelerator_handler.h"
-#include "views/layout/fill_layout.h"
-#include "views/layout/box_layout.h"
-#include "views/widget/widget.h"
-#include "views/widget/widget_delegate.h"
+#include "ui/views/focus/accelerator_handler.h"
+#include "ui/views/layout/fill_layout.h"
+#include "ui/views/layout/box_layout.h"
+#include "ui/views/widget/widget.h"
+#include "ui/views/widget/widget_delegate.h"
 #include "ui/base/keycodes/keyboard_codes.h"
-#include "views/controls/scrollbar/native_scroll_bar.h"
-#include "views/controls/label.h"
+#include "ui/views/controls/scrollbar/native_scroll_bar.h"
+#include "ui/views/controls/label.h"
 
 // in theory i include addition manifest in the gyp. but gyp have a bug no 
 // generate the right vcxproj. so i add it here.

@@ -6,10 +6,10 @@
 #define VIEWS_BUBBLE_BUBBLE_FRAME_VIEW_H_
 #pragma once
 
-#include "views/bubble/bubble_border.h"
-#include "views/widget/widget.h"
-#include "views/window/client_view.h"
-#include "views/window/window_resources.h"
+#include "ui/views/bubble/bubble_border.h"
+#include "ui/views/widget/widget.h"
+#include "ui/views/window/client_view.h"
+#include "ui/views/window/window_resources.h"
 
 namespace gfx {
 class Canvas;

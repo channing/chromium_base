@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "views/controls/tree/tree_view.h"
+#include "ui/views/controls/tree/tree_view.h"
 
 #include <vector>
 
@@ -22,8 +22,8 @@
 #include "ui/gfx/favicon_size.h"
 #include "ui/gfx/icon_util.h"
 #include "ui/gfx/point.h"
-#include "views/focus/focus_manager.h"
-#include "views/widget/widget.h"
+#include "ui/views/focus/focus_manager.h"
+#include "ui/views/widget/widget.h"
 
 using ui::TreeModel;
 using ui::TreeModelNode;

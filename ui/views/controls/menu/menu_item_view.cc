@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "views/controls/menu/menu_item_view.h"
+#include "ui/views/controls/menu/menu_item_view.h"
 
 #include "base/i18n/case_conversion.h"
 #include "base/stl_util.h"
@@ -12,12 +12,12 @@
 #include "ui/base/l10n/l10n_util.h"
 #include "ui/base/models/menu_model.h"
 #include "ui/gfx/canvas.h"
-#include "views/controls/button/menu_button.h"
-#include "views/controls/button/text_button.h"
-#include "views/controls/menu/menu_config.h"
-#include "views/controls/menu/menu_controller.h"
-#include "views/controls/menu/menu_separator.h"
-#include "views/controls/menu/submenu_view.h"
+#include "ui/views/controls/button/menu_button.h"
+#include "ui/views/controls/button/text_button.h"
+#include "ui/views/controls/menu/menu_config.h"
+#include "ui/views/controls/menu/menu_controller.h"
+#include "ui/views/controls/menu/menu_separator.h"
+#include "ui/views/controls/menu/submenu_view.h"
 
 namespace views {
 

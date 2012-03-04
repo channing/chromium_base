@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "views/controls/menu/menu_scroll_view_container.h"
+#include "ui/views/controls/menu/menu_scroll_view_container.h"
 
 #if defined(OS_WIN)
 #include <windows.h>
@@ -13,12 +13,12 @@
 #include "ui/base/accessibility/accessible_view_state.h"
 #include "ui/gfx/canvas_skia.h"
 #include "ui/gfx/color_utils.h"
-#include "views/border.h"
+#include "ui/views/border.h"
 #include "third_party/skia/include/effects/SkGradientShader.h"
-#include "views/controls/menu/menu_config.h"
-#include "views/controls/menu/menu_controller.h"
-#include "views/controls/menu/menu_item_view.h"
-#include "views/controls/menu/submenu_view.h"
+#include "ui/views/controls/menu/menu_config.h"
+#include "ui/views/controls/menu/menu_controller.h"
+#include "ui/views/controls/menu/menu_item_view.h"
+#include "ui/views/controls/menu/submenu_view.h"
 
 #if defined(OS_WIN)
 #include "ui/gfx/native_theme.h"

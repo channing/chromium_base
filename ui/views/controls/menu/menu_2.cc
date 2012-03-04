@@ -2,10 +2,10 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "views/controls/menu/menu_2.h"
+#include "ui/views/controls/menu/menu_2.h"
 
 #include "ui/base/models/menu_model.h"
-#include "views/controls/menu/menu_listener.h"
+#include "ui/views/controls/menu/menu_listener.h"
 
 namespace views {
 

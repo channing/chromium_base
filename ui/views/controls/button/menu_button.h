@@ -10,8 +10,8 @@
 
 #include "base/time.h"
 #include "ui/gfx/font.h"
-#include "views/background.h"
-#include "views/controls/button/text_button.h"
+#include "ui/views/background.h"
+#include "ui/views/controls/button/text_button.h"
 
 namespace views {
 

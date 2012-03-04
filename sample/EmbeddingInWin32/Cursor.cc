@@ -20,7 +20,7 @@
 #include "ui/base/resource/resource_bundle.h"
 #include "ui/base/ui_base_paths.h"
 #include "base/message_loop_embed.h"
-#include "views/focus/accelerator_handler_embed_win.h"
+#include "ui/views/focus/accelerator_handler_embed_win.h"
 
 HINSTANCE hInst = NULL;
 HCURSOR hSaveCursor = NULL;                 /* handle to current cursor      */

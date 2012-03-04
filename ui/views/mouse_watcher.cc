@@ -2,14 +2,14 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "views/mouse_watcher.h"
+#include "ui/views/mouse_watcher.h"
 
 #include "base/compiler_specific.h"
 #include "base/message_loop.h"
 #include "base/task.h"
 #include "ui/gfx/screen.h"
-#include "views/view.h"
-#include "views/widget/widget.h"
+#include "ui/views/view.h"
+#include "ui/views/widget/widget.h"
 
 #if defined(USE_WAYLAND)
 #include "ui/wayland/events/wayland_event.h"

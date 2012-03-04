@@ -2,13 +2,13 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "views/ime/input_method_win.h"
+#include "ui/views/ime/input_method_win.h"
 
 #include "base/basictypes.h"
 #include "base/logging.h"
 #include "base/string_util.h"
 #include "ui/base/keycodes/keyboard_codes.h"
-#include "views/events/event.h"
+#include "ui/views/events/event.h"
 
 namespace views {
 

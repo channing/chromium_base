@@ -7,7 +7,7 @@
 #pragma once
 
 #include "ui/base/animation/animation_delegate.h"
-#include "views/controls/button/button.h"
+#include "ui/views/controls/button/button.h"
 
 namespace ui {
 class ThrobAnimation;

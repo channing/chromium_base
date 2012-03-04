@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "views/window/dialog_client_view.h"
+#include "ui/views/window/dialog_client_view.h"
 
 #include "build/build_config.h"
 
@@ -23,17 +23,17 @@
 #include "ui/base/resource/resource_bundle.h"
 #include "ui/gfx/canvas_skia.h"
 #include "ui/gfx/font.h"
-#include "views/controls/button/text_button.h"
-#include "views/layout/layout_constants.h"
-#include "views/widget/root_view.h"
-#include "views/widget/widget.h"
-#include "views/window/dialog_delegate.h"
+#include "ui/views/controls/button/text_button.h"
+#include "ui/views/layout/layout_constants.h"
+#include "ui/views/widget/root_view.h"
+#include "ui/views/widget/widget.h"
+#include "ui/views/window/dialog_delegate.h"
 
 #if defined(OS_WIN)
 #include "ui/gfx/native_theme.h"
 #else
 #include "ui/gfx/skia_utils_gtk.h"
-#include "views/window/hit_test.h"
+#include "ui/views/window/hit_test.h"
 #endif
 
 using ui::MessageBoxFlags;

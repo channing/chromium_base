@@ -7,7 +7,7 @@
 #pragma once
 
 #include "base/compiler_specific.h"
-#include "views/painter.h"
+#include "ui/views/painter.h"
 
 namespace gfx {
 class Canvas;

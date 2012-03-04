@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "views/widget/widget.h"
+#include "ui/views/widget/widget.h"
 
 #include "base/logging.h"
 #include "base/message_loop.h"
@@ -11,19 +11,19 @@
 #include "ui/base/resource/resource_bundle.h"
 #include "ui/gfx/compositor/compositor.h"
 #include "ui/gfx/compositor/layer.h"
-#include "views/controls/menu/menu_controller.h"
-#include "views/focus/focus_manager.h"
-#include "views/focus/focus_manager_factory.h"
-#include "views/focus/view_storage.h"
-#include "views/focus/widget_focus_manager.h"
-#include "views/ime/input_method.h"
-#include "views/views_delegate.h"
-#include "views/widget/default_theme_provider.h"
-#include "views/widget/native_widget_private.h"
-#include "views/widget/root_view.h"
-#include "views/widget/tooltip_manager.h"
-#include "views/widget/widget_delegate.h"
-#include "views/window/custom_frame_view.h"
+#include "ui/views/controls/menu/menu_controller.h"
+#include "ui/views/focus/focus_manager.h"
+#include "ui/views/focus/focus_manager_factory.h"
+#include "ui/views/focus/view_storage.h"
+#include "ui/views/focus/widget_focus_manager.h"
+#include "ui/views/ime/input_method.h"
+#include "ui/views/views_delegate.h"
+#include "ui/views/widget/default_theme_provider.h"
+#include "ui/views/widget/native_widget_private.h"
+#include "ui/views/widget/root_view.h"
+#include "ui/views/widget/tooltip_manager.h"
+#include "ui/views/widget/widget_delegate.h"
+#include "ui/views/window/custom_frame_view.h"
 
 namespace {
 

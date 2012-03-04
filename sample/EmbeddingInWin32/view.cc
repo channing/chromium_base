@@ -1,6 +1,6 @@
 #include "view.h"
 
-#include "views/layout/box_layout.h"
+#include "ui/views/layout/box_layout.h"
 #include "ui/gfx/canvas_skia.h"
 
 class focusView : public views::View {

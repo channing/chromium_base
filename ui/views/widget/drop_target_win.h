@@ -7,7 +7,7 @@
 #pragma once
 
 #include "ui/base/dragdrop/drop_target.h"
-#include "views/widget/drop_helper.h"
+#include "ui/views/widget/drop_helper.h"
 
 namespace views {
 

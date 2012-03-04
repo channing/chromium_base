@@ -15,8 +15,8 @@
 #include "base/memory/scoped_ptr.h"
 #include "base/message_loop.h"
 #include "base/timer.h"
-#include "views/controls/menu/menu_delegate.h"
-#include "views/controls/menu/menu_item_view.h"
+#include "ui/views/controls/menu/menu_delegate.h"
+#include "ui/views/controls/menu/menu_item_view.h"
 
 namespace ui {
 class OSExchangeData;

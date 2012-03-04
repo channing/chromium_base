@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "views/touchui/touch_selection_controller_impl.h"
+#include "ui/views/touchui/touch_selection_controller_impl.h"
 
 #include "base/time.h"
 #include "grit/ui_strings.h"
@@ -16,14 +16,14 @@
 #include "ui/gfx/screen.h"
 #include "ui/gfx/size.h"
 #include "ui/gfx/transform.h"
-#include "views/background.h"
-#include "views/controls/button/button.h"
-#include "views/controls/button/custom_button.h"
-#include "views/controls/button/text_button.h"
-#include "views/controls/menu/menu_config.h"
-#include "views/controls/label.h"
-#include "views/layout/box_layout.h"
-#include "views/widget/widget.h"
+#include "ui/views/background.h"
+#include "ui/views/controls/button/button.h"
+#include "ui/views/controls/button/custom_button.h"
+#include "ui/views/controls/button/text_button.h"
+#include "ui/views/controls/menu/menu_config.h"
+#include "ui/views/controls/label.h"
+#include "ui/views/layout/box_layout.h"
+#include "ui/views/widget/widget.h"
 
 namespace {
 

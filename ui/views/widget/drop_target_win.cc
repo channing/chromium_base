@@ -2,14 +2,14 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "views/widget/drop_target_win.h"
+#include "ui/views/widget/drop_target_win.h"
 
 #include "ui/base/dragdrop/drag_drop_types.h"
 #include "ui/base/dragdrop/os_exchange_data.h"
 #include "ui/base/dragdrop/os_exchange_data_provider_win.h"
 #include "ui/gfx/point.h"
-#include "views/widget/root_view.h"
-#include "views/widget/widget.h"
+#include "ui/views/widget/root_view.h"
+#include "ui/views/widget/widget.h"
 
 using ui::OSExchangeData;
 using ui::OSExchangeDataProviderWin;

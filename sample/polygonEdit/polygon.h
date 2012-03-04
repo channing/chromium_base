@@ -1,7 +1,7 @@
 #ifndef POLYGONEDIT_POLYGON_H_
 #define POLYGONEDIT_POLYGON_H_
 
-#include "views/view.h"
+#include "ui/views/view.h"
 #include "ui/gfx/path.h"
 
 // this View support using mouse to draw a Polygon

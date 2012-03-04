@@ -9,8 +9,8 @@
 #include <windows.h>
 
 #include "ui/base/models/table_model.h"
-#include "views/controls/native_control_win.h"
-#include "views/controls/table/native_table_wrapper.h"
+#include "ui/views/controls/native_control_win.h"
+#include "ui/views/controls/table/native_table_wrapper.h"
 
 typedef struct tagNMLVCUSTOMDRAW NMLVCUSTOMDRAW;
 

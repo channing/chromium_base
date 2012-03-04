@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "views/controls/native_control_win.h"
+#include "ui/views/controls/native_control_win.h"
 
 #include <windowsx.h>
 
@@ -11,9 +11,9 @@
 #include "ui/base/l10n/l10n_util_win.h"
 #include "ui/base/view_prop.h"
 #include "ui/base/win/hwnd_util.h"
-#include "views/controls/combobox/combobox.h"
-#include "views/focus/focus_manager.h"
-#include "views/widget/widget.h"
+#include "ui/views/controls/combobox/combobox.h"
+#include "ui/views/focus/focus_manager.h"
+#include "ui/views/widget/widget.h"
 
 using ui::ViewProp;
 

@@ -14,13 +14,13 @@
 #include "third_party/skia/include/core/SkColor.h"
 #include "ui/base/keycodes/keyboard_codes.h"
 #include "ui/base/models/table_model_observer.h"
-#include "views/views_export.h"
+#include "ui/views/views_export.h"
 
 #if defined(OS_WIN)
 #include <windows.h>
 
 // TODO(port): remove the ifdef when native_control.h is ported.
-#include "views/controls/native_control.h"
+#include "ui/views/controls/native_control.h"
 
 typedef struct tagNMLVCUSTOMDRAW NMLVCUSTOMDRAW;
 #endif  // defined(OS_WIN)

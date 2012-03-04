@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "views/widget/native_widget_win.h"
+#include "ui/views/widget/native_widget_win.h"
 
 #include <dwmapi.h>
 #include <shellapi.h>
@@ -32,22 +32,22 @@
 #include "ui/gfx/font.h"
 #include "ui/gfx/path.h"
 #include "ui/gfx/screen.h"
-#include "views/accessibility/native_view_accessibility_win.h"
-#include "views/controls/native_control_win.h"
-// #include "views/controls/textfield/native_textfield_views.h"
-#include "views/focus/accelerator_handler.h"
-#include "views/focus/view_storage.h"
-#include "views/ime/input_method_win.h"
-#include "views/views_delegate.h"
-#include "views/widget/aero_tooltip_manager.h"
-#include "views/widget/child_window_message_processor.h"
-#include "views/widget/drop_target_win.h"
-#include "views/widget/monitor_win.h"
-#include "views/widget/native_widget_delegate.h"
-#include "views/widget/native_widget_views.h"
-#include "views/widget/root_view.h"
-#include "views/widget/widget_delegate.h"
-#include "views/window/native_frame_view.h"
+#include "ui/views/accessibility/native_view_accessibility_win.h"
+#include "ui/views/controls/native_control_win.h"
+// #include "ui/views/controls/textfield/native_textfield_views.h"
+#include "ui/views/focus/accelerator_handler.h"
+#include "ui/views/focus/view_storage.h"
+#include "ui/views/ime/input_method_win.h"
+#include "ui/views/views_delegate.h"
+#include "ui/views/widget/aero_tooltip_manager.h"
+#include "ui/views/widget/child_window_message_processor.h"
+#include "ui/views/widget/drop_target_win.h"
+#include "ui/views/widget/monitor_win.h"
+#include "ui/views/widget/native_widget_delegate.h"
+#include "ui/views/widget/native_widget_views.h"
+#include "ui/views/widget/root_view.h"
+#include "ui/views/widget/widget_delegate.h"
+#include "ui/views/window/native_frame_view.h"
 
 #pragma comment(lib, "dwmapi.lib")
 

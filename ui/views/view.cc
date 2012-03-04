@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "views/view.h"
+#include "ui/views/view.h"
 
 #include <algorithm>
 
@@ -22,21 +22,21 @@
 #include "ui/gfx/path.h"
 #include "ui/gfx/point3.h"
 #include "ui/gfx/transform.h"
-#include "views/background.h"
-#include "views/context_menu_controller.h"
-#include "views/drag_controller.h"
-#include "views/layer_property_setter.h"
-#include "views/layout/layout_manager.h"
-#include "views/views_delegate.h"
-#include "views/widget/native_widget_private.h"
-#include "views/widget/native_widget_views.h"
-#include "views/widget/root_view.h"
-#include "views/widget/tooltip_manager.h"
-#include "views/widget/widget.h"
+#include "ui/views/background.h"
+#include "ui/views/context_menu_controller.h"
+#include "ui/views/drag_controller.h"
+#include "ui/views/layer_property_setter.h"
+#include "ui/views/layout/layout_manager.h"
+#include "ui/views/views_delegate.h"
+#include "ui/views/widget/native_widget_private.h"
+#include "ui/views/widget/native_widget_views.h"
+#include "ui/views/widget/root_view.h"
+#include "ui/views/widget/tooltip_manager.h"
+#include "ui/views/widget/widget.h"
 
 #if defined(OS_WIN)
 #include "base/win/scoped_gdi_object.h"
-#include "views/accessibility/native_view_accessibility_win.h"
+#include "ui/views/accessibility/native_view_accessibility_win.h"
 #endif
 #if defined(TOOLKIT_USES_GTK)
 #include "ui/base/gtk/scoped_handle_gtk.h"

@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "views/controls/menu/menu_win.h"
+#include "ui/views/controls/menu/menu_win.h"
 
 #include <string>
 
@@ -16,7 +16,7 @@
 #include "ui/gfx/canvas_skia.h"
 #include "ui/gfx/font.h"
 #include "ui/gfx/rect.h"
-#include "views/accelerator.h"
+#include "ui/views/accelerator.h"
 
 namespace views {
 

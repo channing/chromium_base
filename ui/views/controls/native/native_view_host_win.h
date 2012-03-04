@@ -7,7 +7,7 @@
 #pragma once
 
 #include "base/basictypes.h"
-#include "views/controls/native/native_view_host_wrapper.h"
+#include "ui/views/controls/native/native_view_host_wrapper.h"
 
 namespace views {
 

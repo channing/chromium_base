@@ -2,11 +2,11 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "views/controls/scroll_view.h"
+#include "ui/views/controls/scroll_view.h"
 
 #include "base/logging.h"
-#include "views/controls/scrollbar/native_scroll_bar.h"
-#include "views/widget/root_view.h"
+#include "ui/views/controls/scrollbar/native_scroll_bar.h"
+#include "ui/views/widget/root_view.h"
 
 namespace views {
 

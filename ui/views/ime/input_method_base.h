@@ -8,10 +8,10 @@
 
 #include "base/basictypes.h"
 #include "base/compiler_specific.h"
-#include "views/focus/focus_manager.h"
-#include "views/ime/input_method.h"
-#include "views/ime/input_method_delegate.h"
-#include "views/ime/text_input_client.h"
+#include "ui/views/focus/focus_manager.h"
+#include "ui/views/ime/input_method.h"
+#include "ui/views/ime/input_method_delegate.h"
+#include "ui/views/ime/text_input_client.h"
 
 namespace views {
 

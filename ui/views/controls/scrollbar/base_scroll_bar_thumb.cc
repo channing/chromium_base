@@ -2,9 +2,9 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "views/controls/scrollbar/base_scroll_bar_thumb.h"
+#include "ui/views/controls/scrollbar/base_scroll_bar_thumb.h"
 
-#include "views/controls/scrollbar/base_scroll_bar.h"
+#include "ui/views/controls/scrollbar/base_scroll_bar.h"
 #include "ui/gfx/canvas.h"
 #include "ui/gfx/rect.h"
 

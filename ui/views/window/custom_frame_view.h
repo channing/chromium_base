@@ -6,9 +6,9 @@
 #define VIEWS_WINDOW_CUSTOM_FRAME_VIEW_H_
 #pragma once
 
-#include "views/controls/button/image_button.h"
-#include "views/widget/widget.h"
-#include "views/window/non_client_view.h"
+#include "ui/views/controls/button/image_button.h"
+#include "ui/views/widget/widget.h"
+#include "ui/views/window/non_client_view.h"
 
 namespace gfx {
 class Canvas;

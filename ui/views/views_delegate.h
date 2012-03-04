@@ -13,7 +13,7 @@
 
 #include "ui/base/accessibility/accessibility_types.h"
 #include "ui/base/ui_base_types.h"
-#include "views/views_export.h"
+#include "ui/views/views_export.h"
 
 namespace gfx {
 class Rect;

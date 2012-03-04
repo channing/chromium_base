@@ -6,7 +6,7 @@
 #define UI_GFX_COMPOSITOR_LAYER_PROPERTY_SETTER_H_
 #pragma once
 
-#include "views/views_export.h"
+#include "ui/views/views_export.h"
 
 namespace gfx {
 class Rect;

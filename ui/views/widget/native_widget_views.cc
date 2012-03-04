@@ -2,23 +2,23 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "views/widget/native_widget_views.h"
+#include "ui/views/widget/native_widget_views.h"
 
 #include "ui/gfx/compositor/compositor.h"
-#include "views/view.h"
-#include "views/views_delegate.h"
-#include "views/widget/native_widget_view.h"
-#include "views/widget/root_view.h"
-#include "views/widget/window_manager.h"
+#include "ui/views/view.h"
+#include "ui/views/views_delegate.h"
+#include "ui/views/widget/native_widget_view.h"
+#include "ui/views/widget/root_view.h"
+#include "ui/views/widget/window_manager.h"
 
 #if defined(HAVE_IBUS)
-#include "views/ime/input_method_ibus.h"
+#include "ui/views/ime/input_method_ibus.h"
 #else
-#include "views/ime/mock_input_method.h"
+#include "ui/views/ime/mock_input_method.h"
 #endif
 
 #if defined(OS_LINUX)
-#include "views/window/hit_test.h"
+#include "ui/views/window/hit_test.h"
 #endif
 
 namespace views {

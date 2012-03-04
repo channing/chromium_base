@@ -2,10 +2,10 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "views/events/event_utils_win.h"
+#include "ui/views/events/event_utils_win.h"
 
 #include "ui/base/events.h"
-#include "views/events/event.h"
+#include "ui/views/events/event.h"
 
 namespace views {
 

@@ -8,10 +8,10 @@
 
 #include "ui/gfx/native_theme.h"
 #include "ui/gfx/point.h"
-#include "views/controls/button/button.h"
-#include "views/controls/scrollbar/base_scroll_bar.h"
-#include "views/controls/scrollbar/native_scroll_bar_wrapper.h"
-#include "views/view.h"
+#include "ui/views/controls/button/button.h"
+#include "ui/views/controls/scrollbar/base_scroll_bar.h"
+#include "ui/views/controls/scrollbar/native_scroll_bar_wrapper.h"
+#include "ui/views/view.h"
 
 namespace gfx {
 class Canvas;

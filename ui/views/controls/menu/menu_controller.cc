@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "views/controls/menu/menu_controller.h"
+#include "ui/views/controls/menu/menu_controller.h"
 
 #include "base/i18n/case_conversion.h"
 #include "base/i18n/rtl.h"
@@ -13,22 +13,22 @@
 #include "ui/base/l10n/l10n_util.h"
 #include "ui/gfx/canvas_skia.h"
 #include "ui/gfx/screen.h"
-#include "views/controls/button/menu_button.h"
-#include "views/controls/menu/menu_controller_delegate.h"
-#include "views/controls/menu/menu_scroll_view_container.h"
-#include "views/controls/menu/submenu_view.h"
-#include "views/drag_utils.h"
-#include "views/view_constants.h"
-#include "views/views_delegate.h"
-#include "views/widget/root_view.h"
-#include "views/widget/widget.h"
+#include "ui/views/controls/button/menu_button.h"
+#include "ui/views/controls/menu/menu_controller_delegate.h"
+#include "ui/views/controls/menu/menu_scroll_view_container.h"
+#include "ui/views/controls/menu/submenu_view.h"
+#include "ui/views/drag_utils.h"
+#include "ui/views/view_constants.h"
+#include "ui/views/views_delegate.h"
+#include "ui/views/widget/root_view.h"
+#include "ui/views/widget/widget.h"
 
 #if defined(OS_LINUX)
 #include "ui/base/keycodes/keyboard_code_conversion_gtk.h"
 #endif
 
 #if defined(TOUCH_UI)
-#include "views/focus/accelerator_handler.h"
+#include "ui/views/focus/accelerator_handler.h"
 #endif
 
 using base::Time;

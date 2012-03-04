@@ -2,14 +2,14 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "views/view.h"
+#include "ui/views/view.h"
 
 // Necessary to define oleacc GUID's.
 #include <initguid.h>
 #include <oleacc.h>
 #include <windows.h>
 
-#include "views/accessibility/native_view_accessibility_win.h"
+#include "ui/views/accessibility/native_view_accessibility_win.h"
 
 namespace views {
 

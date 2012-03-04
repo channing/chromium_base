@@ -7,8 +7,8 @@
 #pragma once
 
 #include "base/task.h"
-#include "views/view.h"
-#include "views/window/client_view.h"
+#include "ui/views/view.h"
+#include "ui/views/window/client_view.h"
 
 namespace gfx {
 class Path;

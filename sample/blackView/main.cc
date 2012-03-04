@@ -5,10 +5,10 @@
 #include "ui/base/resource/resource_bundle.h"
 #include "ui/base/ui_base_paths.h"
 #include "ui/gfx/canvas_skia.h"
-#include "views/focus/accelerator_handler.h"
-#include "views/layout/fill_layout.h"
-#include "views/widget/widget.h"
-#include "views/widget/widget_delegate.h"
+#include "ui/views/focus/accelerator_handler.h"
+#include "ui/views/layout/fill_layout.h"
+#include "ui/views/widget/widget.h"
+#include "ui/views/widget/widget_delegate.h"
 
 class ExampleView : public views::WidgetDelegate {
 public:

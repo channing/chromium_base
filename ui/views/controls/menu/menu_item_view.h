@@ -17,7 +17,7 @@
 // TODO(avi): remove when not needed
 #include "base/utf_string_conversions.h"
 #include "third_party/skia/include/core/SkBitmap.h"
-#include "views/view.h"
+#include "ui/views/view.h"
 
 #if defined(OS_WIN)
 #include "ui/gfx/native_theme.h"

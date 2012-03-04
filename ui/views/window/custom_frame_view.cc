@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "views/window/custom_frame_view.h"
+#include "ui/views/window/custom_frame_view.h"
 
 #include "base/utf_string_conversions.h"
 #include "grit/ui_resources.h"
@@ -12,19 +12,19 @@
 #include "ui/gfx/canvas.h"
 #include "ui/gfx/font.h"
 #include "ui/gfx/path.h"
-#include "views/widget/widget_delegate.h"
-#include "views/window/client_view.h"
-#include "views/window/window_resources.h"
-#include "views/window/window_shape.h"
+#include "ui/views/widget/widget_delegate.h"
+#include "ui/views/window/client_view.h"
+#include "ui/views/window/window_resources.h"
+#include "ui/views/window/window_shape.h"
 
 #if defined(OS_LINUX)
-#include "views/window/hit_test.h"
+#include "ui/views/window/hit_test.h"
 #endif
 
 #if defined(USE_AURA)
-#include "views/widget/native_widget_aura.h"
+#include "ui/views/widget/native_widget_aura.h"
 #elif defined(OS_WIN)
-#include "views/widget/native_widget_win.h"
+#include "ui/views/widget/native_widget_win.h"
 #endif
 
 namespace views {

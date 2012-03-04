@@ -2,11 +2,11 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "views/controls/button/radio_button.h"
+#include "ui/views/controls/button/radio_button.h"
 
 #include "base/logging.h"
 #include "ui/base/accessibility/accessible_view_state.h"
-#include "views/widget/widget.h"
+#include "ui/views/widget/widget.h"
 
 namespace views {
 

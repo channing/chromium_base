@@ -14,9 +14,9 @@
 #include "third_party/skia/include/core/SkColor.h"
 #include "ui/base/models/table_model_observer.h"
 #include "ui/gfx/canvas.h"
-#include "views/controls/table/native_table_wrapper.h"
-#include "views/controls/table/table_view.h"
-#include "views/view.h"
+#include "ui/views/controls/table/native_table_wrapper.h"
+#include "ui/views/controls/table/table_view.h"
+#include "ui/views/view.h"
 
 namespace ui {
 struct TableColumn;

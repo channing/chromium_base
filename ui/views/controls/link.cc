@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "views/controls/link.h"
+#include "ui/views/controls/link.h"
 
 #include "build/build_config.h"
 
@@ -15,8 +15,8 @@
 #include "ui/base/keycodes/keyboard_codes.h"
 #include "ui/gfx/color_utils.h"
 #include "ui/gfx/font.h"
-#include "views/controls/link_listener.h"
-#include "views/events/event.h"
+#include "ui/views/controls/link_listener.h"
+#include "ui/views/events/event.h"
 
 #if defined(TOOLKIT_USES_GTK)
 #include "ui/gfx/gtk_util.h"

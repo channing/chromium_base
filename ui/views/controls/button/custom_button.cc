@@ -2,13 +2,13 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "views/controls/button/custom_button.h"
+#include "ui/views/controls/button/custom_button.h"
 
 #include "ui/base/accessibility/accessible_view_state.h"
 #include "ui/base/animation/throb_animation.h"
 #include "ui/base/keycodes/keyboard_codes.h"
 #include "ui/gfx/screen.h"
-#include "views/widget/widget.h"
+#include "ui/views/widget/widget.h"
 
 namespace views {
 
