@@ -1,4 +1,4 @@
-// Copyright (c) 2011 The Chromium Authors. All rights reserved.
+// Copyright (c) 2012 The Chromium Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -7,6 +7,7 @@
 #include "base/command_line.h"
 #include "base/file_util.h"
 #include "base/logging.h"
+#include "base/metrics/histogram.h"
 #include "base/path_service.h"
 #include "base/stl_util.h"
 #include "base/string_piece.h"
@@ -41,27 +42,13 @@ const int kLargeFontSizeDelta = 8;
 
 ResourceBundle* ResourceBundle::g_shared_instance_ = NULL;
 
-/* static */
-// TODO(glen): Finish moving these into theme provider (dialogs still
-//    depend on these colors).
-const SkColor ResourceBundle::frame_color =
-     SkColorSetRGB(66, 116, 201);
-const SkColor ResourceBundle::frame_color_inactive =
-     SkColorSetRGB(161, 182, 228);
-const SkColor ResourceBundle::frame_color_app_panel =
-     SK_ColorWHITE;
-const SkColor ResourceBundle::frame_color_app_panel_inactive =
-     SK_ColorWHITE;
-const SkColor ResourceBundle::frame_color_incognito =
-     SkColorSetRGB(83, 106, 139);
-const SkColor ResourceBundle::frame_color_incognito_inactive =
-     SkColorSetRGB(126, 139, 156);
+// static
 const SkColor ResourceBundle::toolbar_color =
      SkColorSetRGB(210, 225, 246);
 const SkColor ResourceBundle::toolbar_separator_color =
      SkColorSetRGB(182, 186, 192);
 
-/* static */
+// static
 std::string ResourceBundle::InitSharedInstance(
     const std::string& pref_locale) {
   DCHECK(g_shared_instance_ == NULL) << "ResourceBundle initialized twice";
@@ -71,7 +58,7 @@ std::string ResourceBundle::InitSharedInstance(
   return g_shared_instance_->LoadLocaleResources(pref_locale);
 }
 
-/* static */
+// static
 void ResourceBundle::InitSharedInstanceForTest(const FilePath& path) {
   DCHECK(g_shared_instance_ == NULL) << "ResourceBundle initialized twice";
   g_shared_instance_ = new ResourceBundle();
@@ -79,7 +66,7 @@ void ResourceBundle::InitSharedInstanceForTest(const FilePath& path) {
   g_shared_instance_->LoadTestResources(path);
 }
 
-/* static */
+// static
 DataPack* ResourceBundle::LoadResourcesDataPak(const FilePath& path) {
   DataPack* datapack = new DataPack;
   bool success = datapack->Load(path);
@@ -90,22 +77,13 @@ DataPack* ResourceBundle::LoadResourcesDataPak(const FilePath& path) {
   return datapack;
 }
 
-/* static */
-std::string ResourceBundle::ReloadSharedInstance(
-    const std::string& pref_locale) {
-  DCHECK(g_shared_instance_ != NULL) << "ResourceBundle not initialized";
-
-  g_shared_instance_->UnloadLocaleResources();
-  return g_shared_instance_->LoadLocaleResources(pref_locale);
-}
-
-/* static */
+// static
 void ResourceBundle::AddDataPackToSharedInstance(const FilePath& path) {
   DCHECK(g_shared_instance_ != NULL) << "ResourceBundle not initialized";
   g_shared_instance_->data_packs_.push_back(new LoadedDataPack(path));
 }
 
-/* static */
+// static
 void ResourceBundle::CleanupSharedInstance() {
   if (g_shared_instance_) {
     delete g_shared_instance_;
@@ -113,20 +91,25 @@ void ResourceBundle::CleanupSharedInstance() {
   }
 }
 
-/* static */
+// static
+bool ResourceBundle::HasSharedInstance() {
+  return g_shared_instance_ != NULL;
+}
+
+// static
 ResourceBundle& ResourceBundle::GetSharedInstance() {
   // Must call InitSharedInstance before this function.
   CHECK(g_shared_instance_ != NULL);
   return *g_shared_instance_;
 }
 
-/* static */
+// static
 bool ResourceBundle::LocaleDataPakExists(const std::string& locale) {
   return !GetLocaleFilePath(locale).empty();
 }
 
-#if !defined(OS_MACOSX)
-/* static */
+#if !defined(OS_MACOSX) && !defined(OS_ANDROID)
+// static
 FilePath ResourceBundle::GetLocaleFilePath(const std::string& app_locale) {
   FilePath locale_file_path;
   PathService::Get(ui::DIR_LOCALES, &locale_file_path);
@@ -161,7 +144,12 @@ std::string ResourceBundle::LoadLocaleResources(
     return std::string();
   }
   locale_resources_data_.reset(LoadResourcesDataPak(locale_file_path));
-  CHECK(locale_resources_data_.get()) << "failed to load locale.pak";
+  if (!locale_resources_data_.get()) {
+    UMA_HISTOGRAM_ENUMERATION("ResourceBundle.LoadLocaleResourcesError",
+                              logging::GetLastSystemErrorCode(), 16000);
+    NOTREACHED() << "failed to load locale.pak";
+    return std::string();
+  }
   return app_locale;
 }
 
@@ -170,7 +158,11 @@ void ResourceBundle::UnloadLocaleResources() {
 }
 
 string16 ResourceBundle::GetLocalizedString(int message_id) {
-  // If for some reason we were unable to load a resource pak, return an empty
+  // Ensure that ReloadLocaleResources() doesn't drop the resources while
+  // we're using them.
+  base::AutoLock lock_scope(*locale_resources_data_lock_);
+
+  // If for some reason we were unable to load the resources , return an empty
   // string (better than crashing).
   if (!locale_resources_data_.get()) {
     LOG(WARNING) << "locale resources are not loaded";
@@ -212,6 +204,13 @@ const FilePath& ResourceBundle::GetOverriddenPakPath() {
   return overridden_pak_path_;
 }
 
+std::string ResourceBundle::ReloadLocaleResources(
+    const std::string& pref_locale) {
+  base::AutoLock lock_scope(*locale_resources_data_lock_);
+  UnloadLocaleResources();
+  return LoadLocaleResources(pref_locale);
+}
+
 SkBitmap* ResourceBundle::GetBitmapNamed(int resource_id) {
   const SkBitmap* bitmap =
       static_cast<const SkBitmap*>(GetImageNamed(resource_id));
@@ -221,7 +220,7 @@ SkBitmap* ResourceBundle::GetBitmapNamed(int resource_id) {
 gfx::Image& ResourceBundle::GetImageNamed(int resource_id) {
   // Check to see if the image is already in the cache.
   {
-    base::AutoLock lock_scope(*lock_);
+    base::AutoLock lock_scope(*images_and_fonts_lock_);
     ImageMap::const_iterator found = images_.find(resource_id);
     if (found != images_.end())
       return *found->second;
@@ -236,7 +235,7 @@ gfx::Image& ResourceBundle::GetImageNamed(int resource_id) {
       large_bitmap.reset(LoadBitmap(large_icon_resources_data_, resource_id));
 
     // The load was successful, so cache the image.
-    base::AutoLock lock_scope(*lock_);
+    base::AutoLock lock_scope(*images_and_fonts_lock_);
 
     // Another thread raced the load and has already cached the image.
     if (images_.count(resource_id))
@@ -274,7 +273,7 @@ RefCountedStaticMemory* ResourceBundle::LoadDataResourceBytes(
 
 const gfx::Font& ResourceBundle::GetFont(FontStyle style) {
   {
-    base::AutoLock lock_scope(*lock_);
+    base::AutoLock lock_scope(*images_and_fonts_lock_);
     LoadFontsIfNecessary();
   }
   switch (style) {
@@ -296,13 +295,14 @@ const gfx::Font& ResourceBundle::GetFont(FontStyle style) {
 }
 
 void ResourceBundle::ReloadFonts() {
-  base::AutoLock lock_scope(*lock_);
+  base::AutoLock lock_scope(*images_and_fonts_lock_);
   base_font_.reset();
   LoadFontsIfNecessary();
 }
 
 ResourceBundle::ResourceBundle()
-    : lock_(new base::Lock),
+    : images_and_fonts_lock_(new base::Lock),
+      locale_resources_data_lock_(new base::Lock),
       resources_data_(NULL),
       large_icon_resources_data_(NULL) {
 }
@@ -314,7 +314,7 @@ void ResourceBundle::FreeImages() {
 }
 
 void ResourceBundle::LoadFontsIfNecessary() {
-  lock_->AssertAcquired();
+  images_and_fonts_lock_->AssertAcquired();
   if (!base_font_.get()) {
     base_font_.reset(new gfx::Font());
 
@@ -343,7 +343,7 @@ void ResourceBundle::LoadFontsIfNecessary() {
   }
 }
 
-/* static */
+// static
 SkBitmap* ResourceBundle::LoadBitmap(DataHandle data_handle, int resource_id) {
   scoped_refptr<RefCountedMemory> memory(
       LoadResourceBytes(data_handle, resource_id));
@@ -360,7 +360,7 @@ SkBitmap* ResourceBundle::LoadBitmap(DataHandle data_handle, int resource_id) {
 }
 
 gfx::Image* ResourceBundle::GetEmptyImage() {
-  base::AutoLock lock(*lock_);
+  base::AutoLock lock(*images_and_fonts_lock_);
 
   static gfx::Image* empty_image = NULL;
   if (!empty_image) {
