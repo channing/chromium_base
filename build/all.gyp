@@ -11,7 +11,7 @@
         '../sample/views.gyp:*',
 		'../testing/gtest.gyp:*',
 		'../testing/gmock.gyp:*',
-        '../views/views.gyp:*',
+        '../ui/views/views.gyp:*',
         '../notification/notification.gyp:*',
 	  ],
     },

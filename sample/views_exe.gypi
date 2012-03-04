@@ -7,7 +7,7 @@
     '<(DEPTH)/ui/ui.gyp:gfx_resources',
     '<(DEPTH)/ui/ui.gyp:ui_resources',
     '<(DEPTH)/ui/ui.gyp:ui_resources_standard',
-    '<(DEPTH)/views/views.gyp:views',
+    '<(DEPTH)/ui/views/views.gyp:views',
   ],
   'include_dirs': [
    '..',
