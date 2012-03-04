@@ -2,14 +2,19 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "views/controls/resize_area.h"
+#include "ui/views/controls/resize_area.h"
 
 #include "base/logging.h"
 #include "ui/base/accessibility/accessible_view_state.h"
 #include "ui/base/resource/resource_bundle.h"
+#include "ui/views/controls/resize_area_delegate.h"
 
 #if defined(OS_LINUX)
 #include "ui/gfx/gtk_util.h"
+#endif
+
+#if defined(USE_AURA)
+#include "ui/aura/cursor.h"
 #endif
 
 namespace views {
@@ -32,14 +37,13 @@ std::string ResizeArea::GetClassName() const {
 }
 
 gfx::NativeCursor ResizeArea::GetCursor(const MouseEvent& event) {
-  if (!IsEnabled())
-    return NULL;
-#if defined(OS_WIN)
+  if (!enabled())
+    return gfx::kNullCursor;
+#if defined(USE_AURA)
+  return aura::kCursorEastWestResize;
+#elif defined(OS_WIN)
   static HCURSOR g_resize_cursor = LoadCursor(NULL, IDC_SIZEWE);
   return g_resize_cursor;
-#elif defined(USE_AURA)
-  // TODO(saintlou):
-  return NULL;
 #elif defined(OS_LINUX)
   return gfx::GetCursor(GDK_SB_H_DOUBLE_ARROW);
 #endif

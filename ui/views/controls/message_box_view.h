@@ -2,13 +2,13 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef VIEWS_CONTROLS_MESSAGE_BOX_VIEW_H_
-#define VIEWS_CONTROLS_MESSAGE_BOX_VIEW_H_
+#ifndef UI_VIEWS_CONTROLS_MESSAGE_BOX_VIEW_H_
+#define UI_VIEWS_CONTROLS_MESSAGE_BOX_VIEW_H_
 #pragma once
 
 #include <string>
 
-#include "base/task.h"
+#include "base/string16.h"
 #include "ui/views/view.h"
 
 namespace views {
@@ -23,14 +23,20 @@ class Textfield;
 // and Cancel buttons.
 class VIEWS_EXPORT MessageBoxView : public View {
  public:
-  MessageBoxView(int dialog_flags,
-                 const std::wstring& message,
-                 const std::wstring& default_prompt,
+  enum Options {
+    NO_OPTIONS = 0,
+    DETECT_ALIGNMENT = 1 << 0,
+    HAS_PROMPT_FIELD = 1 << 1,
+  };
+
+  MessageBoxView(int options,
+                 const string16& message,
+                 const string16& default_prompt,
                  int message_width);
 
-  MessageBoxView(int dialog_flags,
-                 const std::wstring& message,
-                 const std::wstring& default_prompt);
+  MessageBoxView(int options,
+                 const string16& message,
+                 const string16& default_prompt);
 
   virtual ~MessageBoxView();
 
@@ -38,7 +44,7 @@ class VIEWS_EXPORT MessageBoxView : public View {
   views::Textfield* text_box() { return prompt_field_; }
 
   // Returns user entered data in the prompt field.
-  std::wstring GetInputText();
+  string16 GetInputText();
 
   // Returns true if a checkbox is selected, false otherwise. (And false if
   // the message box has no checkbox.)
@@ -51,7 +57,7 @@ class VIEWS_EXPORT MessageBoxView : public View {
   // Adds a checkbox with the specified label to the message box if this is the
   // first call. Otherwise, it changes the label of the current checkbox. To
   // start, the message box has no checkbox until this function is called.
-  void SetCheckBoxLabel(const std::wstring& label);
+  void SetCheckBoxLabel(const string16& label);
 
   // Sets the state of the check-box.
   void SetCheckBoxSelected(bool selected);
@@ -65,13 +71,12 @@ class VIEWS_EXPORT MessageBoxView : public View {
                                     views::View* parent,
                                     views::View* child) OVERRIDE;
   // Handles Ctrl-C and writes the message in the system clipboard.
-  virtual bool AcceleratorPressed(
-      const views::Accelerator& accelerator) OVERRIDE;
+  virtual bool AcceleratorPressed(const ui::Accelerator& accelerator) OVERRIDE;
 
  private:
   // Sets up the layout manager and initializes the prompt field. This should
   // only be called once, from the constructor.
-  void Init(int dialog_flags, const std::wstring& default_prompt);
+  void Init(int options, const string16& default_prompt);
 
   // Sets up the layout manager based on currently initialized views. Should be
   // called when a view is initialized or changed.
@@ -92,11 +97,9 @@ class VIEWS_EXPORT MessageBoxView : public View {
   // Maximum width of the message label.
   int message_width_;
 
-  ScopedRunnableMethodFactory<MessageBoxView> focus_grabber_factory_;
-
   DISALLOW_COPY_AND_ASSIGN(MessageBoxView);
 };
 
 }  // namespace views
 
-#endif  // VIEWS_CONTROLS_MESSAGE_BOX_VIEW_H_
+#endif  // UI_VIEWS_CONTROLS_MESSAGE_BOX_VIEW_H_

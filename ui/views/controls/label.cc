@@ -61,7 +61,8 @@ void Label::SetText(const string16& text) {
 }
 
 const string16 Label::GetText() const {
-  return url_set_ ? UTF8ToUTF16(url_.spec()) : text_;
+//  return url_set_ ? UTF8ToWide(url_.spec()) : UTF16ToWideHack(text_);
+    return url_set_ ? NOTREACHED(),std::wstring() : UTF16ToWideHack(text_);
 }
 
 // void Label::SetURL(const GURL& url) {
@@ -483,13 +484,13 @@ void Label::CalculateDrawStringParams(string16* paint_text,
     // characters. We use the locale settings because an URL is always treated
     // as an LTR string, even if its containing view does not use an RTL UI
     // layout.
-    *paint_text = base::i18n::GetDisplayStringInLTRDirectionality(
-        *paint_text);
+    *paint_text = UTF16ToWide(base::i18n::GetDisplayStringInLTRDirectionality(
+        WideToUTF16(*paint_text)));
   } else if (elide_in_middle_) {
-    *paint_text = ui::ElideText(text_, font_, GetAvailableRect().width(),
-                                ui::ELIDE_IN_MIDDLE);
+    *paint_text = UTF16ToWideHack(ui::ElideText(text_,
+        font_, GetAvailableRect().width(), true));
   } else {
-    *paint_text = text_;
+    *paint_text = UTF16ToWideHack(text_);
   }
 
   *text_bounds = GetTextBounds();

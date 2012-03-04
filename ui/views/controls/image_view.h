@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef VIEWS_CONTROLS_IMAGE_VIEW_H_
-#define VIEWS_CONTROLS_IMAGE_VIEW_H_
+#ifndef UI_VIEWS_CONTROLS_IMAGE_VIEW_H_
+#define UI_VIEWS_CONTROLS_IMAGE_VIEW_H_
 #pragma once
 
 #include "third_party/skia/include/core/SkBitmap.h"
@@ -64,21 +64,22 @@ class VIEWS_EXPORT ImageView : public View {
 
   // Set / Get the horizontal alignment.
   void SetHorizontalAlignment(Alignment ha);
-  Alignment GetHorizontalAlignment();
+  Alignment GetHorizontalAlignment() const;
 
   // Set / Get the vertical alignment.
   void SetVerticalAlignment(Alignment va);
-  Alignment GetVerticalAlignment();
+  Alignment GetVerticalAlignment() const;
 
   // Set / Get the tooltip text.
   void SetTooltipText(const string16& tooltip);
-  string16 GetTooltipText();
+  string16 GetTooltipText() const;
 
   // Overriden from View
   virtual gfx::Size GetPreferredSize() OVERRIDE;
   virtual void OnPaint(gfx::Canvas* canvas) OVERRIDE;
   virtual void GetAccessibleState(ui::AccessibleViewState* state) OVERRIDE;
-  virtual bool GetTooltipText(const gfx::Point& p, string16* tooltip) OVERRIDE;
+  virtual bool GetTooltipText(const gfx::Point& p,
+                              string16* tooltip) const OVERRIDE;
 
  private:
   // Compute the image origin given the desired size and the receiver alignment
@@ -108,4 +109,4 @@ class VIEWS_EXPORT ImageView : public View {
 
 }  // namespace views
 
-#endif  // VIEWS_CONTROLS_IMAGE_VIEW_H_
+#endif  // UI_VIEWS_CONTROLS_IMAGE_VIEW_H_

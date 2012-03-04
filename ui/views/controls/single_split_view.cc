@@ -12,16 +12,21 @@
 #include "ui/base/accessibility/accessible_view_state.h"
 #include "ui/gfx/canvas.h"
 #include "ui/views/background.h"
+#include "ui/views/controls/single_split_view_listener.h"
 
 #if defined(TOOLKIT_USES_GTK)
 #include "ui/gfx/gtk_util.h"
+#endif
+
+#if defined(USE_AURA)
+#include "ui/aura/cursor.h"
 #endif
 
 namespace views {
 
 // static
 const char SingleSplitView::kViewClassName[] =
-    "views/controls/SingleSplitView";
+    "ui/views/controls/SingleSplitView";
 
 // Size of the divider in pixels.
 static const int kDividerSize = 4;
@@ -29,11 +34,11 @@ static const int kDividerSize = 4;
 SingleSplitView::SingleSplitView(View* leading,
                                  View* trailing,
                                  Orientation orientation,
-                                 Observer* observer)
+                                 SingleSplitViewListener* listener)
     : is_horizontal_(orientation == HORIZONTAL_SPLIT),
       divider_offset_(-1),
       resize_leading_on_bounds_change_(true),
-      observer_(observer) {
+      listener_(listener) {
   AddChildView(leading);
   AddChildView(trailing);
 #if defined(OS_WIN)
@@ -49,10 +54,10 @@ void SingleSplitView::Layout() {
   CalculateChildrenBounds(bounds(), &leading_bounds, &trailing_bounds);
 
   if (has_children()) {
-    if (child_at(0)->IsVisible())
+    if (child_at(0)->visible())
       child_at(0)->SetBoundsRect(leading_bounds);
     if (child_count() > 1) {
-      if (child_at(1)->IsVisible())
+      if (child_at(1)->visible())
         child_at(1)->SetBoundsRect(trailing_bounds);
     }
   }
@@ -95,17 +100,17 @@ gfx::Size SingleSplitView::GetPreferredSize() {
 
 gfx::NativeCursor SingleSplitView::GetCursor(const MouseEvent& event) {
   if (!IsPointInDivider(event.location()))
-    return NULL;
-#if defined(OS_WIN)
+    return gfx::kNullCursor;
+#if defined(USE_AURA)
+  return is_horizontal_ ?
+      aura::kCursorEastWestResize : aura::kCursorNorthSouthResize;
+#elif defined(OS_WIN)
   static HCURSOR we_resize_cursor = LoadCursor(NULL, IDC_SIZEWE);
   static HCURSOR ns_resize_cursor = LoadCursor(NULL, IDC_SIZENS);
   return is_horizontal_ ? we_resize_cursor : ns_resize_cursor;
 #elif defined(TOOLKIT_USES_GTK)
   return gfx::GetCursor(is_horizontal_ ? GDK_SB_H_DOUBLE_ARROW :
                                          GDK_SB_V_DOUBLE_ARROW);
-#else
-  // TODO(saintlou):
-  return NULL;
 #endif
 }
 
@@ -113,8 +118,8 @@ void SingleSplitView::CalculateChildrenBounds(
     const gfx::Rect& bounds,
     gfx::Rect* leading_bounds,
     gfx::Rect* trailing_bounds) const {
-  bool is_leading_visible = has_children() && child_at(0)->IsVisible();
-  bool is_trailing_visible = child_count() > 1 && child_at(1)->IsVisible();
+  bool is_leading_visible = has_children() && child_at(0)->visible();
+  bool is_trailing_visible = child_count() > 1 && child_at(1)->visible();
 
   if (!is_leading_visible && !is_trailing_visible) {
     *leading_bounds = gfx::Rect();
@@ -182,7 +187,7 @@ bool SingleSplitView::OnMouseDragged(const MouseEvent& event) {
 
   if (new_size != divider_offset_) {
     set_divider_offset(new_size);
-    if (!observer_ || observer_->SplitHandleMoved(this))
+    if (!listener_ || listener_->SplitHandleMoved(this))
       Layout();
   }
   return true;
@@ -194,7 +199,7 @@ void SingleSplitView::OnMouseCaptureLost() {
 
   if (drag_info_.initial_divider_offset != divider_offset_) {
     set_divider_offset(drag_info_.initial_divider_offset);
-    if (!observer_ || observer_->SplitHandleMoved(this))
+    if (!listener_ || listener_->SplitHandleMoved(this))
       Layout();
   }
 }
@@ -208,7 +213,7 @@ bool SingleSplitView::IsPointInDivider(const gfx::Point& p) {
   if (child_count() < 2)
     return false;
 
-  if (!child_at(0)->IsVisible() || !child_at(1)->IsVisible())
+  if (!child_at(0)->visible() || !child_at(1)->visible())
     return false;
 
   int divider_relative_offset;

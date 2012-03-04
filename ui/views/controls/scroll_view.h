@@ -2,12 +2,13 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef VIEWS_CONTROLS_SCROLL_VIEW_H_
-#define VIEWS_CONTROLS_SCROLL_VIEW_H_
+#ifndef UI_VIEWS_CONTROLS_SCROLL_VIEW_H_
+#define UI_VIEWS_CONTROLS_SCROLL_VIEW_H_
 #pragma once
 
 #include <string>
 
+#include "base/compiler_specific.h"
 #include "ui/views/controls/scrollbar/scroll_bar.h"
 
 namespace views {
@@ -43,7 +44,7 @@ class VIEWS_EXPORT ScrollView : public View, public ScrollBarController {
   View* GetContents() const;
 
   // Overridden to layout the viewport and scrollbars.
-  virtual void Layout();
+  virtual void Layout() OVERRIDE;
 
   // Returns the visible region of the content View.
   gfx::Rect GetVisibleRect() const;
@@ -61,7 +62,7 @@ class VIEWS_EXPORT ScrollView : public View, public ScrollBarController {
   // NOTE: this is intended to be invoked by the ScrollBar, and NOT general
   // client code.
   // See also ScrollRectToVisible.
-  virtual void ScrollToPosition(ScrollBar* source, int position);
+  virtual void ScrollToPosition(ScrollBar* source, int position) OVERRIDE;
 
   // Returns the amount to scroll relative to the visible bounds. This invokes
   // either GetPageScrollIncrement or GetLineScrollIncrement to determine the
@@ -69,13 +70,13 @@ class VIEWS_EXPORT ScrollView : public View, public ScrollBarController {
   // value is used.
   virtual int GetScrollIncrement(ScrollBar* source,
                                  bool is_page,
-                                 bool is_positive);
+                                 bool is_positive) OVERRIDE;
 
   // Keyboard events
-  virtual bool OnKeyPressed(const KeyEvent& event);
-  virtual bool OnMouseWheel(const MouseWheelEvent& e);
+  virtual bool OnKeyPressed(const KeyEvent& event) OVERRIDE;
+  virtual bool OnMouseWheel(const MouseWheelEvent& e) OVERRIDE;
 
-  virtual std::string GetClassName() const;
+  virtual std::string GetClassName() const OVERRIDE;
 
   // Retrieves the vertical scrollbar width.
   int GetScrollBarWidth() const;
@@ -192,7 +193,7 @@ class FixedRowHeightScrollHelper : public VariableRowHeightScrollHelper {
 
  protected:
   // Calculates the bounds of the row from the top margin and row height.
-  virtual RowInfo GetRowInfo(int y);
+  virtual RowInfo GetRowInfo(int y) OVERRIDE;
 
  private:
   int top_margin_;
@@ -203,4 +204,4 @@ class FixedRowHeightScrollHelper : public VariableRowHeightScrollHelper {
 
 }  // namespace views
 
-#endif  // VIEWS_CONTROLS_SCROLL_VIEW_H_
+#endif  // UI_VIEWS_CONTROLS_SCROLL_VIEW_H_

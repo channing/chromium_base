@@ -194,8 +194,8 @@ bool IsRTL()
 //   // Treat anything other than RTL as LTR.
 //   return (layout_dir != ULOC_LAYOUT_RTL) ? LEFT_TO_RIGHT : RIGHT_TO_LEFT;
 // }
-// 
-// TextDirection GetFirstStrongCharacterDirection(const string16& text) {
+
+TextDirection GetFirstStrongCharacterDirection(const string16& text) {
 //   const UChar* string = text.c_str();
 //   size_t length = text.length();
 //   size_t position = 0;
@@ -221,8 +221,8 @@ bool IsRTL()
 //     position = next_position;
 //   }
 // 
-//   return LEFT_TO_RIGHT;
-// }
+  return LEFT_TO_RIGHT;
+}
 
 #if defined(OS_WIN)
 bool AdjustStringForLocaleDirection(string16* text) {

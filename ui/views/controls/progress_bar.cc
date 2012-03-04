@@ -21,9 +21,6 @@
 #include "ui/views/border.h"
 #include "ui/views/painter.h"
 
-using std::max;
-using std::min;
-
 namespace {
 
 // Corner radius for the progress bar's border.
@@ -85,7 +82,7 @@ void FillRoundRect(gfx::Canvas* canvas,
   // Need to unref shader, otherwise never deleted.
   s->unref();
 
-  canvas->AsCanvasSkia()->drawPath(path, paint);
+  canvas->GetSkCanvas()->drawPath(path, paint);
 }
 
 void FillRoundRect(gfx::Canvas* canvas,
@@ -106,7 +103,7 @@ void FillRoundRect(gfx::Canvas* canvas,
     paint.setStyle(SkPaint::kFill_Style);
     paint.setFlags(SkPaint::kAntiAlias_Flag);
     paint.setColor(gradient_start_color);
-    canvas->AsCanvasSkia()->drawPath(path, paint);
+    canvas->GetSkCanvas()->drawPath(path, paint);
   }
 }
 
@@ -124,7 +121,7 @@ void StrokeRoundRect(gfx::Canvas* canvas,
   paint.setStyle(SkPaint::kStroke_Style);
   paint.setFlags(SkPaint::kAntiAlias_Flag);
   paint.setStrokeWidth(SkIntToScalar(stroke_width));
-  canvas->AsCanvasSkia()->drawPath(path, paint);
+  canvas->GetSkCanvas()->drawPath(path, paint);
 }
 
 }  // namespace
@@ -143,6 +140,41 @@ ProgressBar::ProgressBar()
 ProgressBar::~ProgressBar() {
 }
 
+void ProgressBar::SetDisplayRange(double min_display_value,
+                                  double max_display_value) {
+  if (min_display_value != min_display_value_ ||
+      max_display_value != max_display_value_) {
+    DCHECK(min_display_value < max_display_value);
+    min_display_value_ = min_display_value;
+    max_display_value_ = max_display_value;
+    SchedulePaint();
+  }
+}
+
+void ProgressBar::SetValue(double value) {
+  if (value != current_value_) {
+    current_value_ = value;
+    SchedulePaint();
+  }
+}
+
+void ProgressBar::SetTooltipText(const string16& tooltip_text) {
+  tooltip_text_ = tooltip_text;
+}
+
+bool ProgressBar::GetTooltipText(const gfx::Point& p, string16* tooltip) const {
+  DCHECK(tooltip);
+  if (tooltip == NULL)
+    return false;
+  tooltip->assign(tooltip_text_);
+  return !tooltip_text_.empty();
+}
+
+void ProgressBar::GetAccessibleState(ui::AccessibleViewState* state) {
+  state->role = ui::AccessibilityTypes::ROLE_PROGRESSBAR;
+  state->state = ui::AccessibilityTypes::STATE_READONLY;
+}
+
 gfx::Size ProgressBar::GetPreferredSize() {
   return gfx::Size(100, 16);
 }
@@ -151,14 +183,9 @@ std::string ProgressBar::GetClassName() const {
   return kViewClassName;
 }
 
-void ProgressBar::GetAccessibleState(ui::AccessibleViewState* state) {
-  state->role = ui::AccessibilityTypes::ROLE_PROGRESSBAR;
-  state->state = ui::AccessibilityTypes::STATE_READONLY;
-}
-
 void ProgressBar::OnPaint(gfx::Canvas* canvas) {
-  const double capped_value =
-      min(max(current_value_, min_display_value_), max_display_value_);
+  const double capped_value = std::min(
+      std::max(current_value_, min_display_value_), max_display_value_);
   const double capped_fraction =
       (capped_value - min_display_value_) /
       (max_display_value_ - min_display_value_);
@@ -194,16 +221,14 @@ void ProgressBar::OnPaint(gfx::Canvas* canvas) {
                   kBorderWidth);
 
   if (progress_width > 1) {
-    const bool enabled = IsEnabled();
-
-    const SkColor bar_color_start = enabled ?
+    const SkColor bar_color_start = enabled() ?
         SkColorSetRGB(100, 116, 147) :
         SkColorSetRGB(229, 232, 237);
-    const SkColor bar_color_end = enabled ?
+    const SkColor bar_color_end = enabled() ?
         SkColorSetRGB(65, 73, 87) :
         SkColorSetRGB(224, 225, 227);
 
-    const SkColor bar_outer_color = enabled ?
+    const SkColor bar_outer_color = enabled() ?
         SkColorSetRGB(0x4A, 0x4A, 0x4A) :
         SkColorSetARGB(0x80, 0x4A, 0x4A, 0x4A);
 
@@ -222,7 +247,7 @@ void ProgressBar::OnPaint(gfx::Canvas* canvas) {
 
     // Draw inner stroke and shadow if wide enough.
     if (progress_width > 2 * kBorderWidth) {
-      canvas->AsCanvasSkia()->save();
+      canvas->GetSkCanvas()->save();
 
       SkPath inner_path;
       AddRoundRectPathWithPadding(
@@ -230,7 +255,7 @@ void ProgressBar::OnPaint(gfx::Canvas* canvas) {
           kCornerRadius,
           SkIntToScalar(kBorderWidth),
           &inner_path);
-      canvas->AsCanvasSkia()->clipPath(inner_path);
+      canvas->GetSkCanvas()->clipPath(inner_path);
 
       // Draw bar inner stroke
       StrokeRoundRect(canvas,
@@ -248,7 +273,7 @@ void ProgressBar::OnPaint(gfx::Canvas* canvas) {
                       bar_inner_shadow_color,
                       kBorderWidth);
 
-      canvas->AsCanvasSkia()->restore();
+      canvas->GetSkCanvas()->restore();
     }
 
     // Draw bar stroke
@@ -287,36 +312,6 @@ void ProgressBar::OnPaint(gfx::Canvas* canvas) {
                   border_color,
                   kBorderWidth);
 #endif
-}
-
-bool ProgressBar::GetTooltipText(const gfx::Point& p, string16* tooltip) {
-  DCHECK(tooltip);
-  if (tooltip == NULL)
-    return false;
-  tooltip->assign(tooltip_text_);
-  return !tooltip_text_.empty();
-}
-
-void ProgressBar::SetDisplayRange(double min_display_value,
-                                  double max_display_value) {
-  if (min_display_value != min_display_value_ ||
-      max_display_value != max_display_value_) {
-    DCHECK(min_display_value < max_display_value);
-    min_display_value_ = min_display_value;
-    max_display_value_ = max_display_value;
-    SchedulePaint();
-  }
-}
-
-void ProgressBar::SetValue(double value) {
-  if (value != current_value_) {
-    current_value_ = value;
-    SchedulePaint();
-  }
-}
-
-void ProgressBar::SetTooltipText(const string16& tooltip_text) {
-  tooltip_text_ = tooltip_text;
 }
 
 }  // namespace views

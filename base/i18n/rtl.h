@@ -68,8 +68,8 @@ BASE_I18N_EXPORT bool IsRTL();
 // character types L, LRE, LRO, R, AL, RLE, and RLO are considered as strong
 // directionality characters. Please refer to http://unicode.org/reports/tr9/
 // for more information.
-// BASE_I18N_EXPORT TextDirection GetFirstStrongCharacterDirection(
-//     const string16& text);
+BASE_I18N_EXPORT TextDirection GetFirstStrongCharacterDirection(
+    const string16& text);
 
 // Given the string in |text|, this function modifies the string in place with
 // the appropriate Unicode formatting marks that mark the string direction
