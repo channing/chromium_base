@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef VIEWS_IME_INPUT_METHOD_BASE_H_
-#define VIEWS_IME_INPUT_METHOD_BASE_H_
+#ifndef UI_VIEWS_IME_INPUT_METHOD_BASE_H_
+#define UI_VIEWS_IME_INPUT_METHOD_BASE_H_
 #pragma once
 
 #include "base/basictypes.h"
@@ -11,7 +11,14 @@
 #include "ui/views/focus/focus_manager.h"
 #include "ui/views/ime/input_method.h"
 #include "ui/views/ime/input_method_delegate.h"
-#include "ui/views/ime/text_input_client.h"
+
+namespace gfx {
+class Rect;
+}
+
+namespace ui {
+class TextInputClient;
+}
 
 namespace views {
 
@@ -46,21 +53,20 @@ class VIEWS_EXPORT InputMethodBase : public InputMethod,
   // implementation.
   virtual void OnTextInputTypeChanged(View* view) OVERRIDE;
 
-  virtual TextInputClient* GetTextInputClient() const OVERRIDE;
+  virtual ui::TextInputClient* GetTextInputClient() const OVERRIDE;
   virtual ui::TextInputType GetTextInputType() const OVERRIDE;
   virtual bool IsMock() const OVERRIDE;
 
-  // Overridden from FocusChangeListener. Derived classes shouldn't override
-  // this method. Override FocusedViewWillChange() and FocusedViewDidChange()
-  // instead.
-  virtual void FocusWillChange(View* focused_before, View* focused) OVERRIDE;
+  // Overridden from FocusChangeListener.
+  virtual void OnWillChangeFocus(View* focused_before, View* focused) OVERRIDE;
+  virtual void OnDidChangeFocus(View* focused_before, View* focused) OVERRIDE;
 
  protected:
   // Getters and setters of properties.
   internal::InputMethodDelegate* delegate() const { return delegate_; }
   Widget* widget() const { return widget_; }
-  View* focused_view() const { return focused_view_; }
   bool widget_focused() const { return widget_focused_; }
+  View* GetFocusedView() const;
 
   // Checks if the given View is focused. Returns true only if the View and
   // the Widget are both focused.
@@ -83,22 +89,9 @@ class VIEWS_EXPORT InputMethodBase : public InputMethod,
   // Returns false if the current text input client doesn't support text input.
   bool GetCaretBoundsInWidget(gfx::Rect* rect) const;
 
-  // Called just before changing the focused view. Should be overridden by
-  // derived classes. The default implementation does nothing.
-  virtual void FocusedViewWillChange();
-
-  // Called just after changing the focused view. Should be overridden by
-  // derived classes. The default implementation does nothing.
-  // Note: It's called just after changing the value of |focused_view_|. As it's
-  // called inside FocusChangeListener's FocusWillChange() method, which is
-  // called by the FocusManager before actually changing the focus, the derived
-  // class should not rely on the actual focus state of the |focused_view_|.
-  virtual void FocusedViewDidChange();
-
  private:
   internal::InputMethodDelegate* delegate_;
   Widget* widget_;
-  View* focused_view_;
 
   // Indicates if the top-level widget is focused or not.
   bool widget_focused_;
@@ -108,4 +101,4 @@ class VIEWS_EXPORT InputMethodBase : public InputMethod,
 
 }  // namespace views
 
-#endif  // VIEWS_IME_INPUT_METHOD_BASE_H_
+#endif  // UI_VIEWS_IME_INPUT_METHOD_BASE_H_

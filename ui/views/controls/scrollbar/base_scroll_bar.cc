@@ -4,23 +4,27 @@
 
 #include "ui/views/controls/scrollbar/base_scroll_bar.h"
 
-#if defined(OS_LINUX)
-#include "ui/gfx/screen.h"
-#endif
-
+#include "base/bind.h"
+#include "base/bind_helpers.h"
 #include "base/callback.h"
 #include "base/compiler_specific.h"
 #include "base/message_loop.h"
 #include "base/string16.h"
 #include "base/utf_string_conversions.h"
+#include "build/build_config.h"
 #include "grit/ui_strings.h"
 #include "ui/base/keycodes/keyboard_codes.h"
 #include "ui/base/l10n/l10n_util.h"
 #include "ui/gfx/canvas.h"
-#include "ui/views/controls/menu/menu.h"
-#include "ui/views/controls/scrollbar/base_scroll_bar_thumb.h"
+#include "ui/views/controls/menu/menu_item_view.h"
+#include "ui/views/controls/menu/menu_runner.h"
 #include "ui/views/controls/scroll_view.h"
+#include "ui/views/controls/scrollbar/base_scroll_bar_thumb.h"
 #include "ui/views/widget/widget.h"
+
+#if defined(OS_LINUX)
+#include "ui/gfx/screen.h"
+#endif
 
 #undef min
 #undef max
@@ -38,8 +42,7 @@ BaseScrollBar::BaseScrollBar(bool horizontal, BaseScrollBarThumb* thumb)
       thumb_track_state_(CustomButton::BS_NORMAL),
       last_scroll_amount_(SCROLL_NONE),
       ALLOW_THIS_IN_INITIALIZER_LIST(repeater_(
-          NewCallback<BaseScrollBar>(this,
-                                       &BaseScrollBar::TrackClicked))),
+          base::Bind(&BaseScrollBar::TrackClicked, base::Unretained(this)))),
       context_menu_mouse_position_(0) {
   AddChildView(thumb_);
 
@@ -77,6 +80,9 @@ void BaseScrollBar::ScrollByAmount(ScrollAmount amount) {
   }
   contents_scroll_offset_ = offset;
   ScrollContentsToOffset();
+}
+
+BaseScrollBar::~BaseScrollBar() {
 }
 
 void BaseScrollBar::ScrollToThumbPosition(int thumb_position,
@@ -205,8 +211,9 @@ void BaseScrollBar::ShowContextMenuForView(View* source,
   View::ConvertPointFromWidget(this, &temp_pt);
   context_menu_mouse_position_ = IsHorizontal() ? temp_pt.x() : temp_pt.y();
 
-  scoped_ptr<Menu> menu(
-      Menu::Create(this, Menu::TOPLEFT, GetWidget()->GetNativeView()));
+  views::MenuItemView* menu = new views::MenuItemView(this);
+  // MenuRunner takes ownership of |menu|.
+  menu_runner_.reset(new MenuRunner(menu));
   menu->AppendDelegateMenuItem(ScrollBarContextMenuCommand_ScrollHere);
   menu->AppendSeparator();
   menu->AppendDelegateMenuItem(ScrollBarContextMenuCommand_ScrollStart);
@@ -217,13 +224,16 @@ void BaseScrollBar::ShowContextMenuForView(View* source,
   menu->AppendSeparator();
   menu->AppendDelegateMenuItem(ScrollBarContextMenuCommand_ScrollPrev);
   menu->AppendDelegateMenuItem(ScrollBarContextMenuCommand_ScrollNext);
-  menu->RunMenuAt(p.x(), p.y());
+  if (menu_runner_->RunMenuAt(GetWidget(), NULL, gfx::Rect(p, gfx::Size(0, 0)),
+      MenuItemView::TOPLEFT, MenuRunner::HAS_MNEMONICS) ==
+      MenuRunner::MENU_DELETED)
+    return;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 // BaseScrollBar, Menu::Delegate implementation:
 
-std::wstring BaseScrollBar::GetLabel(int id) const {
+string16 BaseScrollBar::GetLabel(int id) const {
   int ids_value = 0;
   switch (id) {
     case ScrollBarContextMenuCommand_ScrollHere:
@@ -255,7 +265,7 @@ std::wstring BaseScrollBar::GetLabel(int id) const {
       NOTREACHED() << "Invalid BaseScrollBar Context Menu command!";
   }
 
-  return ids_value ? UTF16ToWide(l10n_util::GetStringUTF16(ids_value)) : L"";
+  return ids_value ? l10n_util::GetStringUTF16(ids_value) : string16();
 }
 
 bool BaseScrollBar::IsCommandEnabled(int id) const {

@@ -7,7 +7,6 @@
 #include "base/logging.h"
 #include "ui/gfx/canvas.h"
 #include "ui/views/controls/native/native_view_host_wrapper.h"
-#include "ui/views/controls/native/native_view_host_views.h"
 #include "ui/views/widget/widget.h"
 
 namespace views {
@@ -29,8 +28,8 @@ const bool NativeViewHost::kRenderNativeControlFocus = true;
 
 NativeViewHost::NativeViewHost()
     : native_view_(NULL),
-      views_view_(NULL),
       fast_resize_(false),
+      fast_resize_at_last_layout_(false),
       focus_view_(NULL) {
 }
 
@@ -40,23 +39,7 @@ NativeViewHost::~NativeViewHost() {
 void NativeViewHost::Attach(gfx::NativeView native_view) {
   DCHECK(native_view);
   DCHECK(!native_view_);
-  DCHECK(!views_view_);
   native_view_ = native_view;
-  // If set_focus_view() has not been invoked, this view is the one that should
-  // be seen as focused when the native view receives focus.
-  if (!focus_view_)
-    focus_view_ = this;
-  native_wrapper_->NativeViewAttached();
-}
-
-void NativeViewHost::AttachToView(View* view) {
-  if (view == views_view_)
-    return;
-  DCHECK(view);
-  DCHECK(!native_view_);
-  DCHECK(!views_view_);
-  native_wrapper_.reset(new NativeViewHostViews(this));
-  views_view_ = view;
   // If set_focus_view() has not been invoked, this view is the one that should
   // be seen as focused when the native view receives focus.
   if (!focus_view_)
@@ -87,7 +70,7 @@ gfx::Size NativeViewHost::GetPreferredSize() {
 }
 
 void NativeViewHost::Layout() {
-  if ((!native_view_ && !views_view_) || !native_wrapper_.get())
+  if (!native_view_ || !native_wrapper_.get())
     return;
 
   gfx::Rect vis_bounds = GetVisibleBounds();
@@ -120,6 +103,7 @@ void NativeViewHost::Layout() {
   } else {
     native_wrapper_->HideWidget();
   }
+  fast_resize_at_last_layout_ = visible && fast_resize_;
 }
 
 void NativeViewHost::OnPaint(gfx::Canvas* canvas) {
@@ -141,7 +125,7 @@ void NativeViewHost::OnPaint(gfx::Canvas* canvas) {
   // It would be nice if this used some approximation of the page's
   // current background color.
   if (native_wrapper_->HasInstalledClip())
-    canvas->FillRectInt(SK_ColorWHITE, 0, 0, width(), height());
+    canvas->FillRect(SK_ColorWHITE, GetLocalBounds());
 }
 
 void NativeViewHost::VisibilityChanged(View* starting_from, bool is_visible) {
@@ -195,10 +179,10 @@ gfx::NativeViewAccessible NativeViewHost::GetNativeViewAccessible() {
 // NativeViewHost, private:
 
 void NativeViewHost::Detach(bool destroyed) {
-  DCHECK(native_view_ || views_view_);
-  native_wrapper_->NativeViewDetaching(destroyed);
-  native_view_ = NULL;
-  views_view_ = NULL;
+  if (native_view_) {
+    native_wrapper_->NativeViewDetaching(destroyed);
+    native_view_ = NULL;
+  }
 }
 
 }  // namespace views

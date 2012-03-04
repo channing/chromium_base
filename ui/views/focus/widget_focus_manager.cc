@@ -27,9 +27,9 @@ void WidgetFocusManager::RemoveFocusChangeListener(
 
 void WidgetFocusManager::OnWidgetFocusEvent(gfx::NativeView focused_before,
                                             gfx::NativeView focused_now) {
-  if (enabled_) {
+  if (enabled_ && focused_before != focused_now) {
     FOR_EACH_OBSERVER(WidgetFocusChangeListener, focus_change_listeners_,
-                      NativeFocusWillChange(focused_before, focused_now));
+                      OnNativeFocusChange(focused_before, focused_now));
   }
 }
 

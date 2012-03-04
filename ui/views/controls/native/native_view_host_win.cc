@@ -55,7 +55,7 @@ void NativeViewHostWin::AddedToWidget() {
   HWND widget_hwnd = host_->GetWidget()->GetNativeView();
   if (parent_hwnd != widget_hwnd)
     SetParent(host_->native_view(), widget_hwnd);
-  if (host_->IsVisibleInRootView())
+  if (host_->IsDrawn())
     ShowWindow(host_->native_view(), SW_SHOW);
   else
     ShowWindow(host_->native_view(), SW_HIDE);
@@ -130,10 +130,11 @@ gfx::NativeViewAccessible NativeViewHostWin::GetNativeViewAccessible() {
   if (!IsWindow(hwnd))
     return NULL;
 
-  LRESULT ret = SendMessage(hwnd, WM_GETOBJECT, 0, OBJID_CLIENT);
   IAccessible* accessible = NULL;
-  HRESULT success = ObjectFromLresult(
-      ret, IID_IDispatch, 0, reinterpret_cast<void**>(accessible));
+  HRESULT success = ::AccessibleObjectFromWindow(
+      hwnd, OBJID_CLIENT, IID_IAccessible,
+      reinterpret_cast<void**>(&accessible));
+
   if (success == S_OK) {
     return accessible;
   } else {

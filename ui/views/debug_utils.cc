@@ -2,11 +2,11 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "views/debug_utils.h"
+#include "ui/views/debug_utils.h"
 
 #include "base/logging.h"
 #include "base/utf_string_conversions.h"
-#include "views/view.h"
+#include "ui/views/view.h"
 
 #ifndef NDEBUG
 #include <iostream>

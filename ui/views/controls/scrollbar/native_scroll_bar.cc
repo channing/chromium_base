@@ -1,4 +1,4 @@
-// Copyright (c) 2006-2008 The Chromium Authors. All rights reserved.
+// Copyright (c) 2012 The Chromium Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -10,6 +10,10 @@
 #include "base/message_loop.h"
 #include "ui/views/controls/scrollbar/native_scroll_bar_wrapper.h"
 #include "ui/views/widget/widget.h"
+
+#if defined(USE_AURA)
+#include "ui/views/controls/scrollbar/native_scroll_bar_views.h"
+#endif
 
 namespace views {
 
@@ -45,8 +49,10 @@ gfx::Size NativeScrollBar::GetPreferredSize() {
 }
 
 void NativeScrollBar::Layout() {
-  if (native_wrapper_)
+  if (native_wrapper_) {
+    native_wrapper_->GetView()->SetBounds(0, 0, width(), height());
     native_wrapper_->GetView()->Layout();
+  }
 }
 
 void NativeScrollBar::ViewHierarchyChanged(bool is_add, View *parent,
@@ -96,30 +102,6 @@ int NativeScrollBar::GetPosition() const {
     return 0;
   return native_wrapper_->GetPosition();
 }
-
-
-#if defined(USE_AURA)
-
-// static
-NativeScrollBarWrapper* NativeScrollBarWrapper::CreateWrapper(
-    NativeScrollBar* scroll_bar) {
-  NOTIMPLEMENTED();
-  return NULL;
-}
-
-// static
-int NativeScrollBarWrapper::GetHorizontalScrollBarHeight() {
-  NOTIMPLEMENTED();
-  return 16;
-}
-
-// static
-int NativeScrollBarWrapper::GetVerticalScrollBarWidth() {
-  NOTIMPLEMENTED();
-  return 16;
-}
-
-#endif
 
 }  // namespace views
 

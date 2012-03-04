@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef VIEWS_WIDGET_TOOLTIP_MANAGER_WIN_H_
-#define VIEWS_WIDGET_TOOLTIP_MANAGER_WIN_H_
+#ifndef UI_VIEWS_WIDGET_TOOLTIP_MANAGER_WIN_H_
+#define UI_VIEWS_WIDGET_TOOLTIP_MANAGER_WIN_H_
 #pragma once
 
 #include <windows.h>
@@ -11,8 +11,9 @@
 #include <string>
 
 #include "base/basictypes.h"
+#include "base/compiler_specific.h"
+#include "base/memory/weak_ptr.h"
 #include "base/string16.h"
-#include "base/task.h"
 #include "ui/gfx/native_widget_types.h"
 #include "ui/gfx/point.h"
 #include "ui/views/widget/tooltip_manager.h"
@@ -68,16 +69,16 @@ class TooltipManagerWin : public TooltipManager {
   bool Init();
 
   // Notification that the view hierarchy has changed in some way.
-  virtual void UpdateTooltip();
+  virtual void UpdateTooltip() OVERRIDE;
 
   // Invoked when the tooltip text changes for the specified views.
-  virtual void TooltipTextChanged(View* view);
+  virtual void TooltipTextChanged(View* view) OVERRIDE;
 
   // Invoked when toolbar icon gets focus.
-  virtual void ShowKeyboardTooltip(View* view);
+  virtual void ShowKeyboardTooltip(View* view) OVERRIDE;
 
   // Invoked when toolbar loses focus.
-  virtual void HideKeyboardTooltip();
+  virtual void HideKeyboardTooltip() OVERRIDE;
 
   // Message handlers. These forward to the tooltip control.
   virtual void OnMouse(UINT u_msg, WPARAM w_param, LPARAM l_param);
@@ -143,11 +144,11 @@ class TooltipManagerWin : public TooltipManager {
 
   // Used to register DestroyTooltipWindow function with PostDelayedTask
   // function.
-  ScopedRunnableMethodFactory<TooltipManagerWin> keyboard_tooltip_factory_;
+  base::WeakPtrFactory<TooltipManagerWin> keyboard_tooltip_factory_;
 
   DISALLOW_COPY_AND_ASSIGN(TooltipManagerWin);
 };
 
 }  // namespace views
 
-#endif // VIEWS_WIDGET_TOOLTIP_MANAGER_WIN_H_
+#endif  // UI_VIEWS_WIDGET_TOOLTIP_MANAGER_WIN_H_

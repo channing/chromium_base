@@ -1,11 +1,12 @@
-// Copyright (c) 2011 The Chromium Authors. All rights reserved.
+// Copyright (c) 2012 The Chromium Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef VIEWS_WIDGET_WIDGET_H_
-#define VIEWS_WIDGET_WIDGET_H_
+#ifndef UI_VIEWS_WIDGET_WIDGET_H_
+#define UI_VIEWS_WIDGET_WIDGET_H_
 #pragma once
 
+#include <set>
 #include <stack>
 
 #include "base/gtest_prod_util.h"
@@ -35,7 +36,6 @@
 
 namespace gfx {
 class Canvas;
-class Path;
 class Point;
 class Rect;
 }
@@ -56,7 +56,6 @@ class InputMethod;
 class NativeWidget;
 class NonClientFrameView;
 class ScopedEvent;
-class TooltipManager;
 class View;
 class WidgetDelegate;
 namespace internal {
@@ -93,7 +92,7 @@ class VIEWS_EXPORT Widget : public internal::NativeWidgetDelegate,
                             public FocusTraversable {
  public:
   // Observers can listen to various events on the Widgets.
-  class Observer {
+  class VIEWS_EXPORT Observer {
    public:
     virtual void OnWidgetClosing(Widget* widget) {}
     virtual void OnWidgetVisibilityChanged(Widget* widget, bool visible) {}
@@ -108,10 +107,21 @@ class VIEWS_EXPORT Widget : public internal::NativeWidgetDelegate,
     FRAME_TYPE_FORCE_NATIVE     // Force the native frame.
   };
 
+  // Result from RunMoveLoop().
+  enum MoveLoopResult {
+    // The move loop completed successfully.
+    MOVE_LOOP_SUCCESSFUL,
+
+    // The user canceled the move loop.
+    MOVE_LOOP_CANCELED
+  };
+
   struct VIEWS_EXPORT InitParams {
     enum Type {
       TYPE_WINDOW,      // A decorated Window, like a frame window.
                         // Widgets of TYPE_WINDOW will have a NonClientView.
+      TYPE_PANEL,       // Always on top window managed by PanelManager.
+                        // Widgets of TYPE_PANEL will have a NonClientView.
       TYPE_WINDOW_FRAMELESS,
                         // An undecorated Window.
       TYPE_CONTROL,     // A control, like a button.
@@ -134,11 +144,18 @@ class VIEWS_EXPORT Widget : public internal::NativeWidgetDelegate,
     InitParams();
     explicit InitParams(Type type);
 
+    // If |parent_widget| is non-null, it's native view is returned, otherwise
+    // |parent| is returned.
+    gfx::NativeView GetParent() const;
+
     Type type;
     // If NULL, a default implementation will be constructed.
     WidgetDelegate* delegate;
     bool child;
     bool transient;
+    // If true, the widget may be fully or partially transparent.  If false,
+    // we can perform optimizations based on the widget being fully opaque.
+    // Defaults to false.
     bool transparent;
     bool accept_events;
     bool can_activate;
@@ -159,8 +176,9 @@ class VIEWS_EXPORT Widget : public internal::NativeWidgetDelegate,
     // The Widget will not construct a default one. Default is NULL.
     NativeWidget* native_widget;
     bool top_level;
-    // When set NativeWidgetViews will create its own layer.
-    bool create_layer;
+    // Only used by NativeWidgetAura. Specifies whether the Layer created by
+    // aura::Window has a texture. The default is true.
+    bool create_texture_for_layer;
   };
 
   Widget();
@@ -204,8 +222,8 @@ class VIEWS_EXPORT Widget : public internal::NativeWidgetDelegate,
   static Widget* GetWidgetForNativeWindow(gfx::NativeWindow native_window);
 
   // Retrieves the top level widget in a native view hierarchy
-  // starting at |native_view|. Top level widget is a widget with
-  // TYPE_WINDOW, TYPE_WINDOW_FRAMELESS, POPUP or MENU and has its own
+  // starting at |native_view|. Top level widget is a widget with TYPE_WINDOW,
+  // TYPE_PANEL, TYPE_WINDOW_FRAMELESS, POPUP or MENU and has its own
   // focus manager. This may be itself if the |native_view| is top level,
   // or NULL if there is no toplevel in a native view hierarchy.
   static Widget* GetTopLevelWidgetForNativeView(gfx::NativeView native_view);
@@ -244,7 +262,7 @@ class VIEWS_EXPORT Widget : public internal::NativeWidgetDelegate,
 
   // Returns the gfx::NativeWindow associated with this Widget. This may return
   // NULL on some platforms if the widget was created with a type other than
-  // TYPE_WINDOW.
+  // TYPE_WINDOW or TYPE_PANEL.
   gfx::NativeWindow GetNativeWindow() const;
 
   // Add/remove observer.
@@ -292,17 +310,27 @@ class VIEWS_EXPORT Widget : public internal::NativeWidgetDelegate,
   void SetBounds(const gfx::Rect& bounds);
   void SetSize(const gfx::Size& size);
 
-  // Like SetBounds(), but ensures the Widget is fully visible within the bounds
-  // of its parent. If the Widget has no parent, it is centered within the
-  // bounds of its screen if it is visible, or |other_widget|'s screen if it is
-  // not.
-  void SetBoundsConstrained(const gfx::Rect& bounds,
-                            Widget* other_widget);
+  // Like SetBounds(), but ensures the Widget is fully visible on screen,
+  // resizing and/or repositioning as necessary. This is only useful for
+  // non-child widgets.
+  void SetBoundsConstrained(const gfx::Rect& bounds);
+
+  // Sets whether animations that occur when visibility is changed are enabled.
+  // Default is true.
+  void SetVisibilityChangedAnimationsEnabled(bool value);
+
+  // Starts a nested message loop that moves the window. This can be used to
+  // start a window move operation from a mouse moved event. This returns when
+  // the move completes.
+  MoveLoopResult RunMoveLoop();
+
+  // Stops a previously started move loop. This is not immediate.
+  void EndMoveLoop();
 
   // Places the widget in front of the specified widget in z-order.
-  void MoveAboveWidget(Widget* widget);
-  void MoveAbove(gfx::NativeView native_view);
-  void MoveToTop();
+  void StackAboveWidget(Widget* widget);
+  void StackAbove(gfx::NativeView native_view);
+  void StackAtTop();
 
   // Sets a shape on the widget. This takes ownership of shape.
   void SetShape(gfx::NativeRegion shape);
@@ -315,10 +343,6 @@ class VIEWS_EXPORT Widget : public internal::NativeWidgetDelegate,
   // window handle associated with this Widget, so should not be called from
   // any code that expects it to be valid beyond this call.
   void CloseNow();
-
-  // Toggles the enable state for the Close button (and the Close menu item in
-  // the system menu).
-  void EnableClose(bool enable);
 
   // Shows or hides the widget, without changing activation state.
   virtual void Show();
@@ -337,10 +361,10 @@ class VIEWS_EXPORT Widget : public internal::NativeWidgetDelegate,
   // Returns whether the Widget is the currently active window.
   virtual bool IsActive() const;
 
-  // Prevents the window from being rendered as deactivated the next time it is.
-  // This state is reset automatically as soon as the window becomes activated
-  // again. There is no ability to control the state through this API as this
-  // leads to sync problems.
+  // Prevents the window from being rendered as deactivated. This state is
+  // reset automatically as soon as the window becomes activated again. There is
+  // no ability to control the state through this API as this leads to sync
+  // problems.
   void DisableInactiveRendering();
 
   // Sets the widget to be on top of all other widgets in the windowing system.
@@ -397,6 +421,7 @@ class VIEWS_EXPORT Widget : public internal::NativeWidgetDelegate,
   // Note that all widgets in a widget hierarchy share the same focus manager.
   // TODO(beng): remove virtual.
   virtual FocusManager* GetFocusManager();
+  virtual const FocusManager* GetFocusManager() const;
 
   // Returns the InputMethod for this widget.
   // Note that all widgets in a widget hierarchy share the same input method.
@@ -498,19 +523,15 @@ class VIEWS_EXPORT Widget : public internal::NativeWidgetDelegate,
     return non_client_view_ ? non_client_view_->client_view() : NULL;
   }
 
-  static void set_compositor_factory_for_testing(ui::Compositor*(*factory)()) {
-    compositor_factory_ = factory;
-  }
-  static ui::Compositor* (*compositor_factory())() {
-    return compositor_factory_;
-  }
-
   const ui::Compositor* GetCompositor() const;
   ui::Compositor* GetCompositor();
 
   // Invokes method of same name on the NativeWidget.
   void CalculateOffsetToAncestorWithLayer(gfx::Point* offset,
                                           ui::Layer** layer_parent);
+
+  // Invokes method of same name on the NativeWidget.
+  void ReorderLayers();
 
   // Notifies assistive technology that an accessibility event has
   // occurred on |view|, such as when the view is focused or when its
@@ -533,6 +554,12 @@ class VIEWS_EXPORT Widget : public internal::NativeWidgetDelegate,
     return native_widget_;
   }
 
+  // Sets mouse capture on the specified view.
+  void SetMouseCapture(views::View* view);
+
+  // Releases mouse capture.
+  void ReleaseMouseCapture();
+
   // Returns the current event being processed. If there are multiple events
   // being processed at the same time (e.g. one event triggers another event),
   // then the most recent event is returned. Returns NULL if no event is being
@@ -552,22 +579,15 @@ class VIEWS_EXPORT Widget : public internal::NativeWidgetDelegate,
     focus_on_creation_ = focus_on_creation;
   }
 
-  // Converts the |point| in ancestor's coordinate to this widget's coordinates.
-  // Returns false if |ancestor| is not an ancestor of this widget.
-  // The receiver has to be pure views widget (NativeWidgetViews) and
-  // ancestor can be of any type.
-  bool ConvertPointFromAncestor(
-      const Widget* ancestor, gfx::Point* point) const;
-
   // Returns a View* that any child Widgets backed by NativeWidgetViews
   // are added to.  The default implementation returns the contents view
   // if it exists and the root view otherwise.
   virtual View* GetChildViewParent();
 
   // True if the widget is considered top level widget. Top level widget
-  // is a widget of TYPE_WINDOW, TYPE_WINDOW_FRAMELESS, BUBBLE, POPUP or MENU,
-  // and has a focus manager and input method object associated with it.
-  // TYPE_CONTROL and TYPE_TOOLTIP is not considered top level.
+  // is a widget of TYPE_WINDOW, TYPE_PANEL, TYPE_WINDOW_FRAMELESS, BUBBLE,
+  // POPUP or MENU, and has a focus manager and input method object associated
+  // with it. TYPE_CONTROL and TYPE_TOOLTIP is not considered top level.
   bool is_top_level() const { return is_top_level_; }
 
   // Returns the bounds of work area in the screen that Widget belongs to.
@@ -599,6 +619,7 @@ class VIEWS_EXPORT Widget : public internal::NativeWidgetDelegate,
   virtual bool OnMouseEvent(const MouseEvent& event) OVERRIDE;
   virtual void OnMouseCaptureLost() OVERRIDE;
   virtual ui::TouchStatus OnTouchEvent(const TouchEvent& event) OVERRIDE;
+  virtual ui::GestureStatus OnGestureEvent(const GestureEvent& event) OVERRIDE;
   virtual bool ExecuteCommand(int command_id) OVERRIDE;
   virtual InputMethod* GetInputMethodDirect() OVERRIDE;
   virtual Widget* AsWidget() OVERRIDE;
@@ -630,6 +651,10 @@ class VIEWS_EXPORT Widget : public internal::NativeWidgetDelegate,
 
   // Returns whether capture should be released on mouse release.
   virtual bool ShouldReleaseCaptureOnMouseReleased() const;
+
+  // Sets the value of |disable_inactive_rendering_|. If the value changes,
+  // both the NonClientView and WidgetDelegate are notified.
+  void SetInactiveRenderingDisabled(bool value);
 
   // Persists the window's restored position and "show" state using the
   // window delegate.
@@ -708,9 +733,6 @@ class VIEWS_EXPORT Widget : public internal::NativeWidgetDelegate,
   // |saved_show_state_| is maximized.
   gfx::Rect initial_restored_bounds_;
 
-  // The smallest size the window can be.
-  gfx::Size minimum_size_;
-
   // Focus is automatically set to the view provided by the delegate
   // when the widget is shown. Set this value to false to override
   // initial focus for the widget.
@@ -720,9 +742,6 @@ class VIEWS_EXPORT Widget : public internal::NativeWidgetDelegate,
 
   // See |is_top_level()| accessor.
   bool is_top_level_;
-
-  // Factory used to create Compositors. Settable by tests.
-  static ui::Compositor*(*compositor_factory_)();
 
   // Tracks whether native widget has been initialized.
   bool native_widget_initialized_;
@@ -743,4 +762,4 @@ class VIEWS_EXPORT Widget : public internal::NativeWidgetDelegate,
 
 }  // namespace views
 
-#endif // VIEWS_WIDGET_WIDGET_H_
+#endif  // UI_VIEWS_WIDGET_WIDGET_H_

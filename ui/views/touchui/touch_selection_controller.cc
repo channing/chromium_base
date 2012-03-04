@@ -13,4 +13,4 @@ TouchSelectionController* TouchSelectionController::create(
 }
 #endif
 
-}  // namespace views.
+}  // namespace views

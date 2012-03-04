@@ -1,14 +1,16 @@
-// Copyright (c) 2011 The Chromium Authors. All rights reserved.
+// Copyright (c) 2012 The Chromium Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
 #include "ui/views/widget/widget_delegate.h"
 
+#include "base/utf_string_conversions.h"
+#include "third_party/skia/include/core/SkBitmap.h"
+#include "ui/views/bubble/bubble_delegate.h"
 #include "ui/views/view.h"
 #include "ui/views/views_delegate.h"
 #include "ui/views/widget/widget.h"
 #include "ui/views/window/client_view.h"
-#include "third_party/skia/include/core/SkBitmap.h"
 
 namespace views {
 
@@ -31,11 +33,11 @@ View* WidgetDelegate::GetInitiallyFocusedView() {
   return NULL;
 }
 
-DialogDelegate* WidgetDelegate::AsDialogDelegate() {
+BubbleDelegateView* WidgetDelegate::AsBubbleDelegate() {
   return NULL;
 }
 
-BubbleDelegate* WidgetDelegate::AsBubbleDelegate() {
+DialogDelegate* WidgetDelegate::AsDialogDelegate() {
   return NULL;
 }
 
@@ -51,8 +53,8 @@ bool WidgetDelegate::CanActivate() const {
   return true;
 }
 
-bool WidgetDelegate::IsModal() const {
-  return false;
+ui::ModalType WidgetDelegate::GetModalType() const {
+  return ui::MODAL_TYPE_NONE;
 }
 
 ui::AccessibilityTypes::Role WidgetDelegate::GetAccessibleWindowRole() const {
@@ -63,12 +65,12 @@ ui::AccessibilityTypes::State WidgetDelegate::GetAccessibleWindowState() const {
   return 0;
 }
 
-std::wstring WidgetDelegate::GetAccessibleWindowTitle() const {
+string16 WidgetDelegate::GetAccessibleWindowTitle() const {
   return GetWindowTitle();
 }
 
-std::wstring WidgetDelegate::GetWindowTitle() const {
-  return L"";
+string16 WidgetDelegate::GetWindowTitle() const {
+  return string16();
 }
 
 bool WidgetDelegate::ShouldShowWindowTitle() const {

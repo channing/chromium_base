@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef VIEWS_CONTROLS_BUTTON_BUTTON_H_
-#define VIEWS_CONTROLS_BUTTON_BUTTON_H_
+#ifndef UI_VIEWS_CONTROLS_BUTTON_BUTTON_H_
+#define UI_VIEWS_CONTROLS_BUTTON_BUTTON_H_
 #pragma once
 
 #include "ui/views/view.h"
@@ -40,7 +40,8 @@ class VIEWS_EXPORT Button : public View {
   void SetAccessibleKeyboardShortcut(const string16& shortcut);
 
   // Overridden from View:
-  virtual bool GetTooltipText(const gfx::Point& p, string16* tooltip) OVERRIDE;
+  virtual bool GetTooltipText(const gfx::Point& p,
+                              string16* tooltip) const OVERRIDE;
   virtual void GetAccessibleState(ui::AccessibleViewState* state) OVERRIDE;
 
  protected:
@@ -75,4 +76,4 @@ class VIEWS_EXPORT Button : public View {
 
 }  // namespace views
 
-#endif  // VIEWS_CONTROLS_BUTTON_BUTTON_H_
+#endif  // UI_VIEWS_CONTROLS_BUTTON_BUTTON_H_

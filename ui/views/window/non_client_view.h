@@ -2,11 +2,10 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef VIEWS_WINDOW_NON_CLIENT_VIEW_H_
-#define VIEWS_WINDOW_NON_CLIENT_VIEW_H_
+#ifndef UI_VIEWS_WINDOW_NON_CLIENT_VIEW_H_
+#define UI_VIEWS_WINDOW_NON_CLIENT_VIEW_H_
 #pragma once
 
-#include "base/task.h"
 #include "ui/views/view.h"
 #include "ui/views/window/client_view.h"
 
@@ -34,14 +33,11 @@ class VIEWS_EXPORT NonClientFrameView : public View {
   // frame border.
   static const int kClientEdgeThickness;
 
-  // Prevent the frame view from painting its inactive state. Prevents a related
-  // window from causing its owner to appear deactivated. Used for windows like
-  // bubbles.
-  void DisableInactiveRendering(bool disable) {
-    paint_as_active_ = disable;
-    if (!paint_as_active_)
-      SchedulePaint();
-  }
+  // Sets whether the window should be rendered as active regardless of the
+  // actual active state. Used when bubbles become active to make their parent
+  // appear active. A value of true makes the window render as active always,
+  // false gives normal behavior.
+  void SetInactiveRenderingDisabled(bool disable);
 
   // Returns the bounds (in this View's parent's coordinates) that the client
   // view should be laid out within.
@@ -57,7 +53,6 @@ class VIEWS_EXPORT NonClientFrameView : public View {
   virtual int NonClientHitTest(const gfx::Point& point) = 0;
   virtual void GetWindowMask(const gfx::Size& size,
                              gfx::Path* window_mask) = 0;
-  virtual void EnableClose(bool enable) = 0;
   virtual void ResetWindowControls() = 0;
   virtual void UpdateWindowIcon() = 0;
 
@@ -70,7 +65,6 @@ class VIEWS_EXPORT NonClientFrameView : public View {
   virtual void OnBoundsChanged(const gfx::Rect& previous_bounds) OVERRIDE;
 
   NonClientFrameView() : paint_as_active_(false) {}
-
 
   // Helper for non-client view implementations to determine which area of the
   // window border the specified |point| falls within. The other parameters are
@@ -85,8 +79,12 @@ class VIEWS_EXPORT NonClientFrameView : public View {
 
   // Used to determine if the frame should be painted as active. Keyed off the
   // window's actual active state and the override, see
-  // DisableInactiveRendering() above.
+  // SetInactiveRenderingDisabled() above.
   bool ShouldPaintAsActive() const;
+
+  // Invoked from SetInactiveRenderingDisabled(). This implementation invokes
+  // SchedulesPaint as necessary.
+  virtual void ShouldPaintAsActiveChanged();
 
  private:
   // True when the non-client view should always be rendered as if the window
@@ -105,21 +103,21 @@ class VIEWS_EXPORT NonClientFrameView : public View {
 //  portions of the window, and the ClientView, which is responsible for the
 //  same for the client area of the window:
 //
-//  +- views::Window ------------------------------------+
+//  +- views::Widget ------------------------------------+
 //  | +- views::RootView ------------------------------+ |
 //  | | +- views::NonClientView ---------------------+ | |
 //  | | | +- views::NonClientFrameView subclas  ---+ | | |
 //  | | | |                                        | | | |
 //  | | | | << all painting and event receiving >> | | | |
 //  | | | | << of the non-client areas of a     >> | | | |
-//  | | | | << views::Window.                   >> | | | |
+//  | | | | << views::Widget.                   >> | | | |
 //  | | | |                                        | | | |
 //  | | | +----------------------------------------+ | | |
 //  | | | +- views::ClientView or subclass --------+ | | |
 //  | | | |                                        | | | |
 //  | | | | << all painting and event receiving >> | | | |
 //  | | | | << of the client areas of a         >> | | | |
-//  | | | | << views::Window.                   >> | | | |
+//  | | | | << views::Widget.                   >> | | | |
 //  | | | |                                        | | | |
 //  | | | +----------------------------------------+ | | |
 //  | | +--------------------------------------------+ | |
@@ -162,7 +160,7 @@ class VIEWS_EXPORT NonClientView : public View {
   // shown that shouldn't visually de-activate the window.
   // Subclasses can override this to perform additional actions when this value
   // changes.
-  void DisableInactiveRendering(bool disable);
+  void SetInactiveRenderingDisabled(bool disable);
 
   // Returns the bounds of the window required to display the content area at
   // the specified bounds.
@@ -175,10 +173,6 @@ class VIEWS_EXPORT NonClientView : public View {
   // Returns a mask to be used to clip the top level window for the given
   // size. This is used to create the non-rectangular window shape.
   void GetWindowMask(const gfx::Size& size, gfx::Path* window_mask);
-
-  // Toggles the enable state for the Close button (and the Close menu item in
-  // the system menu).
-  void EnableClose(bool enable);
 
   // Tells the window controls as rendered by the NonClientView to reset
   // themselves to a normal state. This happens in situations where the
@@ -238,4 +232,4 @@ class VIEWS_EXPORT NonClientView : public View {
 
 }  // namespace views
 
-#endif  // #ifndef VIEWS_WINDOW_NON_CLIENT_VIEW_H_
+#endif  // UI_VIEWS_WINDOW_NON_CLIENT_VIEW_H_

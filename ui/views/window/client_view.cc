@@ -2,12 +2,11 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+#include "ui/views/window/client_view.h"
+
 #include "base/logging.h"
 #include "ui/base/accessibility/accessible_view_state.h"
-#include "ui/views/window/client_view.h"
-#if defined(OS_LINUX)
-#include "ui/views/window/hit_test.h"
-#endif
+#include "ui/base/hit_test.h"
 #include "ui/views/widget/widget.h"
 #include "ui/views/widget/widget_delegate.h"
 
@@ -15,7 +14,7 @@ namespace views {
 
 // static
 const char ClientView::kViewClassName[] =
-    "views/window/ClientView";
+    "ui/views/window/ClientView";
 
 ///////////////////////////////////////////////////////////////////////////////
 // ClientView, public:
@@ -34,14 +33,6 @@ DialogClientView* ClientView::AsDialogClientView() {
 }
 
 const DialogClientView* ClientView::AsDialogClientView() const {
-  return NULL;
-}
-
-BubbleView* ClientView::AsBubbleView() {
-  return NULL;
-}
-
-const BubbleView* ClientView::AsBubbleView() const {
   return NULL;
 }
 
@@ -74,14 +65,8 @@ std::string ClientView::GetClassName() const {
   return kViewClassName;
 }
 
-void ClientView::ViewHierarchyChanged(bool is_add, View* parent, View* child) {
-  if (is_add && child == this) {
-    DCHECK(GetWidget());
-    DCHECK(contents_view_); // |contents_view_| must be valid now!
-    // Insert |contents_view_| at index 0 so it is first in the focus chain.
-    // (the OK/Cancel buttons are inserted before contents_view_)
-    AddChildViewAt(contents_view_, 0);
-  }
+void ClientView::GetAccessibleState(ui::AccessibleViewState* state) {
+  state->role = ui::AccessibilityTypes::ROLE_CLIENT;
 }
 
 void ClientView::OnBoundsChanged(const gfx::Rect& previous_bounds) {
@@ -90,8 +75,14 @@ void ClientView::OnBoundsChanged(const gfx::Rect& previous_bounds) {
   // NonClientView::Layout.
 }
 
-void ClientView::GetAccessibleState(ui::AccessibleViewState* state) {
-  state->role = ui::AccessibilityTypes::ROLE_CLIENT;
+void ClientView::ViewHierarchyChanged(bool is_add, View* parent, View* child) {
+  if (is_add && child == this) {
+    DCHECK(GetWidget());
+    DCHECK(contents_view_); // |contents_view_| must be valid now!
+    // Insert |contents_view_| at index 0 so it is first in the focus chain.
+    // (the OK/Cancel buttons are inserted before contents_view_)
+    AddChildViewAt(contents_view_, 0);
+  }
 }
 
 }  // namespace views

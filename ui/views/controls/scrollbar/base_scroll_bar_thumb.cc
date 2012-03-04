@@ -4,9 +4,9 @@
 
 #include "ui/views/controls/scrollbar/base_scroll_bar_thumb.h"
 
-#include "ui/views/controls/scrollbar/base_scroll_bar.h"
 #include "ui/gfx/canvas.h"
 #include "ui/gfx/rect.h"
+#include "ui/views/controls/scrollbar/base_scroll_bar.h"
 
 namespace {
 // The distance the mouse can be dragged outside the bounds of the thumb during

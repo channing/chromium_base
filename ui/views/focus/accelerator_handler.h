@@ -1,9 +1,9 @@
-// Copyright (c) 2011 The Chromium Authors. All rights reserved.
+// Copyright (c) 2012 The Chromium Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef VIEWS_FOCUS_ACCELERATOR_HANDLER_H_
-#define VIEWS_FOCUS_ACCELERATOR_HANDLER_H_
+#ifndef UI_VIEWS_FOCUS_ACCELERATOR_HANDLER_H_
+#define UI_VIEWS_FOCUS_ACCELERATOR_HANDLER_H_
 #pragma once
 
 #include "build/build_config.h"
@@ -15,39 +15,42 @@
 #include <set>
 #include <vector>
 
+#include "base/compiler_specific.h"
 #include "base/message_loop.h"
 #include "ui/views/views_export.h"
 
 namespace views {
 
-#if (defined(TOUCH_UI) && !defined(USE_WAYLAND)) \
-    || (!defined(OS_WIN) && defined(USE_AURA))
+#if defined(USE_AURA) && defined(USE_X11) && !defined(USE_WAYLAND)
 // Dispatch an XEvent to the RootView. Return true if the event was dispatched
 // and handled, false otherwise.
 bool VIEWS_EXPORT DispatchXEvent(XEvent* xevent);
-
-// Keep a list of touch devices so that it is possible to determine if a pointer
-// event is a touch-event or a mouse-event.
-void VIEWS_EXPORT SetTouchDeviceList(std::vector<unsigned int>& devices);
-#endif  // TOUCH_UI
+#endif  // USE_AURA && USE_X11 && !USE_WAYLAND
 
 // This class delegates the key messages to the associated FocusManager class
 // for the window that is receiving these messages for accelerator processing.
+#if defined(OS_MACOSX)
+class VIEWS_EXPORT AcceleratorHandler {
+#else
 class VIEWS_EXPORT AcceleratorHandler : public MessageLoop::Dispatcher {
+#endif  // defined(OS_MACOSX)
  public:
   AcceleratorHandler();
 
   // Dispatcher method. This returns true if an accelerator was processed by the
   // focus manager
 #if defined(OS_WIN)
-  virtual bool Dispatch(const MSG& msg);
+  virtual bool Dispatch(const MSG& msg) OVERRIDE;
 #elif defined(USE_WAYLAND)
   virtual base::MessagePumpDispatcher::DispatchStatus Dispatch(
-      ui::WaylandEvent* ev);
-#elif defined(TOUCH_UI) || defined(USE_AURA)
-  virtual base::MessagePumpDispatcher::DispatchStatus Dispatch(XEvent* xev);
+      base::wayland::WaylandEvent* ev) OVERRIDE;
+#elif defined(OS_MACOSX)
+  // TODO(dhollowa): Implement on Mac.  http://crbug.com/109946
+#elif defined(USE_AURA)
+  virtual base::MessagePumpDispatcher::DispatchStatus Dispatch(
+      XEvent* xev) OVERRIDE;
 #else
-  virtual bool Dispatch(GdkEvent* event);
+  virtual bool Dispatch(GdkEvent* event) OVERRIDE;
 #endif
 
  private:
@@ -61,4 +64,4 @@ class VIEWS_EXPORT AcceleratorHandler : public MessageLoop::Dispatcher {
 
 }  // namespace views
 
-#endif  // VIEWS_FOCUS_ACCELERATOR_HANDLER_H_
+#endif  // UI_VIEWS_FOCUS_ACCELERATOR_HANDLER_H_

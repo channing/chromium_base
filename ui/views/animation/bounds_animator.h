@@ -2,12 +2,13 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef VIEWS_ANIMATION_BOUNDS_ANIMATOR_H_
-#define VIEWS_ANIMATION_BOUNDS_ANIMATOR_H_
+#ifndef UI_VIEWS_ANIMATION_BOUNDS_ANIMATOR_H_
+#define UI_VIEWS_ANIMATION_BOUNDS_ANIMATOR_H_
 #pragma once
 
 #include <map>
 
+#include "base/compiler_specific.h"
 #include "base/memory/ref_counted.h"
 #include "ui/base/animation/animation_container_observer.h"
 #include "ui/base/animation/animation_delegate.h"
@@ -71,8 +72,7 @@ class VIEWS_EXPORT BoundsAnimator : public ui::AnimationDelegate,
   // returned Animation.
   const ui::SlideAnimation* GetAnimationForView(View* view);
 
-  // Stops animating the specified view. If the view was scheduled for deletion
-  // it is deleted. This does nothing if |view| is not currently animating.
+  // Stops animating the specified view.
   void StopAnimatingView(View* view);
 
   // Sets the delegate for the animation created for the specified view. If
@@ -152,13 +152,15 @@ class VIEWS_EXPORT BoundsAnimator : public ui::AnimationDelegate,
                                 AnimationEndType type);
 
   // ui::AnimationDelegate overrides.
-  virtual void AnimationProgressed(const ui::Animation* animation);
-  virtual void AnimationEnded(const ui::Animation* animation);
-  virtual void AnimationCanceled(const ui::Animation* animation);
+  virtual void AnimationProgressed(const ui::Animation* animation) OVERRIDE;
+  virtual void AnimationEnded(const ui::Animation* animation) OVERRIDE;
+  virtual void AnimationCanceled(const ui::Animation* animation) OVERRIDE;
 
   // ui::AnimationContainerObserver overrides.
-  virtual void AnimationContainerProgressed(ui::AnimationContainer* container);
-  virtual void AnimationContainerEmpty(ui::AnimationContainer* container);
+  virtual void AnimationContainerProgressed(
+      ui::AnimationContainer* container) OVERRIDE;
+  virtual void AnimationContainerEmpty(
+      ui::AnimationContainer* container) OVERRIDE;
 
   // Parent of all views being animated.
   View* parent_;
@@ -171,10 +173,10 @@ class VIEWS_EXPORT BoundsAnimator : public ui::AnimationDelegate,
   // Maps from view being animated to info about the view.
   ViewToDataMap data_;
 
-  // Makes from animation to view.
+  // Maps from animation to view.
   AnimationToViewMap animation_to_view_;
 
-  // As the animations we created update (AnimationProgressed is invoked) this
+  // As the animations we create update (AnimationProgressed is invoked) this
   // is updated. When all the animations have completed for a given tick of
   // the timer (AnimationContainerProgressed is invoked) the parent_ is asked
   // to repaint these bounds.
@@ -185,4 +187,4 @@ class VIEWS_EXPORT BoundsAnimator : public ui::AnimationDelegate,
 
 }  // namespace views
 
-#endif  // VIEWS_ANIMATION_BOUNDS_ANIMATOR_H_
+#endif  // UI_VIEWS_ANIMATION_BOUNDS_ANIMATOR_H_

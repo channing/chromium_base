@@ -2,14 +2,15 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef VIEWS_CONTROLS_MENU_MENU_DELEGATE_H_
-#define VIEWS_CONTROLS_MENU_MENU_DELEGATE_H_
+#ifndef UI_VIEWS_CONTROLS_MENU_MENU_DELEGATE_H_
+#define UI_VIEWS_CONTROLS_MENU_MENU_DELEGATE_H_
 #pragma once
 
 #include <set>
 #include <string>
 
 #include "base/logging.h"
+#include "base/string16.h"
 #include "ui/base/dragdrop/drag_drop_types.h"
 #include "ui/base/dragdrop/os_exchange_data.h"
 #include "ui/views/controls/menu/menu_item_view.h"
@@ -22,6 +23,12 @@ namespace gfx {
 class Font;
 
 }  // namespace gfx
+
+namespace ui {
+
+class Accelerator;
+
+}  // namespace ui
 
 namespace views {
 
@@ -38,6 +45,8 @@ class VIEWS_EXPORT MenuDelegate {
   // Used during drag and drop to indicate where the drop indicator should
   // be rendered.
   enum DropPosition {
+    DROP_UNKNOWN = -1,
+
     // Indicates a drop is not allowed here.
     DROP_NONE,
 
@@ -59,18 +68,18 @@ class VIEWS_EXPORT MenuDelegate {
 
   // The string shown for the menu item. This is only invoked when an item is
   // added with an empty label.
-  virtual std::wstring GetLabel(int id) const;
+  virtual string16 GetLabel(int id) const;
 
   // The font for the menu item label.
   virtual const gfx::Font& GetLabelFont(int id) const;
 
   // The tooltip shown for the menu item. This is invoked when the user
   // hovers over the item, and no tooltip text has been set for that item.
-  virtual string16 GetTooltipText(int id, const gfx::Point& screen_loc);
+  virtual string16 GetTooltipText(int id, const gfx::Point& screen_loc) const;
 
   // If there is an accelerator for the menu item with id |id| it is set in
   // |accelerator| and true is returned.
-  virtual bool GetAccelerator(int id, Accelerator* accelerator);
+  virtual bool GetAccelerator(int id, ui::Accelerator* accelerator);
 
   // Shows the context menu with the specified id. This is invoked when the
   // user does the appropriate gesture to show a context menu. The id
@@ -88,7 +97,7 @@ class VIEWS_EXPORT MenuDelegate {
   // Controller
   virtual bool SupportsCommand(int id) const;
   virtual bool IsCommandEnabled(int id) const;
-  virtual bool GetContextualLabel(int id, std::wstring* out) const;
+  virtual bool GetContextualLabel(int id, string16* out) const;
   virtual void ExecuteCommand(int id) {
   }
 
@@ -197,4 +206,4 @@ class VIEWS_EXPORT MenuDelegate {
 
 }  // namespace views
 
-#endif  // VIEWS_CONTROLS_MENU_MENU_DELEGATE_H_
+#endif  // UI_VIEWS_CONTROLS_MENU_MENU_DELEGATE_H_

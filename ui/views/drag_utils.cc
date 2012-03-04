@@ -15,8 +15,6 @@
 #include "ui/gfx/font.h"
 #include "ui/views/controls/button/text_button.h"
 
-using ui::OSExchangeData;
-
 namespace drag_utils {
 
 // Maximum width of the link drag image in pixels.
@@ -57,7 +55,7 @@ static const SkColor kFileDragImageTextColor = SK_ColorBLACK;
 
 void CreateDragImageForFile(const FilePath& file_name,
                             const SkBitmap* icon,
-                            OSExchangeData* data_object) {
+                            ui::OSExchangeData* data_object) {
   DCHECK(icon);
   DCHECK(data_object);
 
@@ -69,12 +67,12 @@ void CreateDragImageForFile(const FilePath& file_name,
   // Add +2 here to allow room for the halo.
   const int height = font.GetHeight() + icon->height() +
                      kLinkDragImageVPadding + 2;
-  gfx::CanvasSkia canvas(width, height, false /* translucent */);
+  gfx::CanvasSkia canvas(gfx::Size(width, height), false /* translucent */);
 
   // Paint the icon.
   canvas.DrawBitmapInt(*icon, (width - icon->width()) / 2, 0);
 
-  std::wstring name = UTF16ToWide(file_name.BaseName().LossyDisplayName());
+  string16 name = file_name.BaseName().LossyDisplayName();
 #if defined(OS_WIN)
   // Paint the file name. We inset it one pixel to allow room for the halo.
   canvas.DrawStringWithHalo(name, font, kFileDragImageTextColor, SK_ColorWHITE,
@@ -82,7 +80,7 @@ void CreateDragImageForFile(const FilePath& file_name,
                             width - 2, font.GetHeight(),
                             gfx::Canvas::TEXT_ALIGN_CENTER);
 #else
-  canvas.DrawStringInt(WideToUTF16Hack(name), font, kFileDragImageTextColor,
+  canvas.DrawStringInt(name, font, kFileDragImageTextColor,
                        0, icon->height() + kLinkDragImageVPadding,
                        width, font.GetHeight(), gfx::Canvas::TEXT_ALIGN_CENTER);
 #endif
@@ -95,9 +93,9 @@ void CreateDragImageForFile(const FilePath& file_name,
 void SetDragImageOnDataObject(const gfx::Canvas& canvas,
                               const gfx::Size& size,
                               const gfx::Point& cursor_offset,
-                              OSExchangeData* data_object) {
+                              ui::OSExchangeData* data_object) {
   SetDragImageOnDataObject(
       canvas.AsCanvasSkia()->ExtractBitmap(), size, cursor_offset, data_object);
 }
 
-} // namespace drag_utils
+}  // namespace drag_utils

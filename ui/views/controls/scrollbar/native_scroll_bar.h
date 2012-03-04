@@ -2,12 +2,13 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef VIEWS_CONTROLS_SCROLLBAR_NATIVE_SCROLL_BAR_H_
-#define VIEWS_CONTROLS_SCROLLBAR_NATIVE_SCROLL_BAR_H_
+#ifndef UI_VIEWS_CONTROLS_SCROLLBAR_NATIVE_SCROLL_BAR_H_
+#define UI_VIEWS_CONTROLS_SCROLLBAR_NATIVE_SCROLL_BAR_H_
 #pragma once
 
 #include <string>
 
+#include "base/compiler_specific.h"
 #include "base/gtest_prod_util.h"
 #include "ui/views/controls/scrollbar/scroll_bar.h"
 #include "ui/views/view.h"
@@ -36,19 +37,23 @@ class VIEWS_EXPORT NativeScrollBar : public ScrollBar {
   FRIEND_TEST_ALL_PREFIXES(NativeScrollBarTest, Scrolling);
 
   // Overridden from View.
-  virtual gfx::Size GetPreferredSize();
-  virtual void Layout();
-  virtual void ViewHierarchyChanged(bool is_add, View* parent, View* child);
-  virtual std::string GetClassName() const;
+  virtual gfx::Size GetPreferredSize() OVERRIDE;
+  virtual void Layout() OVERRIDE;
+  virtual void ViewHierarchyChanged(bool is_add,
+                                    View* parent,
+                                    View* child) OVERRIDE;
+  virtual std::string GetClassName() const OVERRIDE;
 
   // Overrideen from View for keyboard UI purpose.
-  virtual bool OnKeyPressed(const KeyEvent& event);
-  virtual bool OnMouseWheel(const MouseWheelEvent& e);
+  virtual bool OnKeyPressed(const KeyEvent& event) OVERRIDE;
+  virtual bool OnMouseWheel(const MouseWheelEvent& e) OVERRIDE;
 
   // Overridden from ScrollBar.
-  virtual void Update(int viewport_size, int content_size, int current_pos);
-  virtual int GetPosition() const;
-  virtual int GetLayoutSize() const;
+  virtual void Update(int viewport_size,
+                      int content_size,
+                      int current_pos) OVERRIDE;
+  virtual int GetPosition() const OVERRIDE;
+  virtual int GetLayoutSize() const OVERRIDE;
 
   // init border
   NativeScrollBarWrapper* native_wrapper_;
@@ -58,4 +63,4 @@ class VIEWS_EXPORT NativeScrollBar : public ScrollBar {
 
 }  // namespace views
 
-#endif  // VIEWS_CONTROLS_SCROLLBAR_NATIVE_SCROLL_BAR_H_
+#endif  // UI_VIEWS_CONTROLS_SCROLLBAR_NATIVE_SCROLL_BAR_H_

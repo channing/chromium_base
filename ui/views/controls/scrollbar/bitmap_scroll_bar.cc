@@ -4,24 +4,27 @@
 
 #include "ui/views/controls/scrollbar/bitmap_scroll_bar.h"
 
-#if defined(OS_LINUX)
-#include "ui/views/screen.h"
-#endif
-
+#include "base/bind.h"
+#include "base/bind_helpers.h"
 #include "base/callback.h"
 #include "base/compiler_specific.h"
 #include "base/message_loop.h"
 #include "base/string16.h"
 #include "base/utf_string_conversions.h"
+#include "build/build_config.h"
 #include "grit/ui_strings.h"
 #include "third_party/skia/include/core/SkBitmap.h"
 #include "ui/base/keycodes/keyboard_codes.h"
 #include "ui/base/l10n/l10n_util.h"
 #include "ui/gfx/canvas.h"
 #include "ui/views/controls/menu/menu.h"
-#include "ui/views/controls/scrollbar/base_scroll_bar_thumb.h"
 #include "ui/views/controls/scroll_view.h"
+#include "ui/views/controls/scrollbar/base_scroll_bar_thumb.h"
 #include "ui/views/widget/widget.h"
+
+#if defined(OS_LINUX)
+#include "ui/views/screen.h"
+#endif
 
 #undef min
 #undef max
@@ -32,7 +35,7 @@ namespace {
 
 // The distance the mouse can be dragged outside the bounds of the thumb during
 // dragging before the scrollbar will snap back to its regular position.
-static const int kScrollThumbDragOutSnap = 100;
+const int kScrollThumbDragOutSnap = 100;
 
 ///////////////////////////////////////////////////////////////////////////////
 //
@@ -48,8 +51,8 @@ class AutorepeatButton : public ImageButton {
   explicit AutorepeatButton(ButtonListener* listener)
       : ImageButton(listener),
         ALLOW_THIS_IN_INITIALIZER_LIST(repeater_(
-            NewCallback<AutorepeatButton>(this,
-                                          &AutorepeatButton::NotifyClick))) {
+            base::Bind(&AutorepeatButton::NotifyClick,
+                       base::Unretained(this)))) {
   }
   virtual ~AutorepeatButton() {}
 
@@ -79,7 +82,7 @@ class AutorepeatButton : public ImageButton {
 #endif
     views::MouseEvent event(ui::ET_MOUSE_RELEASED,
                             cursor_point.x(), cursor_point.y(),
-                            ui::EF_LEFT_BUTTON_DOWN);
+                            ui::EF_LEFT_MOUSE_BUTTON);
     Button::NotifyClick(event);
   }
 
@@ -279,7 +282,7 @@ void BitmapScrollBar::Layout() {
   if ((IsHorizontal() && (track_bounds.width() < thumb_prefsize.width()) ||
       (!IsHorizontal() && (track_bounds.height() < thumb_prefsize.height())))) {
     thumb->SetVisible(false);
-  } else if (!thumb->IsVisible()) {
+  } else if (!thumb->visible()) {
     thumb->SetVisible(true);
   }
 }

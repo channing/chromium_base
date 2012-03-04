@@ -2,15 +2,14 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef VIEWS_WINDOW_CLIENT_VIEW_H_
-#define VIEWS_WINDOW_CLIENT_VIEW_H_
+#ifndef UI_VIEWS_WINDOW_CLIENT_VIEW_H_
+#define UI_VIEWS_WINDOW_CLIENT_VIEW_H_
 #pragma once
 
 #include "ui/views/view.h"
 
 namespace views {
 
-class BubbleView;
 class DialogClientView;
 class Widget;
 
@@ -37,8 +36,6 @@ class VIEWS_EXPORT ClientView : public View {
   // Manual RTTI ftw.
   virtual DialogClientView* AsDialogClientView();
   virtual const DialogClientView* AsDialogClientView() const;
-  virtual BubbleView* AsBubbleView();
-  virtual const BubbleView* AsBubbleView() const;
 
   // Returns true to signal that the Widget can be closed. Specialized
   // ClientView subclasses can override this default behavior to allow the
@@ -46,8 +43,7 @@ class VIEWS_EXPORT ClientView : public View {
   // dialog, etc.
   virtual bool CanClose();
 
-  // Notification that the widget is closing.  The default implementation
-  // forwards the notification to the delegate.
+  // Notification that the widget is closing.
   virtual void WidgetClosing();
 
   // Tests to see if the specified point (in view coordinates) is within the
@@ -68,10 +64,11 @@ class VIEWS_EXPORT ClientView : public View {
 
  protected:
   // Overridden from View:
-  virtual void ViewHierarchyChanged(
-      bool is_add, View* parent, View* child) OVERRIDE;
-  virtual void OnBoundsChanged(const gfx::Rect& previous_bounds) OVERRIDE;
   virtual void GetAccessibleState(ui::AccessibleViewState* state) OVERRIDE;
+  virtual void OnBoundsChanged(const gfx::Rect& previous_bounds) OVERRIDE;
+  virtual void ViewHierarchyChanged(bool is_add,
+                                    View* parent,
+                                    View* child) OVERRIDE;
 
   // Accessors for private data members.
   View* contents_view() const { return contents_view_; }
@@ -89,4 +86,4 @@ class VIEWS_EXPORT ClientView : public View {
 
 }  // namespace views
 
-#endif  // #ifndef VIEWS_WINDOW_CLIENT_VIEW_H_
+#endif  // UI_VIEWS_WINDOW_CLIENT_VIEW_H_

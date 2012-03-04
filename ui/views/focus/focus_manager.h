@@ -1,18 +1,21 @@
-// Copyright (c) 2011 The Chromium Authors. All rights reserved.
+// Copyright (c) 2012 The Chromium Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef VIEWS_FOCUS_FOCUS_MANAGER_H_
-#define VIEWS_FOCUS_FOCUS_MANAGER_H_
+#ifndef UI_VIEWS_FOCUS_FOCUS_MANAGER_H_
+#define UI_VIEWS_FOCUS_FOCUS_MANAGER_H_
 #pragma once
 
 #include <list>
 #include <map>
 
 #include "base/basictypes.h"
+#include "base/memory/scoped_ptr.h"
 #include "base/observer_list.h"
+#include "ui/base/accelerators/accelerator.h"
 #include "ui/gfx/native_widget_types.h"
-#include "ui/views/accelerator.h"
+#include "ui/views/events/event.h"
+#include "ui/views/views_export.h"
 
 // The FocusManager class is used to handle focus traversal, store/restore
 // focused views and handle keyboard accelerators.
@@ -69,6 +72,11 @@
 // Note that FocusTraversable do not have to be RootViews: AccessibleToolbarView
 // is FocusTraversable.
 
+namespace ui {
+class AcceleratorTarget;
+class AcceleratorManager;
+}
+
 namespace views {
 
 class FocusSearch;
@@ -99,10 +107,13 @@ class VIEWS_EXPORT FocusTraversable {
 
 // This interface should be implemented by classes that want to be notified when
 // the focus is about to change.  See the Add/RemoveFocusChangeListener methods.
-// No change to focus state has occurred yet when this function is called.
 class VIEWS_EXPORT FocusChangeListener {
  public:
-  virtual void FocusWillChange(View* focused_before, View* focused_now) = 0;
+  // No change to focus state has occurred yet when this function is called.
+  virtual void OnWillChangeFocus(View* focused_before, View* focused_now) = 0;
+
+  // Called after focus state has changed.
+  virtual void OnDidChangeFocus(View* focused_before, View* focused_now) = 0;
 
  protected:
   virtual ~FocusChangeListener() {}
@@ -140,7 +151,8 @@ class VIEWS_EXPORT FocusManager {
   void AdvanceFocus(bool reverse);
 
   // The FocusManager keeps track of the focused view within a RootView.
-  View* GetFocusedView() const { return focused_view_; }
+  View* GetFocusedView() { return focused_view_; }
+  const View* GetFocusedView() const { return focused_view_; }
 
   // Low-level methods to force the focus to change (and optionally provide
   // a reason). If the focus change should only happen if the view is
@@ -183,15 +195,15 @@ class VIEWS_EXPORT FocusManager {
   // - the enter key
   // - any F key (F1, F2, F3 ...)
   // - any browser specific keys (as available on special keyboards)
-  void RegisterAccelerator(const Accelerator& accelerator,
-                           AcceleratorTarget* target);
+  void RegisterAccelerator(const ui::Accelerator& accelerator,
+                           ui::AcceleratorTarget* target);
 
   // Unregister the specified keyboard accelerator for the specified target.
-  void UnregisterAccelerator(const Accelerator& accelerator,
-                             AcceleratorTarget* target);
+  void UnregisterAccelerator(const ui::Accelerator& accelerator,
+                             ui::AcceleratorTarget* target);
 
   // Unregister all keyboard accelerator for the specified target.
-  void UnregisterAccelerators(AcceleratorTarget* target);
+  void UnregisterAccelerators(ui::AcceleratorTarget* target);
 
   // Activate the target associated with the specified accelerator.
   // First, AcceleratorPressed handler of the most recently registered target
@@ -199,7 +211,16 @@ class VIEWS_EXPORT FocusManager {
   // this method immediately returns. If not, we do the same thing on the next
   // target, and so on.
   // Returns true if an accelerator was activated.
-  bool ProcessAccelerator(const Accelerator& accelerator);
+  bool ProcessAccelerator(const ui::Accelerator& accelerator);
+
+  // Resets menu key state if |event| is not menu key release.
+  // This is effective only on x11.
+  void MaybeResetMenuKeyState(const KeyEvent& key);
+
+#if defined(TOOLKIT_USES_GTK)
+  // Resets menu key state. TODO(oshima): Remove this when views/gtk is removed.
+  void ResetMenuKeyState();
+#endif
 
   // Called by a RootView when a view within its hierarchy is removed
   // from its parent. This will only be called by a RootView in a
@@ -215,11 +236,8 @@ class VIEWS_EXPORT FocusManager {
   // Returns the AcceleratorTarget that should be activated for the specified
   // keyboard accelerator, or NULL if no view is registered for that keyboard
   // accelerator.
-  AcceleratorTarget* GetCurrentTargetForAccelerator(
-      const Accelerator& accelertor) const;
-
-  // Sets the focus to the specified native view.
-  virtual void FocusNativeView(gfx::NativeView native_view);
+  ui::AcceleratorTarget* GetCurrentTargetForAccelerator(
+      const ui::Accelerator& accelertor) const;
 
   // Clears the native view having the focus.
   virtual void ClearNativeFocus();
@@ -247,6 +265,9 @@ class VIEWS_EXPORT FocusManager {
   // The view that currently is focused.
   View* focused_view_;
 
+  // The AcceleratorManager this FocusManager is associated with.
+  scoped_ptr<ui::AcceleratorManager> accelerator_manager_;
+
   // The storage id used in the ViewStorage to store/restore the view that last
   // had focus.
   int stored_focused_view_storage_id_;
@@ -254,13 +275,13 @@ class VIEWS_EXPORT FocusManager {
   // The reason why the focus most recently changed.
   FocusChangeReason focus_change_reason_;
 
-  // The accelerators and associated targets.
-  typedef std::list<AcceleratorTarget*> AcceleratorTargetList;
-  typedef std::map<Accelerator, AcceleratorTargetList> AcceleratorMap;
-  AcceleratorMap accelerators_;
-
   // The list of registered FocusChange listeners.
   ObserverList<FocusChangeListener, true> focus_change_listeners_;
+
+#if defined(USE_X11)
+  // Indicates if we should handle the upcoming Alt key release event.
+  bool should_handle_menu_key_release_;
+#endif
 
   // See description above getter.
   bool is_changing_focus_;
@@ -270,4 +291,4 @@ class VIEWS_EXPORT FocusManager {
 
 }  // namespace views
 
-#endif  // VIEWS_FOCUS_FOCUS_MANAGER_H_
+#endif  // UI_VIEWS_FOCUS_FOCUS_MANAGER_H_

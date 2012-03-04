@@ -2,13 +2,13 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef VIEWS_WINDOW_DIALOG_CLIENT_VIEW_H_
-#define VIEWS_WINDOW_DIALOG_CLIENT_VIEW_H_
+#ifndef UI_VIEWS_WINDOW_DIALOG_CLIENT_VIEW_H_
+#define UI_VIEWS_WINDOW_DIALOG_CLIENT_VIEW_H_
 #pragma once
 
 #include "ui/gfx/font.h"
-#include "ui/views/focus/focus_manager.h"
 #include "ui/views/controls/button/button.h"
+#include "ui/views/focus/focus_manager.h"
 #include "ui/views/window/client_view.h"
 
 namespace views {
@@ -76,8 +76,10 @@ class VIEWS_EXPORT DialogClientView : public ClientView,
   virtual const DialogClientView* AsDialogClientView() const OVERRIDE;
 
   // FocusChangeListener implementation:
-  virtual void FocusWillChange(View* focused_before,
-                               View* focused_now) OVERRIDE;
+  virtual void OnWillChangeFocus(View* focused_before,
+                                 View* focused_now) OVERRIDE;
+  virtual void OnDidChangeFocus(View* focused_before,
+                                View* focused_now) OVERRIDE;
 
  protected:
   // View overrides:
@@ -87,7 +89,7 @@ class VIEWS_EXPORT DialogClientView : public ClientView,
   virtual void ViewHierarchyChanged(bool is_add, View* parent,
                                     View* child) OVERRIDE;
   virtual gfx::Size GetPreferredSize() OVERRIDE;
-  virtual bool AcceleratorPressed(const Accelerator& accelerator) OVERRIDE;
+  virtual bool AcceleratorPressed(const ui::Accelerator& accelerator) OVERRIDE;
 
   // ButtonListener implementation:
   virtual void ButtonPressed(Button* sender,
@@ -165,4 +167,4 @@ class VIEWS_EXPORT DialogClientView : public ClientView,
 
 }  // namespace views
 
-#endif  // #ifndef VIEWS_WINDOW_DIALOG_CLIENT_VIEW_H_
+#endif  // UI_VIEWS_WINDOW_DIALOG_CLIENT_VIEW_H_

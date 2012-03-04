@@ -1,26 +1,26 @@
-// Copyright (c) 2011 The Chromium Authors. All rights reserved.
+// Copyright (c) 2012 The Chromium Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef VIEWS_WIDGET_NATIVE_WIDGET_DELEGATE_H_
-#define VIEWS_WIDGET_NATIVE_WIDGET_DELEGATE_H_
+#ifndef UI_VIEWS_WIDGET_NATIVE_WIDGET_DELEGATE_H_
+#define UI_VIEWS_WIDGET_NATIVE_WIDGET_DELEGATE_H_
 #pragma once
 
+#include "ui/base/events.h"
 #include "ui/views/views_export.h"
 
 namespace gfx {
 class Canvas;
+class Point;
 class Size;
 }
 
-#if defined(TOUCH_UI)
-namespace ui {
-enum TouchStatus;
-}
-#endif
-
 namespace views {
 class InputMethod;
+class GestureEvent;
+class KeyEvent;
+class MouseEvent;
+class TouchEvent;
 
 namespace internal {
 
@@ -88,7 +88,7 @@ class VIEWS_EXPORT NativeWidgetDelegate {
   // tree if necessary when accelerated painting is enabled.
   virtual void OnNativeWidgetPaint(gfx::Canvas* canvas) = 0;
 
-  // Returns the non-client component (see views/window/hit_test.h) containing
+  // Returns the non-client component (see ui/base/hit_test.h) containing
   // |point|, in client coordinates.
   virtual int GetNonClientComponent(const gfx::Point& point) = 0;
 
@@ -97,6 +97,7 @@ class VIEWS_EXPORT NativeWidgetDelegate {
   virtual bool OnMouseEvent(const MouseEvent& event) = 0;
   virtual void OnMouseCaptureLost() = 0;
   virtual ui::TouchStatus OnTouchEvent(const TouchEvent& event) = 0;
+  virtual ui::GestureStatus OnGestureEvent(const GestureEvent& event) = 0;
 
   // Runs the specified native command. Returns true if the command is handled.
   virtual bool ExecuteCommand(int command_id) = 0;
@@ -114,4 +115,4 @@ class VIEWS_EXPORT NativeWidgetDelegate {
 }  // namespace internal
 }  // namespace views
 
-#endif  // VIEWS_WIDGET_NATIVE_WIDGET_DELEGATE_H_
+#endif  // UI_VIEWS_WIDGET_NATIVE_WIDGET_DELEGATE_H_

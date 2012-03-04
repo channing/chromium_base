@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef VIEWS_CONTROLS_SCROLLBAR_BASE_SCROLL_BAR_THUMB_H_
-#define VIEWS_CONTROLS_SCROLLBAR_BASE_SCROLL_BAR_THUMB_H_
+#ifndef UI_VIEWS_CONTROLS_SCROLLBAR_BASE_SCROLL_BAR_THUMB_H_
+#define UI_VIEWS_CONTROLS_SCROLLBAR_BASE_SCROLL_BAR_THUMB_H_
 #pragma once
 
 #include "ui/gfx/size.h"
@@ -79,4 +79,4 @@ class VIEWS_EXPORT BaseScrollBarThumb : public View {
 
 }  // namespace views
 
-#endif  // VIEWS_CONTROLS_SCROLLBAR_BASE_SCROLL_BAR_THUMB_H_
+#endif  // UI_VIEWS_CONTROLS_SCROLLBAR_BASE_SCROLL_BAR_THUMB_H_

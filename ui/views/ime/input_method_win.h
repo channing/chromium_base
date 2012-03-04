@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef VIEWS_IME_INPUT_METHOD_WIN_H_
-#define VIEWS_IME_INPUT_METHOD_WIN_H_
+#ifndef UI_VIEWS_IME_INPUT_METHOD_WIN_H_
+#define UI_VIEWS_IME_INPUT_METHOD_WIN_H_
 #pragma once
 
 #include <windows.h>
@@ -54,6 +54,8 @@ class InputMethodWin : public InputMethodBase {
       UINT message, WPARAM wparam, LPARAM lparam, BOOL* handled);
   LRESULT OnImeEndComposition(
       UINT message, WPARAM wparam, LPARAM lparam, BOOL* handled);
+  LRESULT OnImeRequest(
+      UINT message, WPARAM wparam, LPARAM lparam, BOOL* handled);
   // For both WM_CHAR and WM_SYSCHAR
   LRESULT OnChar(
       UINT message, WPARAM wparam, LPARAM lparam, BOOL* handled);
@@ -61,10 +63,12 @@ class InputMethodWin : public InputMethodBase {
   LRESULT OnDeadChar(
       UINT message, WPARAM wparam, LPARAM lparam, BOOL* handled);
 
+  LRESULT OnDocumentFeed(RECONVERTSTRING *reconv);
+  LRESULT OnReconvertString(RECONVERTSTRING *reconv);
 
   // Overridden from InputMethodBase.
-  virtual void FocusedViewWillChange() OVERRIDE;
-  virtual void FocusedViewDidChange() OVERRIDE;
+  virtual void OnWillChangeFocus(View* focused_before, View* focused) OVERRIDE;
+  virtual void OnDidChangeFocus(View* focused_before, View* focused) OVERRIDE;
 
   // A helper function to return the Widget's native window.
   HWND hwnd() const { return widget()->GetNativeView(); }
@@ -98,4 +102,4 @@ class InputMethodWin : public InputMethodBase {
 
 }  // namespace views
 
-#endif  // VIEWS_IME_INPUT_METHOD_WIN_H_
+#endif  // UI_VIEWS_IME_INPUT_METHOD_WIN_H_

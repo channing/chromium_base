@@ -1,4 +1,4 @@
-// Copyright (c) 2011 The Chromium Authors. All rights reserved.
+// Copyright (c) 2012 The Chromium Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -11,10 +11,10 @@
 #include "ui/gfx/path.h"
 #include "ui/views/controls/button/custom_button.h"
 #include "ui/views/controls/focusable_border.h"
-#include "ui/views/controls/scrollbar/native_scroll_bar.h"
-#include "ui/views/controls/scrollbar/scroll_bar.h"
 #include "ui/views/controls/scrollbar/base_scroll_bar_button.h"
 #include "ui/views/controls/scrollbar/base_scroll_bar_thumb.h"
+#include "ui/views/controls/scrollbar/native_scroll_bar.h"
+#include "ui/views/controls/scrollbar/scroll_bar.h"
 
 namespace views {
 
@@ -98,7 +98,7 @@ void ScrollBarButton::OnPaint(gfx::Canvas* canvas) {
   gfx::Rect bounds;
   bounds.set_size(GetPreferredSize());
 
-  native_theme->Paint(canvas->AsCanvasSkia(),
+  native_theme->Paint(canvas->GetSkCanvas(),
                       GetNativeThemePart(),
                       GetNativeThemeState(),
                       bounds,
@@ -183,7 +183,7 @@ gfx::Size ScrollBarThumb::GetPreferredSize() {
 void ScrollBarThumb::OnPaint(gfx::Canvas* canvas) {
   const gfx::NativeTheme* native_theme = gfx::NativeTheme::instance();
 
-  native_theme->Paint(canvas->AsCanvasSkia(),
+  native_theme->Paint(canvas->GetSkCanvas(),
                       GetNativeThemePart(),
                       GetNativeThemeState(),
                       GetLocalBounds(),
@@ -276,8 +276,6 @@ NativeScrollBarViews::~NativeScrollBarViews() {
 // NativeScrollBarViews, View overrides:
 
 void NativeScrollBarViews::Layout() {
-  SetBoundsRect(native_scroll_bar_->GetLocalBounds());
-
   gfx::Size size = prev_button_->GetPreferredSize();
   prev_button_->SetBounds(0, 0, size.width(), size.height());
 
@@ -296,13 +294,16 @@ void NativeScrollBarViews::OnPaint(gfx::Canvas* canvas) {
   const gfx::NativeTheme* native_theme = gfx::NativeTheme::instance();
   gfx::Rect bounds = GetTrackBounds();
 
+  if (bounds.IsEmpty())
+    return;
+
   params_.scrollbar_track.track_x = bounds.x();
   params_.scrollbar_track.track_y = bounds.y();
   params_.scrollbar_track.track_width = bounds.width();
   params_.scrollbar_track.track_height = bounds.height();
 
 
-  native_theme->Paint(canvas->AsCanvasSkia(),
+  native_theme->Paint(canvas->GetSkCanvas(),
                       part_,
                       state_,
                       bounds,
@@ -383,5 +384,58 @@ gfx::Rect NativeScrollBarViews::GetTrackBounds() const {
 
   return bounds;
 }
+
+#if defined(USE_WAYLAND) || defined(USE_AURA)
+////////////////////////////////////////////////////////////////////////////////
+// NativewScrollBarWrapper, public:
+
+// static
+NativeScrollBarWrapper* NativeScrollBarWrapper::CreateWrapper(
+    NativeScrollBar* scroll_bar) {
+  return new NativeScrollBarViews(scroll_bar);
+}
+
+// static
+int NativeScrollBarWrapper::GetHorizontalScrollBarHeight() {
+  const gfx::NativeTheme* native_theme = gfx::NativeTheme::instance();
+
+  gfx::NativeTheme::ExtraParams button_params;
+  button_params.scrollbar_arrow.is_hovering = false;
+  gfx::Size button_size = native_theme->GetPartSize(
+      gfx::NativeTheme::kScrollbarLeftArrow,
+      gfx::NativeTheme::kNormal,
+      button_params);
+
+  gfx::NativeTheme::ExtraParams thumb_params;
+  thumb_params.scrollbar_thumb.is_hovering = false;
+  gfx::Size track_size = native_theme->GetPartSize(
+      gfx::NativeTheme::kScrollbarHorizontalThumb,
+      gfx::NativeTheme::kNormal,
+      thumb_params);
+
+  return std::max(track_size.height(), button_size.height());
+}
+
+// static
+int NativeScrollBarWrapper::GetVerticalScrollBarWidth() {
+  const gfx::NativeTheme* native_theme = gfx::NativeTheme::instance();
+
+  gfx::NativeTheme::ExtraParams button_params;
+  button_params.scrollbar_arrow.is_hovering = false;
+  gfx::Size button_size = native_theme->GetPartSize(
+      gfx::NativeTheme::kScrollbarUpArrow,
+      gfx::NativeTheme::kNormal,
+      button_params);
+
+  gfx::NativeTheme::ExtraParams thumb_params;
+  thumb_params.scrollbar_thumb.is_hovering = false;
+  gfx::Size track_size = native_theme->GetPartSize(
+      gfx::NativeTheme::kScrollbarVerticalThumb,
+      gfx::NativeTheme::kNormal,
+      thumb_params);
+
+  return std::max(track_size.width(), button_size.width());
+}
+#endif
 
 }  // namespace views

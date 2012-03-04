@@ -18,6 +18,7 @@
 
 #include "base/utf_string_conversions.h"
 #include "grit/ui_strings.h"
+#include "ui/base/hit_test.h"
 #include "ui/base/keycodes/keyboard_codes.h"
 #include "ui/base/l10n/l10n_util.h"
 #include "ui/base/resource/resource_bundle.h"
@@ -33,10 +34,7 @@
 #include "ui/gfx/native_theme.h"
 #else
 #include "ui/gfx/skia_utils_gtk.h"
-#include "ui/views/window/hit_test.h"
 #endif
-
-using ui::MessageBoxFlags;
 
 namespace views {
 namespace {
@@ -44,21 +42,13 @@ namespace {
 // Updates any of the standard buttons according to the delegate.
 void UpdateButtonHelper(NativeTextButton* button_view,
                         DialogDelegate* delegate,
-                        MessageBoxFlags::DialogButton button) {
-  std::wstring label = delegate->GetDialogButtonLabel(button);
+                        ui::DialogButton button) {
+  string16 label = delegate->GetDialogButtonLabel(button);
   if (!label.empty())
     button_view->SetText(label);
   button_view->SetEnabled(delegate->IsDialogButtonEnabled(button));
   button_view->SetVisible(delegate->IsDialogButtonVisible(button));
 }
-
-#if defined(OS_WIN)
-void FillViewWithSysColor(gfx::Canvas* canvas, View* view, COLORREF color) {
-  SkColor sk_color =
-      SkColorSetRGB(GetRValue(color), GetGValue(color), GetBValue(color));
-  canvas->FillRectInt(sk_color, 0, 0, view->width(), view->height());
-}
-#endif
 
 // DialogButton ----------------------------------------------------------------
 
@@ -69,8 +59,8 @@ class DialogButton : public NativeTextButton {
  public:
   DialogButton(ButtonListener* listener,
                Widget* owner,
-               MessageBoxFlags::DialogButton type,
-               const std::wstring& title,
+               ui::DialogButton type,
+               const string16& title,
                bool is_default)
       : NativeTextButton(listener, title),
         owner_(owner),
@@ -79,7 +69,7 @@ class DialogButton : public NativeTextButton {
   }
 
   // Overridden to forward to the delegate.
-  virtual bool AcceleratorPressed(const Accelerator& accelerator) {
+  virtual bool AcceleratorPressed(const ui::Accelerator& accelerator) {
     if (!owner_->widget_delegate()->AsDialogDelegate()->
         AreAcceleratorsEnabled(type_)) {
       return false;
@@ -89,7 +79,7 @@ class DialogButton : public NativeTextButton {
 
  private:
   Widget* owner_;
-  const MessageBoxFlags::DialogButton type_;
+  const ui::DialogButton type_;
 
   DISALLOW_COPY_AND_ASSIGN(DialogButton);
 };
@@ -129,43 +119,46 @@ DialogClientView::~DialogClientView() {
 void DialogClientView::ShowDialogButtons() {
   DialogDelegate* dd = GetDialogDelegate();
   int buttons = dd->GetDialogButtons();
-  if (buttons & MessageBoxFlags::DIALOGBUTTON_OK && !ok_button_) {
-    std::wstring label =
-        dd->GetDialogButtonLabel(MessageBoxFlags::DIALOGBUTTON_OK);
+  if (buttons & ui::DIALOG_BUTTON_OK && !ok_button_) {
+    string16 label = dd->GetDialogButtonLabel(ui::DIALOG_BUTTON_OK);
     if (label.empty())
-      label = UTF16ToWide(l10n_util::GetStringUTF16(IDS_APP_OK));
+      label = l10n_util::GetStringUTF16(IDS_APP_OK);
     bool is_default_button =
-        (dd->GetDefaultDialogButton() & MessageBoxFlags::DIALOGBUTTON_OK) != 0;
-    ok_button_ = new DialogButton(this, GetWidget(),
-                                  MessageBoxFlags::DIALOGBUTTON_OK, label,
+        (dd->GetDefaultDialogButton() & ui::DIALOG_BUTTON_OK) != 0;
+    ok_button_ = new DialogButton(this,
+                                  GetWidget(),
+                                  ui::DIALOG_BUTTON_OK,
+                                  label,
                                   is_default_button);
     ok_button_->SetGroup(kButtonGroup);
     if (is_default_button)
       default_button_ = ok_button_;
-    if (!(buttons & MessageBoxFlags::DIALOGBUTTON_CANCEL))
-      ok_button_->AddAccelerator(Accelerator(ui::VKEY_ESCAPE,
-                                             false, false, false));
+    if (!(buttons & ui::DIALOG_BUTTON_CANCEL))
+      ok_button_->AddAccelerator(ui::Accelerator(ui::VKEY_ESCAPE,
+                                                 false, false, false));
     AddChildView(ok_button_);
   }
-  if (buttons & MessageBoxFlags::DIALOGBUTTON_CANCEL && !cancel_button_) {
-    std::wstring label =
-        dd->GetDialogButtonLabel(MessageBoxFlags::DIALOGBUTTON_CANCEL);
+  if (buttons & ui::DIALOG_BUTTON_CANCEL && !cancel_button_) {
+    string16 label =
+        dd->GetDialogButtonLabel(ui::DIALOG_BUTTON_CANCEL);
     if (label.empty()) {
-      if (buttons & MessageBoxFlags::DIALOGBUTTON_OK) {
-        label = UTF16ToWide(l10n_util::GetStringUTF16(IDS_APP_CANCEL));
+      if (buttons & ui::DIALOG_BUTTON_OK) {
+        label = l10n_util::GetStringUTF16(IDS_APP_CANCEL);
       } else {
-        label = UTF16ToWide(l10n_util::GetStringUTF16(IDS_APP_CLOSE));
+        label = l10n_util::GetStringUTF16(IDS_APP_CLOSE);
       }
     }
     bool is_default_button =
-        (dd->GetDefaultDialogButton() & MessageBoxFlags::DIALOGBUTTON_CANCEL)
+        (dd->GetDefaultDialogButton() & ui::DIALOG_BUTTON_CANCEL)
         != 0;
-    cancel_button_ = new DialogButton(this, GetWidget(),
-                                      MessageBoxFlags::DIALOGBUTTON_CANCEL,
-                                      label, is_default_button);
+    cancel_button_ = new DialogButton(this,
+                                      GetWidget(),
+                                      ui::DIALOG_BUTTON_CANCEL,
+                                      label,
+                                      is_default_button);
     cancel_button_->SetGroup(kButtonGroup);
-    cancel_button_->AddAccelerator(Accelerator(ui::VKEY_ESCAPE,
-                                               false, false, false));
+    cancel_button_->AddAccelerator(ui::Accelerator(ui::VKEY_ESCAPE,
+                                                   false, false, false));
     if (is_default_button)
       default_button_ = ok_button_;
     AddChildView(cancel_button_);
@@ -173,7 +166,7 @@ void DialogClientView::ShowDialogButtons() {
   if (!buttons) {
     // Register the escape key as an accelerator which will close the window
     // if there are no dialog buttons.
-    AddAccelerator(Accelerator(ui::VKEY_ESCAPE, false, false, false));
+    AddAccelerator(ui::Accelerator(ui::VKEY_ESCAPE, false, false, false));
   }
 }
 
@@ -189,8 +182,8 @@ void DialogClientView::SetDefaultButton(NativeTextButton* new_default_button) {
   }
 }
 
-void DialogClientView::FocusWillChange(View* focused_before,
-                                       View* focused_now) {
+void DialogClientView::OnWillChangeFocus(View* focused_before,
+                                         View* focused_now) {
   NativeTextButton* new_default_button = NULL;
   if (focused_now &&
       focused_now->GetClassName() == NativeTextButton::kViewClassName) {
@@ -199,13 +192,17 @@ void DialogClientView::FocusWillChange(View* focused_before,
     // The focused view is not a button, get the default button from the
     // delegate.
     DialogDelegate* dd = GetDialogDelegate();
-    if ((dd->GetDefaultDialogButton() & MessageBoxFlags::DIALOGBUTTON_OK) != 0)
+    if ((dd->GetDefaultDialogButton() & ui::DIALOG_BUTTON_OK) != 0)
       new_default_button = ok_button_;
-    if ((dd->GetDefaultDialogButton() & MessageBoxFlags::DIALOGBUTTON_CANCEL)
+    if ((dd->GetDefaultDialogButton() & ui::DIALOG_BUTTON_CANCEL)
         != 0)
       new_default_button = cancel_button_;
   }
   SetDefaultButton(new_default_button);
+}
+
+void DialogClientView::OnDidChangeFocus(View* focused_before,
+                                        View* focused_now) {
 }
 
 // Changing dialog labels will change button widths.
@@ -213,12 +210,11 @@ void DialogClientView::UpdateDialogButtons() {
   DialogDelegate* dd = GetDialogDelegate();
   int buttons = dd->GetDialogButtons();
 
-  if (buttons & MessageBoxFlags::DIALOGBUTTON_OK)
-    UpdateButtonHelper(ok_button_, dd, MessageBoxFlags::DIALOGBUTTON_OK);
+  if (buttons & ui::DIALOG_BUTTON_OK)
+    UpdateButtonHelper(ok_button_, dd, ui::DIALOG_BUTTON_OK);
 
-  if (buttons & MessageBoxFlags::DIALOGBUTTON_CANCEL) {
-    UpdateButtonHelper(cancel_button_, dd,
-                       MessageBoxFlags::DIALOGBUTTON_CANCEL);
+  if (buttons & ui::DIALOG_BUTTON_CANCEL) {
+    UpdateButtonHelper(cancel_button_, dd, ui::DIALOG_BUTTON_CANCEL);
   }
 
   LayoutDialogButtons();
@@ -276,9 +272,9 @@ bool DialogClientView::CanClose() {
   DialogDelegate* dd = GetDialogDelegate();
   int buttons = dd->GetDialogButtons();
   bool close = true;
-  if (buttons & MessageBoxFlags::DIALOGBUTTON_CANCEL)
+  if (buttons & ui::DIALOG_BUTTON_CANCEL)
     close = dd->Cancel();
-  else if (buttons & MessageBoxFlags::DIALOGBUTTON_OK)
+  else if (buttons & ui::DIALOG_BUTTON_OK)
     close = dd->Accept(true);
   notified_delegate_ = close;
   return close;
@@ -310,20 +306,20 @@ const DialogClientView* DialogClientView::AsDialogClientView() const {
 // DialogClientView, View overrides:
 
 void DialogClientView::OnPaint(gfx::Canvas* canvas) {
-#if defined(OS_WIN)
-  FillViewWithSysColor(canvas, this, GetSysColor(COLOR_3DFACE));
-#elif defined(USE_WAYLAND) || defined(USE_AURA)
-  SkColor sk_color = SkColorSetARGB(200, 255, 255, 255);
-  canvas->FillRectInt(sk_color, 0, 0, width(), height());
-#else
+#if defined(TOOLKIT_USES_GTK)
+  // TODO(benrg): Unfortunately, GetSystemColor often returns the wrong color
+  // under GTK right now. This is meant to be a temporary fix. See related TODO
+  // in ui/gfx/native_theme_gtk.cc.
   GtkWidget* widget = GetWidget()->GetNativeView();
-  if (GTK_IS_WINDOW(widget)) {
-    GtkStyle* window_style = gtk_widget_get_style(widget);
-    canvas->FillRectInt(gfx::GdkColorToSkColor(
-                            window_style->bg[GTK_STATE_NORMAL]),
-                        0, 0, width(), height());
-  }
+  if (!GTK_IS_WINDOW(widget))
+    return;
+  SkColor bg_color = gfx::GdkColorToSkColor(
+                         gtk_widget_get_style(widget)->bg[GTK_STATE_NORMAL]);
+#else
+  SkColor bg_color = gfx::NativeTheme::instance()->GetSystemColor(
+                         gfx::NativeTheme::kColorId_DialogBackground);
 #endif
+  canvas->FillRect(bg_color, GetLocalBounds());
 }
 
 void DialogClientView::PaintChildren(gfx::Canvas* canvas) {
@@ -379,9 +375,9 @@ gfx::Size DialogClientView::GetPreferredSize() {
     // the contents.
     int width = 0;
     if (cancel_button_)
-      width += GetButtonWidth(MessageBoxFlags::DIALOGBUTTON_CANCEL);
+      width += GetButtonWidth(ui::DIALOG_BUTTON_CANCEL);
     if (ok_button_) {
-      width += GetButtonWidth(MessageBoxFlags::DIALOGBUTTON_OK);
+      width += GetButtonWidth(ui::DIALOG_BUTTON_OK);
       if (cancel_button_)
         width += kRelatedButtonHSpacing;
     }
@@ -403,7 +399,7 @@ gfx::Size DialogClientView::GetPreferredSize() {
   return prefsize;
 }
 
-bool DialogClientView::AcceleratorPressed(const Accelerator& accelerator) {
+bool DialogClientView::AcceleratorPressed(const ui::Accelerator& accelerator) {
   // We only expect Escape key.
   DCHECK(accelerator.key_code() == ui::VKEY_ESCAPE);
   Close();
@@ -449,7 +445,7 @@ void DialogClientView::PaintSizeBox(gfx::Canvas* canvas) {
     size_box_bounds_.set_x(size_box_bounds_.right() - gripper_size.width());
     size_box_bounds_.set_y(size_box_bounds_.bottom() - gripper_size.height());
 
-    gfx::NativeTheme::instance()->Paint(canvas->AsCanvasSkia(),
+    gfx::NativeTheme::instance()->Paint(canvas->GetSkCanvas(),
                                         gfx::NativeTheme::kWindowResizeGripper,
                                         gfx::NativeTheme::kNormal,
                                         size_box_bounds_,
@@ -463,10 +459,9 @@ void DialogClientView::PaintSizeBox(gfx::Canvas* canvas) {
 
 int DialogClientView::GetButtonWidth(int button) const {
   DialogDelegate* dd = GetDialogDelegate();
-  std::wstring button_label = dd->GetDialogButtonLabel(
-      static_cast<MessageBoxFlags::DialogButton>(button));
-  int string_width = dialog_button_font_->GetStringWidth(
-      WideToUTF16Hack(button_label));
+  string16 button_label = dd->GetDialogButtonLabel(
+      static_cast<ui::DialogButton>(button));
+  int string_width = dialog_button_font_->GetStringWidth(button_label);
   return std::max(string_width + kDialogButtonLabelSpacing,
                   kDialogMinButtonWidth);
 }
@@ -492,7 +487,7 @@ void DialogClientView::LayoutDialogButtons() {
   if (cancel_button_) {
     gfx::Size ps = cancel_button_->GetPreferredSize();
     int button_width = std::max(
-        GetButtonWidth(MessageBoxFlags::DIALOGBUTTON_CANCEL), ps.width());
+        GetButtonWidth(ui::DIALOG_BUTTON_CANCEL), ps.width());
     int button_x = lb.right() - button_width - kButtonHEdgeMargin;
     int button_y = bottom_y - ps.height();
     cancel_button_->SetBounds(button_x, button_y, button_width, ps.height());
@@ -504,7 +499,7 @@ void DialogClientView::LayoutDialogButtons() {
   if (ok_button_) {
     gfx::Size ps = ok_button_->GetPreferredSize();
     int button_width = std::max(
-        GetButtonWidth(MessageBoxFlags::DIALOGBUTTON_OK), ps.width());
+        GetButtonWidth(ui::DIALOG_BUTTON_OK), ps.width());
     int ok_button_right = lb.right() - kButtonHEdgeMargin;
     if (cancel_button_)
       ok_button_right = cancel_button_->x() - kRelatedButtonHSpacing;

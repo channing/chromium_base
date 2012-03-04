@@ -1,25 +1,24 @@
-// Copyright (c) 2011 The Chromium Authors. All rights reserved.
+// Copyright (c) 2012 The Chromium Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef VIEWS_CONTROLS_MENU_MENU_ITEM_VIEW_H_
-#define VIEWS_CONTROLS_MENU_MENU_ITEM_VIEW_H_
+#ifndef UI_VIEWS_CONTROLS_MENU_MENU_ITEM_VIEW_H_
+#define UI_VIEWS_CONTROLS_MENU_MENU_ITEM_VIEW_H_
 #pragma once
 
 #include <string>
 #include <vector>
 
-#if defined(OS_WIN)
-#include <windows.h>
-#endif
-
+#include "base/compiler_specific.h"
 #include "base/logging.h"
-// TODO(avi): remove when not needed
-#include "base/utf_string_conversions.h"
+#include "base/string16.h"
+#include "build/build_config.h"
 #include "third_party/skia/include/core/SkBitmap.h"
 #include "ui/views/view.h"
 
 #if defined(OS_WIN)
+#include <windows.h>
+
 #include "ui/gfx/native_theme.h"
 #endif
 
@@ -37,7 +36,6 @@ namespace internal {
 class MenuRunnerImpl;
 }
 
-class MenuButton;
 struct MenuConfig;
 class MenuController;
 class MenuDelegate;
@@ -103,7 +101,8 @@ class VIEWS_EXPORT MenuItemView : public View {
   enum MenuPosition {
     POSITION_BEST_FIT,
     POSITION_ABOVE_BOUNDS,
-    POSITION_BELOW_BOUNDS
+    POSITION_BELOW_BOUNDS,
+    POSITION_OVER_BOUNDS
   };
 
   // Constructor for use with the top level menu item. This menu is never
@@ -111,7 +110,8 @@ class VIEWS_EXPORT MenuItemView : public View {
   explicit MenuItemView(MenuDelegate* delegate);
 
   // Overridden from View:
-  virtual bool GetTooltipText(const gfx::Point& p, string16* tooltip) OVERRIDE;
+  virtual bool GetTooltipText(const gfx::Point& p,
+                              string16* tooltip) const OVERRIDE;
   virtual void GetAccessibleState(ui::AccessibleViewState* state) OVERRIDE;
 
   // Returns the preferred height of menu items. This is only valid when the
@@ -133,7 +133,7 @@ class VIEWS_EXPORT MenuItemView : public View {
   // called after adding menu items if the menu may be active.
   MenuItemView* AddMenuItemAt(int index,
                               int item_id,
-                              const std::wstring& label,
+                              const string16& label,
                               const SkBitmap& icon,
                               Type type);
 
@@ -151,52 +151,38 @@ class VIEWS_EXPORT MenuItemView : public View {
   // label      The text label shown.
   // type       The type of item.
   MenuItemView* AppendMenuItem(int item_id,
-                      const std::wstring& label,
-                      Type type) {
-    return AppendMenuItemImpl(item_id, label, SkBitmap(), type);
-  }
+                               const string16& label,
+                               Type type);
 
   // Append a submenu to this menu.
   // The returned pointer is owned by this menu.
   MenuItemView* AppendSubMenu(int item_id,
-                              const std::wstring& label) {
-    return AppendMenuItemImpl(item_id, label, SkBitmap(), SUBMENU);
-  }
+                              const string16& label);
 
   // Append a submenu with an icon to this menu.
   // The returned pointer is owned by this menu.
   MenuItemView* AppendSubMenuWithIcon(int item_id,
-                                      const std::wstring& label,
-                                      const SkBitmap& icon) {
-    return AppendMenuItemImpl(item_id, label, icon, SUBMENU);
-  }
+                                      const string16& label,
+                                      const SkBitmap& icon);
 
   // This is a convenience for standard text label menu items where the label
   // is provided with this call.
   MenuItemView* AppendMenuItemWithLabel(int item_id,
-                               const std::wstring& label) {
-    return AppendMenuItem(item_id, label, NORMAL);
-  }
+                                        const string16& label);
 
   // This is a convenience for text label menu items where the label is
   // provided by the delegate.
-  MenuItemView* AppendDelegateMenuItem(int item_id) {
-    return AppendMenuItem(item_id, std::wstring(), NORMAL);
-  }
+  MenuItemView* AppendDelegateMenuItem(int item_id);
 
   // Adds a separator to this menu
-  void AppendSeparator() {
-    AppendMenuItemImpl(0, std::wstring(), SkBitmap(), SEPARATOR);
-  }
+  void AppendSeparator();
 
   // Appends a menu item with an icon. This is for the menu item which
   // needs an icon. Calling this function forces the Menu class to draw
   // the menu, instead of relying on Windows.
   MenuItemView* AppendMenuItemWithIcon(int item_id,
-                              const std::wstring& label,
-                              const SkBitmap& icon) {
-    return AppendMenuItemImpl(item_id, label, icon, NORMAL);
-  }
+                                       const string16& label,
+                                       const SkBitmap& icon);
 
   // Creates a menu item for the specified entry in the model and appends it as
   // a child. |index| should be offset by GetFirstItemIndex() before calling
@@ -207,7 +193,7 @@ class VIEWS_EXPORT MenuItemView : public View {
 
   // All the AppendXXX methods funnel into this.
   MenuItemView* AppendMenuItemImpl(int item_id,
-                                   const std::wstring& label,
+                                   const string16& label,
                                    const SkBitmap& icon,
                                    Type type);
 
@@ -222,17 +208,20 @@ class VIEWS_EXPORT MenuItemView : public View {
   virtual SubmenuView* GetSubmenu() const;
 
   // Returns the parent menu item.
-  MenuItemView* GetParentMenuItem() const { return parent_menu_item_; }
+  MenuItemView* GetParentMenuItem() { return parent_menu_item_; }
+  const MenuItemView* GetParentMenuItem() const { return parent_menu_item_; }
 
-  // Sets the title
-  void SetTitle(const std::wstring& title);
-
-  // Returns the title.
-  // TODO(avi): switch back to returning a const reference.
-  const std::wstring GetTitle() const { return UTF16ToWideHack(title_); }
+  // Sets/Gets the title.
+  void SetTitle(const string16& title);
+  const string16& title() const { return title_; }
 
   // Returns the type of this menu.
-  const Type& GetType() { return type_; }
+  const Type& GetType() const { return type_; }
+
+  // Returns the requested menu position.
+  const MenuPosition& GetRequestedMenuPosition() {
+    return requested_menu_position_;
+  }
 
   // Sets whether this item is selected. This is invoked as the user moves
   // the mouse around the menu while open.
@@ -260,20 +249,23 @@ class VIEWS_EXPORT MenuItemView : public View {
   int GetCommand() const { return command_; }
 
   // Paints the menu item.
-  virtual void OnPaint(gfx::Canvas* canvas);
+  virtual void OnPaint(gfx::Canvas* canvas) OVERRIDE;
 
   // Returns the preferred size of this item.
-  virtual gfx::Size GetPreferredSize();
+  virtual gfx::Size GetPreferredSize() OVERRIDE;
 
   // Returns the object responsible for controlling showing the menu.
   MenuController* GetMenuController();
+  const MenuController* GetMenuController() const;
 
   // Returns the delegate. This returns the delegate of the root menu item.
   MenuDelegate* GetDelegate();
+  const MenuDelegate* GetDelegate() const;
   void set_delegate(MenuDelegate* delegate) { delegate_ = delegate; }
 
   // Returns the root parent, or this if this has no parent.
   MenuItemView* GetRootMenuItem();
+  const MenuItemView* GetRootMenuItem() const;
 
   // Returns the mnemonic for this MenuItemView, or 0 if this MenuItemView
   // doesn't have a mnemonic.
@@ -293,7 +285,7 @@ class VIEWS_EXPORT MenuItemView : public View {
   void ChildrenChanged();
 
   // Sizes any child views.
-  virtual void Layout();
+  virtual void Layout() OVERRIDE;
 
   // Returns the amount of space needed to accomodate the accelerator. The
   // space needed for the accelerator is NOT included in the preferred width.
@@ -404,6 +396,10 @@ class VIEWS_EXPORT MenuItemView : public View {
 
   void set_controller(MenuController* controller) { controller_ = controller; }
 
+  // Returns true if this MenuItemView contains a single child
+  // that is responsible for rendering the content.
+  bool IsContainer() const;
+
   // The delegate. This is only valid for the root menu item. You shouldn't
   // use this directly, instead use GetDelegate() which walks the tree as
   // as necessary.
@@ -433,9 +429,6 @@ class VIEWS_EXPORT MenuItemView : public View {
 
   // Title.
   string16 title_;
-
-  // Accessible name (doesn't include accelerators, etc.).
-  string16 accessible_name_;
 
   // Icon.
   SkBitmap icon_;
@@ -483,4 +476,4 @@ class VIEWS_EXPORT MenuItemView : public View {
 
 }  // namespace views
 
-#endif  // VIEWS_CONTROLS_MENU_MENU_ITEM_VIEW_H_
+#endif  // UI_VIEWS_CONTROLS_MENU_MENU_ITEM_VIEW_H_

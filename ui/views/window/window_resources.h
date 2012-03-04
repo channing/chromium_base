@@ -1,9 +1,9 @@
-// Copyright (c) 2006-2008 The Chromium Authors. All rights reserved.
+// Copyright (c) 2011 The Chromium Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef VIEWS_WINDOW_WINDOW_RESOURCES_H_
-#define VIEWS_WINDOW_WINDOW_RESOURCES_H_
+#ifndef UI_VIEWS_WINDOW_WINDOW_RESOURCES_H_
+#define UI_VIEWS_WINDOW_WINDOW_RESOURCES_H_
 #pragma once
 
 class SkBitmap;
@@ -22,10 +22,11 @@ typedef int FramePartBitmap;
 //
 class WindowResources {
  public:
-  virtual ~WindowResources() { }
+  virtual ~WindowResources() {}
+
   virtual SkBitmap* GetPartBitmap(FramePartBitmap part) const = 0;
 };
 
 }  // namespace views
 
-#endif  // VIEWS_WINDOW_WINDOW_RESOURCES_H_
+#endif  // UI_VIEWS_WINDOW_WINDOW_RESOURCES_H_

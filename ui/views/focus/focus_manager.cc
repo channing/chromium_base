@@ -1,4 +1,4 @@
-// Copyright (c) 2011 The Chromium Authors. All rights reserved.
+// Copyright (c) 2012 The Chromium Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -9,8 +9,9 @@
 #include "base/auto_reset.h"
 #include "base/logging.h"
 #include "build/build_config.h"
+#include "ui/base/accelerators/accelerator.h"
+#include "ui/base/accelerators/accelerator_manager.h"
 #include "ui/base/keycodes/keyboard_codes.h"
-#include "ui/views/accelerator.h"
 #include "ui/views/focus/focus_search.h"
 #include "ui/views/focus/view_storage.h"
 #include "ui/views/focus/widget_focus_manager.h"
@@ -23,7 +24,11 @@ namespace views {
 FocusManager::FocusManager(Widget* widget)
     : widget_(widget),
       focused_view_(NULL),
+      accelerator_manager_(new ui::AcceleratorManager),
       focus_change_reason_(kReasonDirectFocusChange),
+#if defined(USE_X11)
+      should_handle_menu_key_release_(false),
+#endif
       is_changing_focus_(false) {
   DCHECK(widget_);
   stored_focused_view_storage_id_ =
@@ -34,6 +39,41 @@ FocusManager::~FocusManager() {
 }
 
 bool FocusManager::OnKeyEvent(const KeyEvent& event) {
+  const int key_code = event.key_code();
+
+#if defined(USE_X11)
+  // TODO(ben): beng believes that this should be done in
+  // RootWindowHosLinux for aura/linux.
+
+  // Always reset |should_handle_menu_key_release_| unless we are handling a
+  // VKEY_MENU key release event. It ensures that VKEY_MENU accelerator can only
+  // be activated when handling a VKEY_MENU key release event which is preceded
+  // by an un-handled VKEY_MENU key press event.
+  if (key_code != ui::VKEY_MENU || event.type() != ui::ET_KEY_RELEASED)
+    should_handle_menu_key_release_ = false;
+
+  if (event.type() == ui::ET_KEY_PRESSED) {
+    // VKEY_MENU is triggered by key release event.
+    // FocusManager::OnKeyEvent() returns false when the key has been consumed.
+    if (key_code == ui::VKEY_MENU) {
+      should_handle_menu_key_release_ = true;
+      return false;
+    }
+    // Pass through to the reset of OnKeyEvent.
+  } else if (key_code == ui::VKEY_MENU && should_handle_menu_key_release_ &&
+             (event.flags() & ~ui::EF_ALT_DOWN) == 0) {
+    // Trigger VKEY_MENU when only this key is pressed and released, and both
+    // press and release events are not handled by others.
+    ui::Accelerator accelerator(ui::VKEY_MENU, false, false, false);
+    return ProcessAccelerator(accelerator);
+  } else {
+    return false;
+  }
+#else
+  if (event.type() != ui::ET_KEY_PRESSED)
+    return false;
+#endif
+
 #if defined(OS_WIN)
   // If the focused view wants to process the key event as is, let it be.
   // On Linux we always dispatch key events to the focused view first, so
@@ -62,7 +102,6 @@ bool FocusManager::OnKeyEvent(const KeyEvent& event) {
 #endif
 
   // Intercept arrow key messages to switch between grouped views.
-  ui::KeyboardCode key_code = event.key_code();
   if (focused_view_ && focused_view_->GetGroup() != -1 &&
       (key_code == ui::VKEY_UP || key_code == ui::VKEY_DOWN ||
        key_code == ui::VKEY_LEFT || key_code == ui::VKEY_RIGHT)) {
@@ -86,10 +125,10 @@ bool FocusManager::OnKeyEvent(const KeyEvent& event) {
   // Process keyboard accelerators.
   // If the key combination matches an accelerator, the accelerator is
   // triggered, otherwise the key event is processed as usual.
-  Accelerator accelerator(event.key_code(),
-                          event.IsShiftDown(),
-                          event.IsControlDown(),
-                          event.IsAltDown());
+  ui::Accelerator accelerator(event.key_code(),
+                              event.IsShiftDown(),
+                              event.IsControlDown(),
+                              event.IsAltDown());
   if (ProcessAccelerator(accelerator)) {
     // If a shortcut was activated for this keydown message, do not propagate
     // the event further.
@@ -233,13 +272,17 @@ void FocusManager::SetFocusedViewWithReason(
   // some listeners), then notify all listeners.
   focus_change_reason_ = reason;
   FOR_EACH_OBSERVER(FocusChangeListener, focus_change_listeners_,
-                    FocusWillChange(focused_view_, view));
+                    OnWillChangeFocus(focused_view_, view));
 
-  if (focused_view_)
-    focused_view_->Blur();
+  View* old_focused_view = focused_view_;
   focused_view_ = view;
+  if (old_focused_view)
+    old_focused_view->Blur();
   if (focused_view_)
     focused_view_->Focus();
+
+  FOR_EACH_OBSERVER(FocusChangeListener, focus_change_listeners_,
+                    OnDidChangeFocus(old_focused_view, focused_view_));
 }
 
 void FocusManager::ClearFocus() {
@@ -248,6 +291,10 @@ void FocusManager::ClearFocus() {
 }
 
 void FocusManager::StoreFocusedView() {
+#if defined(USE_X11)
+  // Forget menu key state when the window lost focus.
+  should_handle_menu_key_release_ = false;
+#endif
   ViewStorage* view_storage = ViewStorage::GetInstance();
   if (!view_storage) {
     // This should never happen but bug 981648 seems to indicate it could.
@@ -281,6 +328,9 @@ void FocusManager::StoreFocusedView() {
 }
 
 void FocusManager::RestoreFocusedView() {
+#if defined(USE_X11)
+  DCHECK(!should_handle_menu_key_release_);
+#endif
   ViewStorage* view_storage = ViewStorage::GetInstance();
   if (!view_storage) {
     // This should never happen but bug 981648 seems to indicate it could.
@@ -291,8 +341,7 @@ void FocusManager::RestoreFocusedView() {
   View* view = view_storage->RetrieveView(stored_focused_view_storage_id_);
   if (view) {
     if (ContainsView(view)) {
-      if (!view->IsFocusableInRootView() &&
-          view->IsAccessibilityFocusableInRootView()) {
+      if (!view->IsFocusable() && view->IsAccessibilityFocusable()) {
         // RequestFocus would fail, but we want to restore focus to controls
         // that had focus in accessibility mode.
         SetFocusedViewWithReason(view, kReasonFocusRestore);
@@ -355,66 +404,44 @@ View* FocusManager::FindFocusableView(FocusTraversable* focus_traversable,
 }
 
 void FocusManager::RegisterAccelerator(
-    const Accelerator& accelerator,
-    AcceleratorTarget* target) {
-  AcceleratorTargetList& targets = accelerators_[accelerator];
-  DCHECK(std::find(targets.begin(), targets.end(), target) == targets.end())
-      << "Registering the same target multiple times";
-  targets.push_front(target);
+    const ui::Accelerator& accelerator,
+    ui::AcceleratorTarget* target) {
+  accelerator_manager_->Register(accelerator, target);
 }
 
-void FocusManager::UnregisterAccelerator(const Accelerator& accelerator,
-                                         AcceleratorTarget* target) {
-  AcceleratorMap::iterator map_iter = accelerators_.find(accelerator);
-  if (map_iter == accelerators_.end()) {
-    NOTREACHED() << "Unregistering non-existing accelerator";
-    return;
-  }
-
-  AcceleratorTargetList* targets = &map_iter->second;
-  AcceleratorTargetList::iterator target_iter =
-      std::find(targets->begin(), targets->end(), target);
-  if (target_iter == targets->end()) {
-    NOTREACHED() << "Unregistering accelerator for wrong target";
-    return;
-  }
-
-  targets->erase(target_iter);
+void FocusManager::UnregisterAccelerator(const ui::Accelerator& accelerator,
+                                         ui::AcceleratorTarget* target) {
+  accelerator_manager_->Unregister(accelerator, target);
 }
 
-void FocusManager::UnregisterAccelerators(AcceleratorTarget* target) {
-  for (AcceleratorMap::iterator map_iter = accelerators_.begin();
-       map_iter != accelerators_.end(); ++map_iter) {
-    AcceleratorTargetList* targets = &map_iter->second;
-    targets->remove(target);
-  }
+void FocusManager::UnregisterAccelerators(ui::AcceleratorTarget* target) {
+  accelerator_manager_->UnregisterAll(target);
 }
 
-bool FocusManager::ProcessAccelerator(const Accelerator& accelerator) {
-  AcceleratorMap::iterator map_iter = accelerators_.find(accelerator);
-  if (map_iter != accelerators_.end()) {
-    // We have to copy the target list here, because an AcceleratorPressed
-    // event handler may modify the list.
-    AcceleratorTargetList targets(map_iter->second);
-    for (AcceleratorTargetList::iterator iter = targets.begin();
-         iter != targets.end(); ++iter) {
-      if ((*iter)->AcceleratorPressed(accelerator))
-        return true;
-    }
-  }
-  return false;
+bool FocusManager::ProcessAccelerator(const ui::Accelerator& accelerator) {
+  return accelerator_manager_->Process(accelerator);
 }
 
-AcceleratorTarget* FocusManager::GetCurrentTargetForAccelerator(
-    const views::Accelerator& accelerator) const {
-  AcceleratorMap::const_iterator map_iter = accelerators_.find(accelerator);
-  if (map_iter == accelerators_.end() || map_iter->second.empty())
-    return NULL;
-  return map_iter->second.front();
+void FocusManager::MaybeResetMenuKeyState(const KeyEvent& key) {
+#if defined(USE_X11)
+  // Always reset |should_handle_menu_key_release_| unless we are handling a
+  // VKEY_MENU key release event. It ensures that VKEY_MENU accelerator can only
+  // be activated when handling a VKEY_MENU key release event which is preceded
+  // by an unhandled VKEY_MENU key press event. See also HandleKeyboardEvent().
+  if (key.key_code() != ui::VKEY_MENU || key.type() != ui::ET_KEY_RELEASED)
+    should_handle_menu_key_release_ = false;
+#endif
 }
 
-void FocusManager::FocusNativeView(gfx::NativeView native_view) {
-  widget_->FocusNativeView(native_view);
+#if defined(TOOLKIT_USES_GTK)
+void FocusManager::ResetMenuKeyState() {
+  should_handle_menu_key_release_ = false;
+}
+#endif
+
+ui::AcceleratorTarget* FocusManager::GetCurrentTargetForAccelerator(
+    const ui::Accelerator& accelerator) const {
+  return accelerator_manager_->GetCurrentTarget(accelerator);
 }
 
 // static

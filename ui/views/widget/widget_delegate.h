@@ -1,9 +1,9 @@
-// Copyright (c) 2011 The Chromium Authors. All rights reserved.
+// Copyright (c) 2012 The Chromium Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef VIEWS_WIDGET_WIDGET_DELEGATE_H_
-#define VIEWS_WIDGET_WIDGET_DELEGATE_H_
+#ifndef UI_VIEWS_WIDGET_WIDGET_DELEGATE_H_
+#define UI_VIEWS_WIDGET_WIDGET_DELEGATE_H_
 #pragma once
 
 #include <string>
@@ -20,7 +20,7 @@ class Rect;
 }
 
 namespace views {
-class BubbleDelegate;
+class BubbleDelegateView;
 class ClientView;
 class DialogDelegate;
 class NonClientFrameView;
@@ -50,7 +50,7 @@ class VIEWS_EXPORT WidgetDelegate {
   // Moved from WindowDelegate: ------------------------------------------------
   // TODO(beng): sort
 
-  virtual BubbleDelegate* AsBubbleDelegate();
+  virtual BubbleDelegateView* AsBubbleDelegate();
   virtual DialogDelegate* AsDialogDelegate();
 
   // Returns true if the window can ever be resized.
@@ -62,19 +62,19 @@ class VIEWS_EXPORT WidgetDelegate {
   // Returns true if the window can be activated.
   virtual bool CanActivate() const;
 
-  // Returns true if the dialog should be displayed modally to the window that
-  // opened it. Only windows with WindowType == DIALOG can be modal.
-  virtual bool IsModal() const;
+  // Returns the modal type that applies to the widget. Default is
+  // ui::MODAL_TYPE_NONE (not modal).
+  virtual ui::ModalType GetModalType() const;
 
   virtual ui::AccessibilityTypes::Role GetAccessibleWindowRole() const;
 
   virtual ui::AccessibilityTypes::State GetAccessibleWindowState() const;
 
   // Returns the title to be read with screen readers.
-  virtual std::wstring GetAccessibleWindowTitle() const;
+  virtual string16 GetAccessibleWindowTitle() const;
 
   // Returns the text to be displayed in the window title.
-  virtual std::wstring GetWindowTitle() const;
+  virtual string16 GetWindowTitle() const;
 
   // Returns true if the window should show a title in the title bar.
   virtual bool ShouldShowWindowTitle() const;
@@ -178,4 +178,4 @@ class VIEWS_EXPORT WidgetDelegateView : public WidgetDelegate, public View {
 
 }  // namespace views
 
-#endif  // VIEWS_WIDGET_WIDGET_DELEGATE_H_
+#endif  // UI_VIEWS_WIDGET_WIDGET_DELEGATE_H_

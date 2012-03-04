@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef VIEWS_WINDOW_WINDOW_SHAPE_H_
-#define VIEWS_WINDOW_WINDOW_SHAPE_H_
+#ifndef UI_VIEWS_WINDOW_WINDOW_SHAPE_H_
+#define UI_VIEWS_WINDOW_WINDOW_SHAPE_H_
 #pragma once
 
 #include "ui/views/views_export.h"
@@ -22,4 +22,4 @@ VIEWS_EXPORT void GetDefaultWindowMask(const gfx::Size& size,
 
 } // namespace views
 
-#endif  // VIEWS_WINDOW_WINDOW_SHAPE_H_
+#endif  // UI_VIEWS_WINDOW_WINDOW_SHAPE_H_

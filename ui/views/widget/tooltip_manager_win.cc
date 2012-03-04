@@ -1,12 +1,14 @@
-// Copyright (c) 2011 The Chromium Authors. All rights reserved.
+// Copyright (c) 2012 The Chromium Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
 #include "ui/views/widget/tooltip_manager_win.h"
 
 #include <windowsx.h>
+
 #include <limits>
 
+#include "base/bind.h"
 #include "base/i18n/rtl.h"
 #include "base/logging.h"
 #include "base/message_loop.h"
@@ -88,7 +90,7 @@ bool TooltipManagerWin::Init() {
   DCHECK(!tooltip_hwnd_);
   // Create the tooltip control.
   tooltip_hwnd_ = CreateWindowEx(
-      WS_EX_TRANSPARENT | l10n_util::GetExtendedTooltipStyles(),
+      WS_EX_TRANSPARENT | WS_EX_TOPMOST | l10n_util::GetExtendedTooltipStyles(),
       TOOLTIPS_CLASS, NULL, TTS_NOPREFIX, 0, 0, 0, 0,
       GetParent(), NULL, NULL, NULL);
   if (!tooltip_hwnd_)
@@ -331,7 +333,7 @@ void TooltipManagerWin::ShowKeyboardTooltip(View* focused_view) {
   gfx::Point screen_point;
   focused_view->ConvertPointToScreen(focused_view, &screen_point);
   keyboard_tooltip_hwnd_ = CreateWindowEx(
-      WS_EX_TRANSPARENT | l10n_util::GetExtendedTooltipStyles(),
+      WS_EX_TRANSPARENT | WS_EX_TOPMOST | l10n_util::GetExtendedTooltipStyles(),
       TOOLTIPS_CLASS, NULL, 0, 0, 0, 0, 0, NULL, NULL, NULL, NULL);
   if (!keyboard_tooltip_hwnd_)
     return;
@@ -366,10 +368,11 @@ void TooltipManagerWin::ShowKeyboardTooltip(View* focused_view) {
   ::SetWindowPos(keyboard_tooltip_hwnd_, NULL, rect_bounds.left,
                  rect_bounds.top, 0, 0,
                  SWP_NOZORDER | SWP_NOACTIVATE | SWP_NOSIZE);
-  MessageLoop::current()->PostDelayedTask(FROM_HERE,
-      keyboard_tooltip_factory_.NewRunnableMethod(
-      &TooltipManagerWin::DestroyKeyboardTooltipWindow,
-      keyboard_tooltip_hwnd_),
+  MessageLoop::current()->PostDelayedTask(
+      FROM_HERE,
+      base::Bind(&TooltipManagerWin::DestroyKeyboardTooltipWindow,
+                 keyboard_tooltip_factory_.GetWeakPtr(),
+                 keyboard_tooltip_hwnd_),
       kDefaultTimeout);
 }
 

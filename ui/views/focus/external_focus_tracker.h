@@ -2,10 +2,11 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef VIEWS_FOCUS_EXTERNAL_FOCUS_TRACKER_H_
-#define VIEWS_FOCUS_EXTERNAL_FOCUS_TRACKER_H_
+#ifndef UI_VIEWS_FOCUS_EXTERNAL_FOCUS_TRACKER_H_
+#define UI_VIEWS_FOCUS_EXTERNAL_FOCUS_TRACKER_H_
 #pragma once
 
+#include "base/compiler_specific.h"
 #include "ui/views/focus/focus_manager.h"
 
 namespace views {
@@ -32,7 +33,10 @@ class VIEWS_EXPORT ExternalFocusTracker : public FocusChangeListener {
 
   virtual ~ExternalFocusTracker();
   // FocusChangeListener implementation.
-  virtual void FocusWillChange(View* focused_before, View* focused_now);
+  virtual void OnWillChangeFocus(View* focused_before,
+                                 View* focused_now) OVERRIDE;
+  virtual void OnDidChangeFocus(View* focused_before,
+                                View* focused_now) OVERRIDE;
 
   // Focuses last focused view which is not a child of parent view and is not
   // parent view itself. Returns true if focus for a view was requested, false
@@ -74,4 +78,4 @@ class VIEWS_EXPORT ExternalFocusTracker : public FocusChangeListener {
 
 }  // namespace views
 
-#endif  // VIEWS_FOCUS_EXTERNAL_FOCUS_TRACKER_H_
+#endif  // UI_VIEWS_FOCUS_EXTERNAL_FOCUS_TRACKER_H_

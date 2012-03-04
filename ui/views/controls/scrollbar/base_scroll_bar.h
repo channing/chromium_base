@@ -2,19 +2,20 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef VIEWS_CONTROLS_SCROLLBAR_BASE_SCROLL_BAR_H_
-#define VIEWS_CONTROLS_SCROLLBAR_BASE_SCROLL_BAR_H_
+#ifndef UI_VIEWS_CONTROLS_SCROLLBAR_BASE_SCROLL_BAR_H_
+#define UI_VIEWS_CONTROLS_SCROLLBAR_BASE_SCROLL_BAR_H_
 #pragma once
 
 #include "ui/views/context_menu_controller.h"
 #include "ui/views/controls/button/image_button.h"
-#include "ui/views/controls/menu/menu.h"
+#include "ui/views/controls/menu/menu_delegate.h"
 #include "ui/views/controls/scrollbar/scroll_bar.h"
 #include "ui/views/repeat_controller.h"
 
 namespace views {
 
 class BaseScrollBarThumb;
+class MenuRunner;
 
 ///////////////////////////////////////////////////////////////////////////////
 //
@@ -23,10 +24,10 @@ class BaseScrollBarThumb;
 ///////////////////////////////////////////////////////////////////////////////
 class VIEWS_EXPORT BaseScrollBar : public ScrollBar,
                                    public ContextMenuController,
-                                   public Menu::Delegate {
+                                   public MenuDelegate {
  public:
   BaseScrollBar(bool horizontal, BaseScrollBarThumb* thumb);
-  virtual ~BaseScrollBar() { }
+  virtual ~BaseScrollBar();
 
   // Get the bounds of the "track" area that the thumb is free to slide within.
   virtual gfx::Rect GetTrackBounds() const = 0;
@@ -77,7 +78,7 @@ class VIEWS_EXPORT BaseScrollBar : public ScrollBar,
                                       bool is_mouse_gesture) OVERRIDE;
 
   // Menu::Delegate overrides:
-  virtual std::wstring GetLabel(int id) const OVERRIDE;
+  virtual string16 GetLabel(int id) const OVERRIDE;
   virtual bool IsCommandEnabled(int id) const OVERRIDE;
   virtual void ExecuteCommand(int id) OVERRIDE;
 
@@ -148,9 +149,11 @@ class VIEWS_EXPORT BaseScrollBar : public ScrollBar,
   // was invoked.
   int context_menu_mouse_position_;
 
+  scoped_ptr<MenuRunner> menu_runner_;
+
   DISALLOW_COPY_AND_ASSIGN(BaseScrollBar);
 };
 
 }  // namespace views
 
-#endif  // VIEWS_CONTROLS_SCROLLBAR_BASE_SCROLL_BAR_H_
+#endif  // UI_VIEWS_CONTROLS_SCROLLBAR_BASE_SCROLL_BAR_H_

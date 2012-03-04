@@ -1,16 +1,20 @@
-// Copyright (c) 2011 The Chromium Authors. All rights reserved.
+// Copyright (c) 2012 The Chromium Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
 #include "ui/views/controls/scrollbar/base_scroll_bar_button.h"
+
+#include "base/bind.h"
+#include "base/bind_helpers.h"
+#include "ui/gfx/screen.h"
 
 namespace views {
 
 BaseScrollBarButton::BaseScrollBarButton(ButtonListener* listener)
     : CustomButton(listener),
       ALLOW_THIS_IN_INITIALIZER_LIST(repeater_(
-          NewCallback<BaseScrollBarButton>(this,
-              &BaseScrollBarButton::RepeaterNotifyClick))) {
+          base::Bind(&BaseScrollBarButton::RepeaterNotifyClick,
+                     base::Unretained(this)))) {
 }
 
 BaseScrollBarButton::~BaseScrollBarButton() {
@@ -31,16 +35,17 @@ void BaseScrollBarButton::OnMouseCaptureLost() {
 }
 
 void BaseScrollBarButton::RepeaterNotifyClick() {
-#if defined(OS_WIN)
+  // TODO(sky): See if we can convert to using |Screen| everywhere.
+#if defined(OS_WIN) && !defined(USE_AURA)
   DWORD pos = GetMessagePos();
   POINTS points = MAKEPOINTS(pos);
   gfx::Point cursor_point(points.x, points.y);
-#elif defined(OS_LINUX)
+#else
   gfx::Point cursor_point = gfx::Screen::GetCursorScreenPoint();
 #endif
   views::MouseEvent event(ui::ET_MOUSE_RELEASED,
                           cursor_point.x(), cursor_point.y(),
-                          ui::EF_LEFT_BUTTON_DOWN);
+                          ui::EF_LEFT_MOUSE_BUTTON);
   Button::NotifyClick(event);
 }
 

@@ -2,6 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+#include "ui/base/ime/text_input_client.h"
 #include "ui/views/ime/input_method_base.h"
 #include "ui/views/ime/text_input_type_tracker.h"
 #include "ui/views/view.h"
@@ -14,7 +15,6 @@ namespace views {
 InputMethodBase::InputMethodBase()
     : delegate_(NULL),
       widget_(NULL),
-      focused_view_(NULL),
       widget_focused_(false) {
 }
 
@@ -40,9 +40,11 @@ void InputMethodBase::Init(Widget* widget) {
   }
 
   widget_ = widget;
+  // The InputMethod is lazily created, so we need to tell it the currently
+  // focused view.
   View* focused = widget->GetFocusManager()->GetFocusedView();
   if (focused)
-    FocusWillChange(NULL, focused);
+    OnWillChangeFocus(NULL, focused);
   widget->GetFocusManager()->AddFocusChangeListener(this);
 }
 
@@ -58,6 +60,10 @@ void InputMethodBase::OnBlur() {
       GetTextInputType(), widget_);
 }
 
+views::View* InputMethodBase::GetFocusedView() const {
+  return widget_->GetFocusManager()->GetFocusedView();
+}
+
 void InputMethodBase::OnTextInputTypeChanged(View* view) {
   if (IsViewFocused(view)) {
     TextInputTypeTracker::GetInstance()->OnTextInputTypeChanged(
@@ -65,13 +71,13 @@ void InputMethodBase::OnTextInputTypeChanged(View* view) {
   }
 }
 
-TextInputClient* InputMethodBase::GetTextInputClient() const {
-  return (widget_focused_ && focused_view_) ?
-      focused_view_->GetTextInputClient() : NULL;
+ui::TextInputClient* InputMethodBase::GetTextInputClient() const {
+  return (widget_focused_ && GetFocusedView()) ?
+      GetFocusedView()->GetTextInputClient() : NULL;
 }
 
 ui::TextInputType InputMethodBase::GetTextInputType() const {
-  TextInputClient* client = GetTextInputClient();
+  ui::TextInputClient* client = GetTextInputClient();
   return client ? client->GetTextInputType() : ui::TEXT_INPUT_TYPE_NONE;
 }
 
@@ -79,12 +85,10 @@ bool InputMethodBase::IsMock() const {
   return false;
 }
 
-void InputMethodBase::FocusWillChange(View* focused_before, View* focused) {
-  DCHECK_EQ(focused_view_, focused_before);
-  FocusedViewWillChange();
-  focused_view_ = focused;
-  FocusedViewDidChange();
+void InputMethodBase::OnWillChangeFocus(View* focused_before, View* focused) {
+}
 
+void InputMethodBase::OnDidChangeFocus(View* focused_before, View* focused) {
   if (widget_focused_) {
     TextInputTypeTracker::GetInstance()->OnTextInputTypeChanged(
         GetTextInputType(), widget_);
@@ -92,7 +96,7 @@ void InputMethodBase::FocusWillChange(View* focused_before, View* focused) {
 }
 
 bool InputMethodBase::IsViewFocused(View* view) const {
-  return widget_focused_ && view && focused_view_ == view;
+  return widget_focused_ && view && GetFocusedView() == view;
 }
 
 bool InputMethodBase::IsTextInputTypeNone() const {
@@ -100,7 +104,7 @@ bool InputMethodBase::IsTextInputTypeNone() const {
 }
 
 void InputMethodBase::OnInputMethodChanged() const {
-  TextInputClient* client = GetTextInputClient();
+  ui::TextInputClient* client = GetTextInputClient();
   if (client && client->GetTextInputType() != ui::TEXT_INPUT_TYPE_NONE)
     client->OnInputMethodChanged();
 }
@@ -112,23 +116,17 @@ void InputMethodBase::DispatchKeyEventPostIME(const KeyEvent& key) const {
 
 bool InputMethodBase::GetCaretBoundsInWidget(gfx::Rect* rect) const {
   DCHECK(rect);
-  TextInputClient* client = GetTextInputClient();
+  ui::TextInputClient* client = GetTextInputClient();
   if (!client || client->GetTextInputType() == ui::TEXT_INPUT_TYPE_NONE)
     return false;
 
-  *rect = focused_view_->ConvertRectToWidget(client->GetCaretBounds());
+  *rect = GetFocusedView()->ConvertRectToWidget(client->GetCaretBounds());
 
   // We need to do coordinate conversion if the focused view is inside a child
   // Widget.
-  if (focused_view_->GetWidget() != widget_)
-    return Widget::ConvertRect(focused_view_->GetWidget(), widget_, rect);
+  if (GetFocusedView()->GetWidget() != widget_)
+    return Widget::ConvertRect(GetFocusedView()->GetWidget(), widget_, rect);
   return true;
-}
-
-void InputMethodBase::FocusedViewWillChange() {
-}
-
-void InputMethodBase::FocusedViewDidChange() {
 }
 
 }  // namespace views

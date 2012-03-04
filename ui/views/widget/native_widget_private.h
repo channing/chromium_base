@@ -1,11 +1,13 @@
-// Copyright (c) 2011 The Chromium Authors. All rights reserved.
+// Copyright (c) 2012 The Chromium Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef VIEWS_WIDGET_NATIVE_WIDGET_PRIVATE_H_
-#define VIEWS_WIDGET_NATIVE_WIDGET_PRIVATE_H_
+#ifndef UI_VIEWS_WIDGET_NATIVE_WIDGET_PRIVATE_H_
+#define UI_VIEWS_WIDGET_NATIVE_WIDGET_PRIVATE_H_
 #pragma once
 
+#include "base/string16.h"
+#include "ui/base/ui_base_types.h"
 #include "ui/gfx/native_widget_types.h"
 #include "ui/views/ime/input_method_delegate.h"
 #include "ui/views/widget/native_widget.h"
@@ -152,12 +154,14 @@ class VIEWS_EXPORT NativeWidgetPrivate : public NativeWidget,
                               const SkBitmap& app_icon) = 0;
 
   // Update native accessibility properties on the native window.
-  virtual void SetAccessibleName(const std::wstring& name) = 0;
+  virtual void SetAccessibleName(const string16& name) = 0;
   virtual void SetAccessibleRole(ui::AccessibilityTypes::Role role) = 0;
   virtual void SetAccessibleState(ui::AccessibilityTypes::State state) = 0;
 
-  // Makes the NativeWindow modal.
-  virtual void BecomeModal() = 0;
+  // Initializes the modal type of the window to |modal_type|. Called from
+  // NativeWidgetDelegate::OnNativeWidgetCreated() before the widget is
+  // initially parented.
+  virtual void InitModalType(ui::ModalType modal_type) = 0;
 
   // See method documentation in Widget.
   virtual gfx::Rect GetWindowScreenBounds() const = 0;
@@ -165,14 +169,11 @@ class VIEWS_EXPORT NativeWidgetPrivate : public NativeWidget,
   virtual gfx::Rect GetRestoredBounds() const = 0;
   virtual void SetBounds(const gfx::Rect& bounds) = 0;
   virtual void SetSize(const gfx::Size& size) = 0;
-  virtual void SetBoundsConstrained(const gfx::Rect& bounds,
-                                    Widget* other_widget) = 0;
-  virtual void MoveAbove(gfx::NativeView native_view) = 0;
-  virtual void MoveToTop() = 0;
+  virtual void StackAbove(gfx::NativeView native_view) = 0;
+  virtual void StackAtTop() = 0;
   virtual void SetShape(gfx::NativeRegion shape) = 0;
   virtual void Close() = 0;
   virtual void CloseNow() = 0;
-  virtual void EnableClose(bool enable) = 0;
   virtual void Show() = 0;
   virtual void Hide() = 0;
   // Invoked if the initial show should maximize the window. |restored_bounds|
@@ -201,9 +202,11 @@ class VIEWS_EXPORT NativeWidgetPrivate : public NativeWidget,
   virtual void SetCursor(gfx::NativeCursor cursor) = 0;
   virtual void ClearNativeFocus() = 0;
   virtual void FocusNativeView(gfx::NativeView native_view) = 0;
-  virtual bool ConvertPointFromAncestor(
-      const Widget* ancestor, gfx::Point* point) const = 0;
   virtual gfx::Rect GetWorkAreaBoundsInScreen() const = 0;
+  virtual void SetInactiveRenderingDisabled(bool value) = 0;
+  virtual Widget::MoveLoopResult RunMoveLoop() = 0;
+  virtual void EndMoveLoop() = 0;
+  virtual void SetVisibilityChangedAnimationsEnabled(bool value) = 0;
 
   // Overridden from NativeWidget:
   virtual internal::NativeWidgetPrivate* AsNativeWidgetPrivate() OVERRIDE;
@@ -212,4 +215,4 @@ class VIEWS_EXPORT NativeWidgetPrivate : public NativeWidget,
 }  // namespace internal
 }  // namespace views
 
-#endif  // VIEWS_WIDGET_NATIVE_WIDGET_PRIVATE_H_
+#endif  // UI_VIEWS_WIDGET_NATIVE_WIDGET_PRIVATE_H_

@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef VIEWS_WIDGET_FOCUS_SEARCH_H_
-#define VIEWS_WIDGET_FOCUS_SEARCH_H_
+#ifndef UI_VIEWS_FOCUS_FOCUS_SEARCH_H_
+#define UI_VIEWS_FOCUS_FOCUS_SEARCH_H_
 #pragma once
 
 #include "ui/views/view.h"
@@ -35,8 +35,8 @@ class VIEWS_EXPORT FocusSearch {
   //           view to FindNextFocusableView you will always get a valid view
   //           out, even if it's the same view.
   // - |accessibility_mode| should be true if full keyboard accessibility is
-  //   needed and you  want to check IsAccessibilityFocusableInRootView(),
-  //   rather than IsFocusableInRootView().
+  //   needed and you want to check IsAccessibilityFocusable(), rather than
+  //   IsFocusable().
   FocusSearch(View* root, bool cycle, bool accessibility_mode);
   virtual ~FocusSearch() {}
 
@@ -75,8 +75,7 @@ class VIEWS_EXPORT FocusSearch {
   bool IsViewFocusableCandidate(View* v, int skip_group_id);
 
   // Convenience method; returns true if a view is not NULL and is focusable
-  // (checking IsAccessibilityFocusableInRootView() if accessibility_mode_ is
-  // true).
+  // (checking IsAccessibilityFocusable() if |accessibility_mode_| is true).
   bool IsFocusable(View* v);
 
   // Returns the view selected for the group of the selected view. If the view
@@ -119,4 +118,4 @@ class VIEWS_EXPORT FocusSearch {
 
 }  // namespace views
 
-#endif  // VIEWS_WIDGET_FOCUS_SEARCH_H_
+#endif  // UI_VIEWS_FOCUS_FOCUS_SEARCH_H_

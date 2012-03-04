@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef VIEWS_FOCUS_VIEW_STORAGE_H_
-#define VIEWS_FOCUS_VIEW_STORAGE_H_
+#ifndef UI_VIEWS_FOCUS_VIEW_STORAGE_H_
+#define UI_VIEWS_FOCUS_VIEW_STORAGE_H_
 #pragma once
 
 #include "base/memory/singleton.h"
@@ -67,4 +67,4 @@ class VIEWS_EXPORT ViewStorage {
 
 }  // namespace views
 
-#endif  // VIEWS_FOCUS_VIEW_STORAGE_H_
+#endif  // UI_VIEWS_FOCUS_VIEW_STORAGE_H_

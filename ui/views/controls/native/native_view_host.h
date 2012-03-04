@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef VIEWS_CONTROLS_NATIVE_NATIVE_VIEW_HOST_H_
-#define VIEWS_CONTROLS_NATIVE_NATIVE_VIEW_HOST_H_
+#ifndef UI_VIEWS_CONTROLS_NATIVE_NATIVE_VIEW_HOST_H_
+#define UI_VIEWS_CONTROLS_NATIVE_NATIVE_VIEW_HOST_H_
 #pragma once
 
 #include <string>
@@ -38,11 +38,9 @@ class VIEWS_EXPORT NativeViewHost : public View {
   // added to a View hierarchy hosted within a valid Widget.
   void Attach(gfx::NativeView native_view);
 
-  // Attach a views::View instead of a native view to this host.
-  void AttachToView(View* view);
-
-  // Detach the attached window handle. Its bounds and visibility will no longer
-  // be manipulated by this View.
+  // Detach the attached native view. Its bounds and visibility will no
+  // longer be manipulated by this View. The native view may be destroyed and
+  // detached before calling this function, and this has no effect in that case.
   void Detach();
 
   // Sets a preferred size for the native view attached to this View.
@@ -67,40 +65,39 @@ class VIEWS_EXPORT NativeViewHost : public View {
   void set_fast_resize(bool fast_resize) { fast_resize_ = fast_resize; }
   bool fast_resize() const { return fast_resize_; }
 
+  // Value of fast_resize() the last time Layout() was invoked.
+  bool fast_resize_at_last_layout() const {
+    return fast_resize_at_last_layout_;
+  }
+
   // Accessor for |native_view_|.
   gfx::NativeView native_view() const { return native_view_; }
-
-  // Accessor for |views_view_|.
-  View* views_view() const { return views_view_; }
 
   void NativeViewDestroyed();
 
   // Overridden from View:
-  virtual gfx::Size GetPreferredSize();
-  virtual void Layout();
-  virtual void OnPaint(gfx::Canvas* canvas);
-  virtual void VisibilityChanged(View* starting_from, bool is_visible);
-  virtual void OnFocus();
-  virtual gfx::NativeViewAccessible GetNativeViewAccessible();
+  virtual gfx::Size GetPreferredSize() OVERRIDE;
+  virtual void Layout() OVERRIDE;
+  virtual void OnPaint(gfx::Canvas* canvas) OVERRIDE;
+  virtual void VisibilityChanged(View* starting_from, bool is_visible) OVERRIDE;
+  virtual void OnFocus() OVERRIDE;
+  virtual gfx::NativeViewAccessible GetNativeViewAccessible() OVERRIDE;
 
  protected:
-  virtual bool NeedsNotificationWhenVisibleBoundsChange() const;
-  virtual void OnVisibleBoundsChanged();
-  virtual void ViewHierarchyChanged(bool is_add, View* parent, View* child);
-  virtual std::string GetClassName() const;
+  virtual bool NeedsNotificationWhenVisibleBoundsChange() const OVERRIDE;
+  virtual void OnVisibleBoundsChanged() OVERRIDE;
+  virtual void ViewHierarchyChanged(bool is_add,
+                                    View* parent,
+                                    View* child) OVERRIDE;
+  virtual std::string GetClassName() const OVERRIDE;
 
  private:
   // Detach the native view. |destroyed| is true if the native view is
   // detached because it's being destroyed, or false otherwise.
   void Detach(bool destroyed);
 
-  // The attached native view. There is exactly one native_view_ or views_view_
-  // attached.
+  // The attached native view. There is exactly one native_view_ attached.
   gfx::NativeView native_view_;
-
-  // The attached view. There is exactly one native_view_ or views_view_
-  // attached.
-  View* views_view_;
 
   // A platform-specific wrapper that does the OS-level manipulation of the
   // attached gfx::NativeView.
@@ -113,6 +110,9 @@ class VIEWS_EXPORT NativeViewHost : public View {
   // in the setter/accessor above.
   bool fast_resize_;
 
+  // Value of |fast_resize_| during the last call to Layout.
+  bool fast_resize_at_last_layout_;
+
   // The view that should be given focus when this NativeViewHost is focused.
   View* focus_view_;
 
@@ -121,4 +121,4 @@ class VIEWS_EXPORT NativeViewHost : public View {
 
 }  // namespace views
 
-#endif  // VIEWS_CONTROLS_NATIVE_NATIVE_VIEW_HOST_H_
+#endif  // UI_VIEWS_CONTROLS_NATIVE_NATIVE_VIEW_HOST_H_

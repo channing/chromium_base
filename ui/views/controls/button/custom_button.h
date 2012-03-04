@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef VIEWS_CONTROLS_BUTTON_CUSTOM_BUTTON_H_
-#define VIEWS_CONTROLS_BUTTON_CUSTOM_BUTTON_H_
+#ifndef UI_VIEWS_CONTROLS_BUTTON_CUSTOM_BUTTON_H_
+#define UI_VIEWS_CONTROLS_BUTTON_CUSTOM_BUTTON_H_
 #pragma once
 
 #include "ui/base/animation/animation_delegate.h"
@@ -76,7 +76,6 @@ class VIEWS_EXPORT CustomButton : public Button,
   virtual void SetHotTracked(bool flag) OVERRIDE;
   virtual bool IsHotTracked() const OVERRIDE;
   virtual void OnEnabledChanged() OVERRIDE;
-  virtual bool IsEnabled() const OVERRIDE;
   virtual std::string GetClassName() const OVERRIDE;
   virtual bool OnMousePressed(const MouseEvent& event) OVERRIDE;
   virtual bool OnMouseDragged(const MouseEvent& event) OVERRIDE;
@@ -87,7 +86,7 @@ class VIEWS_EXPORT CustomButton : public Button,
   virtual void OnMouseMoved(const MouseEvent& event) OVERRIDE;
   virtual bool OnKeyPressed(const KeyEvent& event) OVERRIDE;
   virtual bool OnKeyReleased(const KeyEvent& event) OVERRIDE;
-  virtual bool AcceleratorPressed(const Accelerator& accelerator) OVERRIDE;
+  virtual bool AcceleratorPressed(const ui::Accelerator& accelerator) OVERRIDE;
   virtual void ShowContextMenu(const gfx::Point& p,
                                bool is_mouse_gesture) OVERRIDE;
   virtual void OnDragDone() OVERRIDE;
@@ -99,6 +98,12 @@ class VIEWS_EXPORT CustomButton : public Button,
  protected:
   // Construct the Button with a Listener. See comment for Button's ctor.
   explicit CustomButton(ButtonListener* listener);
+
+  // Invoked from SetState() when SetState() is passed a value that differs from
+  // the current state. CustomButton's implementation of StateChanged() does
+  // nothing; this method is provided for subclasses that wish to do something
+  // on state changes.
+  virtual void StateChanged();
 
   // Returns true if the event is one that can trigger notifying the listener.
   // This implementation returns true if the left mouse button is down.
@@ -113,7 +118,6 @@ class VIEWS_EXPORT CustomButton : public Button,
   virtual void ViewHierarchyChanged(bool is_add,
                                     View* parent,
                                     View* child) OVERRIDE;
-  virtual bool IsFocusable() const OVERRIDE;
   virtual void OnBlur() OVERRIDE;
 
   // The button state (defined in implementation)
@@ -140,4 +144,4 @@ class VIEWS_EXPORT CustomButton : public Button,
 
 }  // namespace views
 
-#endif  // VIEWS_CONTROLS_BUTTON_CUSTOM_BUTTON_H_
+#endif  // UI_VIEWS_CONTROLS_BUTTON_CUSTOM_BUTTON_H_

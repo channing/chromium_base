@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef VIEWS_IME_INPUT_METHOD_H_
-#define VIEWS_IME_INPUT_METHOD_H_
+#ifndef UI_VIEWS_IME_INPUT_METHOD_H_
+#define UI_VIEWS_IME_INPUT_METHOD_H_
 #pragma once
 
 #include <string>
@@ -13,6 +13,10 @@
 #include "ui/base/ime/text_input_type.h"
 #include "ui/views/views_export.h"
 
+namespace ui {
+class TextInputClient;
+}  // namespace ui
+
 namespace views {
 
 namespace internal {
@@ -20,7 +24,6 @@ class InputMethodDelegate;
 }  // namespace internal
 
 class KeyEvent;
-class TextInputClient;
 class View;
 class Widget;
 
@@ -96,7 +99,7 @@ class VIEWS_EXPORT InputMethod {
   // Gets the focused text input client. Returns NULL if the Widget is not
   // focused, or there is no focused View or the focused View doesn't support
   // text input.
-  virtual TextInputClient* GetTextInputClient() const = 0;
+  virtual ui::TextInputClient* GetTextInputClient() const = 0;
 
   // Gets the text input type of the focused text input client. Returns
   // ui::TEXT_INPUT_TYPE_NONE if there is no focused text input client.
@@ -110,4 +113,4 @@ class VIEWS_EXPORT InputMethod {
 
 }  // namespace views
 
-#endif  // VIEWS_IME_INPUT_METHOD_H_
+#endif  // UI_VIEWS_IME_INPUT_METHOD_H_

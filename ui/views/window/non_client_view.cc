@@ -5,13 +5,10 @@
 #include "ui/views/window/non_client_view.h"
 
 #include "ui/base/accessibility/accessible_view_state.h"
+#include "ui/base/hit_test.h"
 #include "ui/views/widget/root_view.h"
 #include "ui/views/widget/widget.h"
 #include "ui/views/window/client_view.h"
-
-#if !defined(OS_WIN)
-#include "ui/views/window/hit_test.h"
-#endif
 
 namespace views {
 
@@ -19,10 +16,10 @@ namespace views {
 const int NonClientFrameView::kFrameShadowThickness = 1;
 const int NonClientFrameView::kClientEdgeThickness = 1;
 const char NonClientFrameView::kViewClassName[] =
-    "views/window/NonClientFrameView";
+    "ui/views/window/NonClientFrameView";
 
 const char NonClientView::kViewClassName[] =
-    "views/window/NonClientView";
+    "ui/views/window/NonClientView";
 
 // The frame view and the client view are always at these specific indices,
 // because the RootView message dispatch sends messages to items higher in the
@@ -71,8 +68,8 @@ void NonClientView::UpdateFrame() {
   widget->UpdateFrameAfterFrameChange();
 }
 
-void NonClientView::DisableInactiveRendering(bool disable) {
-  frame_view_->DisableInactiveRendering(disable);
+void NonClientView::SetInactiveRenderingDisabled(bool disable) {
+  frame_view_->SetInactiveRenderingDisabled(disable);
 }
 
 gfx::Rect NonClientView::GetWindowBoundsForClientBounds(
@@ -88,10 +85,6 @@ int NonClientView::NonClientHitTest(const gfx::Point& point) {
 void NonClientView::GetWindowMask(const gfx::Size& size,
                                   gfx::Path* window_mask) {
   frame_view_->GetWindowMask(size, window_mask);
-}
-
-void NonClientView::EnableClose(bool enable) {
-  frame_view_->EnableClose(enable);
 }
 
 void NonClientView::ResetWindowControls() {
@@ -184,6 +177,16 @@ views::View* NonClientView::GetEventHandlerForPoint(const gfx::Point& point) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+// NonClientFrameView, public:
+
+void NonClientFrameView::SetInactiveRenderingDisabled(bool disable) {
+  // See comment in Widget::SetInactiveRenderingDisabled as to why we don't
+  // conditionally invoke ShouldPaintAsActiveChanged.
+  paint_as_active_ = disable;
+  ShouldPaintAsActiveChanged();
+}
+
+////////////////////////////////////////////////////////////////////////////////
 // NonClientFrameView, View overrides:
 
 bool NonClientFrameView::HitTest(const gfx::Point& l) const {
@@ -246,6 +249,11 @@ int NonClientFrameView::GetHTComponentForFrame(const gfx::Point& point,
 
 bool NonClientFrameView::ShouldPaintAsActive() const {
   return GetWidget()->IsActive() || paint_as_active_;
+}
+
+void NonClientFrameView::ShouldPaintAsActiveChanged() {
+  if (!paint_as_active_)
+    SchedulePaint();
 }
 
 void NonClientFrameView::GetAccessibleState(ui::AccessibleViewState* state) {

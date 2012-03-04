@@ -1,9 +1,9 @@
-// Copyright (c) 2011 The Chromium Authors. All rights reserved.
+// Copyright (c) 2012 The Chromium Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef VIEWS_CONTROLS_TEXTFIELD_NATIVE_TEXTFIELD_WRAPPER_H_
-#define VIEWS_CONTROLS_TEXTFIELD_NATIVE_TEXTFIELD_WRAPPER_H_
+#ifndef UI_VIEWS_CONTROLS_TEXTFIELD_NATIVE_TEXTFIELD_WRAPPER_H_
+#define UI_VIEWS_CONTROLS_TEXTFIELD_NATIVE_TEXTFIELD_WRAPPER_H_
 #pragma once
 
 #include "base/string16.h"
@@ -12,18 +12,19 @@
 
 namespace gfx {
 class Insets;
+class SelectionModel;
 struct StyleRange;
 }  // namespace gfx
 
 namespace ui {
 class Range;
+class TextInputClient;
 }  // namespace ui
 
 namespace views {
 
 class KeyEvent;
 class Textfield;
-class TextInputClient;
 class View;
 
 // An interface implemented by an object that provides a platform-native
@@ -71,7 +72,7 @@ class VIEWS_EXPORT NativeTextfieldWrapper {
   virtual void UpdateFont() = 0;
 
   // Updates the visibility of the text in the native text field.
-  virtual void UpdateIsPassword() = 0;
+  virtual void UpdateIsObscured() = 0;
 
   // Updates the enabled state of the native text field.
   virtual void UpdateEnabled() = 0;
@@ -104,6 +105,12 @@ class VIEWS_EXPORT NativeTextfieldWrapper {
   // Selects the text given by |range|.
   virtual void SelectRange(const ui::Range& range) = 0;
 
+  // Gets the selection model.
+  virtual void GetSelectionModel(gfx::SelectionModel* sel) const = 0;
+
+  // Selects the text given by |sel|.
+  virtual void SelectSelectionModel(const gfx::SelectionModel& sel) = 0;
+
   // Returns the currnet cursor position.
   virtual size_t GetCursorPosition() const = 0;
 
@@ -125,7 +132,7 @@ class VIEWS_EXPORT NativeTextfieldWrapper {
 
   // Returns the View's TextInputClient instance or NULL if the View doesn't
   // support text input.
-  virtual TextInputClient* GetTextInputClient() = 0;
+  virtual ui::TextInputClient* GetTextInputClient() = 0;
 
   // Applies the |style| to the text specified by its range.
   // See |Textfield::ApplyStyleRange| for detail.
@@ -137,10 +144,13 @@ class VIEWS_EXPORT NativeTextfieldWrapper {
   // Clears Edit history.
   virtual void ClearEditHistory() = 0;
 
+  // Get the height in pixels of the first font used in this textfield.
+  virtual int GetFontHeight() = 0;
+
   // Creates an appropriate NativeTextfieldWrapper for the platform.
   static NativeTextfieldWrapper* CreateWrapper(Textfield* field);
 };
 
 }  // namespace views
 
-#endif  // VIEWS_CONTROLS_TEXTFIELD_NATIVE_TEXTFIELD_WRAPPER_H_
+#endif  // UI_VIEWS_CONTROLS_TEXTFIELD_NATIVE_TEXTFIELD_WRAPPER_H_

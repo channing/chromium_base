@@ -2,16 +2,16 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef VIEWS_WINDOW_DIALOG_DELEGATE_H_
-#define VIEWS_WINDOW_DIALOG_DELEGATE_H_
+#ifndef UI_VIEWS_WINDOW_DIALOG_DELEGATE_H_
+#define UI_VIEWS_WINDOW_DIALOG_DELEGATE_H_
 #pragma once
 
+#include "base/compiler_specific.h"
+#include "base/string16.h"
 #include "ui/base/accessibility/accessibility_types.h"
-#include "ui/base/message_box_flags.h"
+#include "ui/base/ui_base_types.h"
 #include "ui/views/widget/widget_delegate.h"
 #include "ui/views/window/dialog_client_view.h"
-
-using ui::MessageBoxFlags;
 
 namespace views {
 
@@ -29,7 +29,7 @@ class View;
 ///////////////////////////////////////////////////////////////////////////////
 class VIEWS_EXPORT DialogDelegate : public WidgetDelegate {
  public:
-  virtual DialogDelegate* AsDialogDelegate();
+  virtual DialogDelegate* AsDialogDelegate() OVERRIDE;
 
   // Returns a mask specifying which of the available DialogButtons are visible
   // for the dialog. Note: If an OK button is provided, you should provide a
@@ -40,15 +40,27 @@ class VIEWS_EXPORT DialogDelegate : public WidgetDelegate {
   // To use the extra button you need to override GetDialogButtons()
   virtual int GetDialogButtons() const;
 
+  // Returns the default dialog button. This should not be a mask as only
+  // one button should ever be the default button.  Return
+  // ui::DIALOG_BUTTON_NONE if there is no default.  Default
+  // behavior is to return ui::DIALOG_BUTTON_OK or
+  // ui::DIALOG_BUTTON_CANCEL (in that order) if they are
+  // present, ui::DIALOG_BUTTON_NONE otherwise.
+  virtual int GetDefaultDialogButton() const;
+
+  // Returns the label of the specified dialog button.
+  virtual string16 GetDialogButtonLabel(ui::DialogButton button) const;
+
+  // Returns whether the specified dialog button is enabled.
+  virtual bool IsDialogButtonEnabled(ui::DialogButton button) const;
+
+  // Returns whether the specified dialog button is visible.
+  virtual bool IsDialogButtonVisible(ui::DialogButton button) const;
+
   // Returns whether accelerators are enabled on the button. This is invoked
   // when an accelerator is pressed, not at construction time. This
   // returns true.
-  virtual bool AreAcceleratorsEnabled(
-      ui::MessageBoxFlags::DialogButton button);
-
-  // Returns the label of the specified DialogButton.
-  virtual std::wstring GetDialogButtonLabel(
-      ui::MessageBoxFlags::DialogButton button) const;
+  virtual bool AreAcceleratorsEnabled(ui::DialogButton button);
 
   // Override this function if with a view which will be shown in the same
   // row as the OK and CANCEL buttons but flush to the left and extending
@@ -60,22 +72,6 @@ class VIEWS_EXPORT DialogDelegate : public WidgetDelegate {
   // height. By returning true the height becomes
   // max(extra_view preferred height, buttons preferred height).
   virtual bool GetSizeExtraViewHeightToButtons();
-
-  // Returns the default dialog button. This should not be a mask as only
-  // one button should ever be the default button.  Return
-  // ui::MessageBoxFlags::DIALOGBUTTON_NONE if there is no default.  Default
-  // behavior is to return ui::MessageBoxFlags::DIALOGBUTTON_OK or
-  // ui::MessageBoxFlags::DIALOGBUTTON_CANCEL (in that order) if they are
-  // present, ui::MessageBoxFlags::DIALOGBUTTON_NONE otherwise.
-  virtual int GetDefaultDialogButton() const;
-
-  // Returns whether the specified dialog button is enabled.
-  virtual bool IsDialogButtonEnabled(
-      ui::MessageBoxFlags::DialogButton button) const;
-
-  // Returns whether the specified dialog button is visible.
-  virtual bool IsDialogButtonVisible(
-      ui::MessageBoxFlags::DialogButton button) const;
 
   // For Dialog boxes, if there is a "Cancel" button, this is called when the
   // user presses the "Cancel" button or the Close button on the window or
@@ -128,7 +124,6 @@ class VIEWS_EXPORT DialogDelegateView : public DialogDelegate,
   DISALLOW_COPY_AND_ASSIGN(DialogDelegateView);
 };
 
-
 }  // namespace views
 
-#endif  // VIEWS_WINDOW_DIALOG_DELEGATE_H_
+#endif  // UI_VIEWS_WINDOW_DIALOG_DELEGATE_H_

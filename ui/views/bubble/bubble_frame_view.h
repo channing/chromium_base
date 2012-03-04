@@ -2,34 +2,27 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef VIEWS_BUBBLE_BUBBLE_FRAME_VIEW_H_
-#define VIEWS_BUBBLE_BUBBLE_FRAME_VIEW_H_
+#ifndef UI_VIEWS_BUBBLE_BUBBLE_FRAME_VIEW_H_
+#define UI_VIEWS_BUBBLE_BUBBLE_FRAME_VIEW_H_
 #pragma once
 
+#include "base/gtest_prod_util.h"
+#include "third_party/skia/include/core/SkColor.h"
 #include "ui/views/bubble/bubble_border.h"
-#include "ui/views/widget/widget.h"
-#include "ui/views/window/client_view.h"
-#include "ui/views/window/window_resources.h"
-
-namespace gfx {
-class Canvas;
-class Font;
-class Size;
-class Path;
-class Point;
-}
+#include "ui/views/window/non_client_view.h"
 
 namespace views {
+
+class BorderContentsView;
 
 //  BubbleFrameView to render BubbleBorder.
 //
 ////////////////////////////////////////////////////////////////////////////////
 class VIEWS_EXPORT BubbleFrameView : public NonClientFrameView {
  public:
-  BubbleFrameView(Widget* frame,
-                  const gfx::Rect& bounds,
+  BubbleFrameView(BubbleBorder::ArrowLocation arrow_location,
                   SkColor color,
-                  BubbleBorder::ArrowLocation location);
+                  int margin);
   virtual ~BubbleFrameView();
 
   // NonClientFrameView overrides:
@@ -37,29 +30,48 @@ class VIEWS_EXPORT BubbleFrameView : public NonClientFrameView {
   virtual gfx::Rect GetWindowBoundsForClientBounds(
       const gfx::Rect& client_bounds) const OVERRIDE;
   virtual int NonClientHitTest(const gfx::Point& point) OVERRIDE;
-  virtual void GetWindowMask(
-      const gfx::Size& size, gfx::Path* window_mask) OVERRIDE;
-  virtual void EnableClose(bool enable) OVERRIDE;
-  virtual void ResetWindowControls() OVERRIDE;
-  virtual void UpdateWindowIcon() OVERRIDE;
+  virtual void GetWindowMask(const gfx::Size& size,
+                             gfx::Path* window_mask) OVERRIDE {}
+  virtual void ResetWindowControls() OVERRIDE {}
+  virtual void UpdateWindowIcon() OVERRIDE {}
 
   // View overrides:
-  virtual void OnPaint(gfx::Canvas* canvas) OVERRIDE;
   virtual gfx::Size GetPreferredSize() OVERRIDE;
 
+  BubbleBorder* bubble_border() const { return bubble_border_; }
+
+  gfx::Insets content_margins() const { return content_margins_; }
+
+  // Given the size of the contents and the rect to point at, returns the bounds
+  // of the bubble window. The bubble's arrow location may change if the bubble
+  // does not fit on the monitor and |try_mirroring_arrow| is true.
+  gfx::Rect GetUpdatedWindowBounds(const gfx::Rect& anchor_rect,
+                                   gfx::Size client_size,
+                                   bool try_mirroring_arrow);
+
+ protected:
+  // Returns the bounds for the monitor showing the specified |rect|.
+  // This function is virtual to support testing environments.
+  virtual gfx::Rect GetMonitorBounds(const gfx::Rect& rect);
+
  private:
-  // Not owned.
-  Widget* frame_;
-  // Window bounds in screen coordinates.
-  gfx::Rect frame_bounds_;
-  // The bubble border object owned by this view.
+  FRIEND_TEST_ALL_PREFIXES(BubbleFrameViewTest, GetBoundsForClientView);
+
+  // Mirrors the bubble's arrow location on the |vertical| or horizontal axis,
+  // if the generated window bounds don't fit in the monitor bounds.
+  void MirrorArrowIfOffScreen(bool vertical,
+                              const gfx::Rect& anchor_rect,
+                              const gfx::Size& client_size);
+
+  // The bubble border.
   BubbleBorder* bubble_border_;
-  // The bubble background object owned by this view.
-  BubbleBackground* bubble_background_;
+
+  // Margins between the content and the inside of the border, in pixels.
+  gfx::Insets content_margins_;
 
   DISALLOW_COPY_AND_ASSIGN(BubbleFrameView);
 };
 
 }  // namespace views
 
-#endif  // VIEWS_BUBBLE_BUBBLE_FRAME_VIEW_H_
+#endif  // UI_VIEWS_BUBBLE_BUBBLE_FRAME_VIEW_H_

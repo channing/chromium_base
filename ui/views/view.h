@@ -1,9 +1,9 @@
-// Copyright (c) 2011 The Chromium Authors. All rights reserved.
+// Copyright (c) 2012 The Chromium Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef VIEWS_VIEW_H_
-#define VIEWS_VIEW_H_
+#ifndef UI_VIEWS_VIEW_H_
+#define UI_VIEWS_VIEW_H_
 #pragma once
 
 #include <algorithm>
@@ -12,18 +12,23 @@
 #include <string>
 #include <vector>
 
+#include "base/compiler_specific.h"
 #include "base/i18n/rtl.h"
 #include "base/logging.h"
 #include "base/memory/scoped_ptr.h"
 #include "build/build_config.h"
+#include "ui/base/accelerators/accelerator.h"
 #include "ui/base/dragdrop/os_exchange_data.h"
 #include "ui/gfx/compositor/layer_delegate.h"
 #include "ui/gfx/native_widget_types.h"
 #include "ui/gfx/rect.h"
-#include "ui/views/accelerator.h"
 #include "ui/views/background.h"
 #include "ui/views/border.h"
-#include "ui/views/layer_helper.h"
+#include "ui/views/events/event.h"
+
+#if defined(OS_WIN)
+#include "base/win/scoped_comptr.h"
+#endif
 
 using ui::OSExchangeData;
 
@@ -37,6 +42,7 @@ namespace ui {
 struct AccessibleViewState;
 class Compositor;
 class Layer;
+class TextInputClient;
 class Texture;
 class ThemeProvider;
 class Transform;
@@ -44,7 +50,8 @@ enum TouchStatus;
 }
 
 #if defined(OS_WIN)
-class NativeViewAccessibilityWin;
+class __declspec(uuid("26f5641a-246d-457b-a96d-07f3fae6acf2"))
+NativeViewAccessibilityWin;
 #endif
 
 namespace views {
@@ -56,14 +63,11 @@ class DragController;
 class FocusManager;
 class FocusTraversable;
 class InputMethod;
-class LayerPropertySetter;
 class LayoutManager;
 class ScrollView;
-class TextInputClient;
 class Widget;
 
 namespace internal {
-class NativeWidgetView;
 class RootView;
 }
 
@@ -93,7 +97,7 @@ class RootView;
 //
 /////////////////////////////////////////////////////////////////////////////
 class VIEWS_EXPORT View : public ui::LayerDelegate,
-                          public AcceleratorTarget {
+                          public ui::AcceleratorTarget {
  public:
   typedef std::vector<View*> Views;
 
@@ -237,28 +241,28 @@ class VIEWS_EXPORT View : public ui::LayerDelegate,
   // as with Labels).
   virtual int GetHeightForWidth(int w);
 
-  // Set whether the receiving view is visible. Painting is scheduled as needed
+  // Set whether this view is visible. Painting is scheduled as needed.
   virtual void SetVisible(bool visible);
 
   // Return whether a view is visible
-  virtual bool IsVisible() const;
+  bool visible() const { return visible_; }
 
-  // Return whether a view and its ancestors are visible. Returns true if the
-  // path from this view to the root view is visible.
-  virtual bool IsVisibleInRootView() const;
+  // Returns true if this view is drawn on screen.
+  virtual bool IsDrawn() const;
 
   // Set whether this view is enabled. A disabled view does not receive keyboard
-  // or mouse inputs. If flag differs from the current value, SchedulePaint is
-  // invoked.
+  // or mouse inputs. If |enabled| differs from the current value, SchedulePaint
+  // is invoked.
   void SetEnabled(bool enabled);
 
   // Returns whether the view is enabled.
-  virtual bool IsEnabled() const;
+  bool enabled() const { return enabled_; }
 
   // This indicates that the view completely fills its bounds in an opaque
-  // color.
-  // This doesn't affect compositing but is a hint to the compositor to optimize
-  // painting.
+  // color. This doesn't affect compositing but is a hint to the compositor to
+  // optimize painting.
+  // Note that this method does not implicitly create a layer if one does not
+  // already exist for the View, but is a no-op in that case.
   void SetFillsBoundsOpaquely(bool fills_bounds_opaquely);
 
   // Transformations -----------------------------------------------------------
@@ -267,13 +271,8 @@ class VIEWS_EXPORT View : public ui::LayerDelegate,
 
   const ui::Transform& GetTransform() const;
 
-  // Clipping parameters. Clipping happens from the right and/or bottom. The
-  // clipping amount is in parent's coordinate system, as in, if the view is
-  // rotated, then the clipping will be applied after the rotation (and other
-  // transformations, if any).
-  void set_clip_x(float x) { clip_x_ = x; }
-  void set_clip_y(float y) { clip_y_ = y; }
-  void set_clip(float x, float y) { clip_x_ = x; clip_y_ = y; }
+  // Clipping parameters. Clipping is done relative to the view bounds.
+  void set_clip_insets(gfx::Insets clip_insets) { clip_insets_ = clip_insets; }
 
   // Sets the transform to the supplied transform.
   void SetTransform(const ui::Transform& transform);
@@ -284,18 +283,10 @@ class VIEWS_EXPORT View : public ui::LayerDelegate,
   // . SetPaintToLayer(true) has been invoked.
   // View creates the Layer only when it exists in a Widget with a non-NULL
   // Compositor.
-  void SetPaintToLayer(bool value);
+  void SetPaintToLayer(bool paint_to_layer);
 
-  // Sets the LayerPropertySetter for this view. A value of NULL resets the
-  // LayerPropertySetter to the default (immediate).
-  void SetLayerPropertySetter(LayerPropertySetter* setter);
-
-  const ui::Layer* layer() const {
-    return layer_helper_.get() ? layer_helper_->layer() : NULL;
-  }
-  ui::Layer* layer() {
-    return layer_helper_.get() ? layer_helper_->layer() : NULL;
-  }
+  const ui::Layer* layer() const { return layer_.get(); }
+  ui::Layer* layer() { return layer_.get(); }
 
   // RTL positioning -----------------------------------------------------------
 
@@ -365,7 +356,7 @@ class VIEWS_EXPORT View : public ui::LayerDelegate,
   // Attributes ----------------------------------------------------------------
 
   // The view class name.
-  static char kViewClassName[];
+  static const char kViewClassName[];
 
   // Return the receiving view's class name. A view class is a string which
   // uniquely identifies the view class. It is intended to be used as a way to
@@ -417,35 +408,34 @@ class VIEWS_EXPORT View : public ui::LayerDelegate,
   // the mirrored position of the child Views if the parent View uses a
   // right-to-left UI layout.
 
-  // Convert a point from source coordinate system to dst coordinate system.
+  // Convert a point from the coordinate system of one View to another.
   //
-  // |src| and |dst| needs to be in the same widget, but doesn't need to be in
+  // |source| and |target| must be in the same widget, but doesn't need to be in
   // the same view hierarchy.
-  // If |src| and |dst| are not in the same widget, the result is undefined.
-  // Source can be NULL in which case it means the screen coordinate system
-  static void ConvertPointToView(const View* src,
-                                 const View* dst,
+  // |source| can be NULL in which case it means the screen coordinate system.
+  static void ConvertPointToView(const View* source,
+                                 const View* target,
                                  gfx::Point* point);
 
-  // Convert a point from the coordinate system of a View to that of the
-  // Widget. This is useful for example when sizing HWND children of the
-  // Widget that don't know about the View hierarchy and need to be placed
-  // relative to the Widget that is their parent.
+  // Convert a point from a View's coordinate system to that of its Widget.
   static void ConvertPointToWidget(const View* src, gfx::Point* point);
 
-  // Convert a point from a view Widget to a View dest
+  // Convert a point from the coordinate system of a View's Widget to that
+  // View's coordinate system.
   static void ConvertPointFromWidget(const View* dest, gfx::Point* p);
 
-  // Convert a point from the coordinate system of a View to that of the
-  // screen. This is useful for example when placing popup windows.
+  // Convert a point from a View's coordinate system to that of the screen.
   static void ConvertPointToScreen(const View* src, gfx::Point* point);
+
+  // Convert a point from a View's coordinate system to that of the screen.
+  static void ConvertPointFromScreen(const View* dst, gfx::Point* point);
 
   // Applies transformation on the rectangle, which is in the view's coordinate
   // system, to convert it into the parent's coordinate system.
   gfx::Rect ConvertRectToParent(const gfx::Rect& rect) const;
 
   // Converts a rectangle from this views coordinate system to its widget
-  // cooridnate system.
+  // coordinate system.
   gfx::Rect ConvertRectToWidget(const gfx::Rect& rect) const;
 
   // Painting ------------------------------------------------------------------
@@ -590,6 +580,10 @@ class VIEWS_EXPORT View : public ui::LayerDelegate,
   // does nothing. Override as needed.
   virtual ui::TouchStatus OnTouchEvent(const TouchEvent& event);
 
+  // This method is invoked for each GestureEvent created by GestureRecognizer.
+  // Default implementation does nothing. Override as needed.
+  virtual ui::GestureStatus OnGestureEvent(const GestureEvent& event);
+
   // Set the MouseHandler for a drag session.
   //
   // A drag session is a stream of mouse events starting
@@ -625,7 +619,7 @@ class VIEWS_EXPORT View : public ui::LayerDelegate,
 
   // Returns the View's TextInputClient instance or NULL if the View doesn't
   // support text input.
-  virtual TextInputClient* GetTextInputClient();
+  virtual ui::TextInputClient* GetTextInputClient();
 
   // Convenience method to retrieve the InputMethod associated with the
   // Widget that contains this view. Returns NULL if this view is not part of a
@@ -637,25 +631,28 @@ class VIEWS_EXPORT View : public ui::LayerDelegate,
   // Sets a keyboard accelerator for that view. When the user presses the
   // accelerator key combination, the AcceleratorPressed method is invoked.
   // Note that you can set multiple accelerators for a view by invoking this
-  // method several times.
-  virtual void AddAccelerator(const Accelerator& accelerator);
+  // method several times. Note also that AcceleratorPressed is invoked only
+  // when CanHandleAccelerators() is true.
+  virtual void AddAccelerator(const ui::Accelerator& accelerator);
 
   // Removes the specified accelerator for this view.
-  virtual void RemoveAccelerator(const Accelerator& accelerator);
+  virtual void RemoveAccelerator(const ui::Accelerator& accelerator);
 
   // Removes all the keyboard accelerators for this view.
   virtual void ResetAccelerators();
 
-  // TODO(beng): Move to an AcceleratorTarget override section.
-  // Called when a keyboard accelerator is pressed.
-  // Derived classes should implement desired behavior and return true if they
-  // handled the accelerator.
-  virtual bool AcceleratorPressed(const Accelerator& accelerator);
+  // Overridden from AcceleratorTarget:
+  virtual bool AcceleratorPressed(const ui::Accelerator& accelerator) OVERRIDE;
+
+  // Returns whether accelerators are enabled for this view. Accelerators are
+  // enabled if the containing widget is visible and the view is enabled() and
+  // IsDrawn()
+  virtual bool CanHandleAccelerators() const OVERRIDE;
 
   // Focus ---------------------------------------------------------------------
 
   // Returns whether this view currently has the focus.
-  virtual bool HasFocus();
+  virtual bool HasFocus() const;
 
   // Returns the view that should be selected next when pressing Tab.
   View* GetNextFocusableView();
@@ -671,18 +668,20 @@ class VIEWS_EXPORT View : public ui::LayerDelegate,
   // IMPORTANT NOTE: loops in the focus hierarchy are not supported.
   void SetNextFocusableView(View* view);
 
-  // Sets whether this view can accept the focus.
+  // Sets whether this view is capable of taking focus.
   // Note that this is false by default so that a view used as a container does
   // not get the focus.
   void set_focusable(bool focusable) { focusable_ = focusable; }
 
-  // Returns true if the view is focusable (IsFocusable) and visible in the root
-  // view. See also IsFocusable.
-  bool IsFocusableInRootView() const;
+  // Returns true if this view is capable of taking focus.
+  bool focusable() const { return focusable_ && enabled_ && visible_; }
+
+  // Returns true if this view is |focusable_|, |enabled_| and drawn.
+  virtual bool IsFocusable() const;
 
   // Return whether this view is focusable when the user requires full keyboard
   // access, even though it may not be normally focusable.
-  bool IsAccessibilityFocusableInRootView() const;
+  bool IsAccessibilityFocusable() const;
 
   // Set whether this view can be made focusable if the user requires
   // full keyboard access, even though it's not normally focusable.
@@ -695,6 +694,7 @@ class VIEWS_EXPORT View : public ui::LayerDelegate,
   // Widget that contains this view.  This can return NULL if this view is not
   // part of a view hierarchy with a Widget.
   virtual FocusManager* GetFocusManager();
+  virtual const FocusManager* GetFocusManager() const;
 
   // Request the keyboard focus. The receiving view will become the
   // focused view.
@@ -703,7 +703,7 @@ class VIEWS_EXPORT View : public ui::LayerDelegate,
   // Invoked when a view is about to be requested for focus due to the focus
   // traversal. Reverse is this request was generated going backward
   // (Shift-Tab).
-  virtual void AboutToRequestFocusFromTabTraversal(bool reverse) { }
+  virtual void AboutToRequestFocusFromTabTraversal(bool reverse) {}
 
   // Invoked when a key is pressed before the key event is processed (and
   // potentially eaten) by the focus manager for tab traversal, accelerators and
@@ -736,12 +736,12 @@ class VIEWS_EXPORT View : public ui::LayerDelegate,
   // Any time the tooltip text that a View is displaying changes, it must
   // invoke TooltipTextChanged.
   // |p| provides the coordinates of the mouse (relative to this view).
-  virtual bool GetTooltipText(const gfx::Point& p, string16* tooltip);
+  virtual bool GetTooltipText(const gfx::Point& p, string16* tooltip) const;
 
   // Returns the location (relative to this View) for the text on the tooltip
   // to display. If false is returned (the default), the tooltip is placed at
   // a default position.
-  virtual bool GetTooltipTextOrigin(const gfx::Point& p, gfx::Point* loc);
+  virtual bool GetTooltipTextOrigin(const gfx::Point& p, gfx::Point* loc) const;
 
   // Context menus -------------------------------------------------------------
 
@@ -760,8 +760,7 @@ class VIEWS_EXPORT View : public ui::LayerDelegate,
   // to provide right-click menu display triggerd by the keyboard (i.e. for the
   // Chrome toolbar Back and Forward buttons). No source needs to be specified,
   // as it is always equal to the current View.
-  virtual void ShowContextMenu(const gfx::Point& p,
-                               bool is_mouse_gesture);
+  virtual void ShowContextMenu(const gfx::Point& p, bool is_mouse_gesture);
 
   // Drag and drop -------------------------------------------------------------
 
@@ -972,18 +971,11 @@ class VIEWS_EXPORT View : public ui::LayerDelegate,
   // Returns false if it cannot create a layer to which to assign the texture.
   bool SetExternalTexture(ui::Texture* texture);
 
-  // Returns the Compositor.
-  virtual const ui::Compositor* GetCompositor() const;
-  virtual ui::Compositor* GetCompositor();
-
   // Returns the offset from this view to the nearest ancestor with a layer.
   // If |ancestor| is non-NULL it is set to the nearest ancestor with a layer.
   virtual void CalculateOffsetToAncestorWithLayer(
       gfx::Point* offset,
       ui::Layer** layer_parent);
-
-  // Creates a layer for this and recurses through all descendants.
-  virtual void CreateLayerIfNecessary();
 
   // If this view has a layer, the layer is reparented to |parent_layer| and its
   // bounds is set based on |point|. If this view does not have a layer, then
@@ -993,16 +985,21 @@ class VIEWS_EXPORT View : public ui::LayerDelegate,
   virtual void MoveLayerToParent(ui::Layer* parent_layer,
                                  const gfx::Point& point);
 
-  // Destroys the layer on this view and all descendants. Intended for when a
-  // view is being removed or made invisible.
-  virtual void DestroyLayerRecurse();
-
-  // Resets the bounds of the layer associated with this view and all
-  // descendants.
-  virtual void UpdateLayerBounds(const gfx::Point& offset);
+  // Called to update the bounds of any child layers within this View's
+  // hierarchy when something happens to the hierarchy.
+  virtual void UpdateChildLayerBounds(const gfx::Point& offset);
 
   // Overridden from ui::LayerDelegate:
   virtual void OnPaintLayer(gfx::Canvas* canvas) OVERRIDE;
+
+  // Finds the layer that this view paints to (it may belong to an ancestor
+  // view), then reorders the immediate children of that layer to match the
+  // order of the view tree.
+  virtual void ReorderLayers();
+
+  // This reorders the immediate children of |*parent_layer| to match the
+  // order of the view tree.
+  virtual void ReorderChildLayers(ui::Layer* parent_layer);
 
   // Input ---------------------------------------------------------------------
 
@@ -1017,12 +1014,6 @@ class VIEWS_EXPORT View : public ui::LayerDelegate,
   virtual void GetHitTestMask(gfx::Path* mask) const;
 
   // Focus ---------------------------------------------------------------------
-
-  // Returns whether this view can accept focus.
-  // A view can accept focus if it's enabled, focusable and visible.
-  // This method is intended for views to use when calculating preferred size.
-  // The FocusManager and other places use IsFocusableInRootView.
-  virtual bool IsFocusable() const;
 
   // Override to be notified when focus has changed either to or from this View.
   virtual void OnFocus();
@@ -1095,7 +1086,6 @@ class VIEWS_EXPORT View : public ui::LayerDelegate,
 #endif
 
  private:
-  friend class internal::NativeWidgetView;
   friend class internal::RootView;
   friend class FocusManager;
   friend class ViewStorage;
@@ -1208,15 +1198,6 @@ class VIEWS_EXPORT View : public ui::LayerDelegate,
 
   // Coordinate conversion -----------------------------------------------------
 
-  // This is the actual implementation for ConvertPointToView()
-  // Attempts a parent -> child conversion and then a
-  // child -> parent conversion if try_other_direction is true
-  // Applies necessary transformations during the conversion.
-  static void ConvertPointToView(const View* src,
-                                 const View* dst,
-                                 gfx::Point* point,
-                                 bool try_other_direction);
-
   // Convert a point in the view's coordinate to an ancestor view's coordinate
   // system using necessary transformations. Returns whether the point was
   // successfully converted to the ancestor's coordinate system.
@@ -1235,27 +1216,36 @@ class VIEWS_EXPORT View : public ui::LayerDelegate,
   // hierarchy during time critical operations and this would not be needed.
   void set_painting_enabled(bool enabled) { painting_enabled_ = enabled; }
 
-  // Returns true if this view should paint to layer.
-  bool ShouldPaintToLayer() const;
-
   // Creates the layer and related fields for this view.
   void CreateLayer();
 
-  // Reparents any descendant layer to our current layer parent and destroys
-  // this views layer.
-  void DestroyLayerAndReparent();
+  // Parents all un-parented layers within this view's hierarchy to this view's
+  // layer.
+  void UpdateParentLayers();
 
-  // Destroys the layer and related fields of this view. This is intended for
-  // use from one of the other destroy methods, normally you shouldn't invoke
-  // this directly.
+  // Updates the view's layer's parent. Called when a view is added to a view
+  // hierarchy, responsible for parenting the view's layer to the enclosing
+  // layer in the hierarchy.
+  void UpdateParentLayer();
+
+  // Parents this view's layer to |parent_layer|, and sets its bounds and other
+  // properties in accordance to |offset|, the view's offset from the
+  // |parent_layer|.
+  void ReparentLayer(const gfx::Point& offset, ui::Layer* parent_layer);
+
+  // Called to update the layer visibility. The layer will be visible if the
+  // View itself, and all its parent Views are visible. This also updates
+  // visibility of the child layers.
+  void UpdateLayerVisibility();
+  void UpdateChildLayerVisibility(bool visible);
+
+  // Orphans the layers in this subtree that are parented to layers outside of
+  // this subtree.
+  void OrphanLayers();
+
+  // Destroys the layer associated with this view, and reparents any descendants
+  // to the destroyed layer's parent.
   void DestroyLayer();
-
-  // Returns the transform, or NULL if no transform has been set or the identity
-  // transform was set. Be careful in using this as it may return NULL. Use
-  // GetTransform() if you always want a non-NULL transform.
-  const ui::Transform* transform() const {
-    return layer_helper_.get() ? layer_helper_->transform() : NULL;
-  }
 
   // Input ---------------------------------------------------------------------
 
@@ -1265,9 +1255,13 @@ class VIEWS_EXPORT View : public ui::LayerDelegate,
   bool ProcessMouseDragged(const MouseEvent& event, DragInfo* drop_info);
   void ProcessMouseReleased(const MouseEvent& event);
 
-  // RootView will invoke this with incoming TouchEvents. Returns the
-  // the result of OnTouchEvent.
+  // RootView will invoke this with incoming TouchEvents. Returns the result
+  // of OnTouchEvent.
   ui::TouchStatus ProcessTouchEvent(const TouchEvent& event);
+
+  // RootView will invoke this with incoming GestureEvents. Returns the result
+  // of OnGestureEvent.
+  ui::GestureStatus ProcessGestureEvent(const GestureEvent& event);
 
   // Accelerators --------------------------------------------------------------
 
@@ -1363,8 +1357,7 @@ class VIEWS_EXPORT View : public ui::LayerDelegate,
 
   // Clipping parameters. skia transformation matrix does not give us clipping.
   // So we do it ourselves.
-  float clip_x_;
-  float clip_y_;
+  gfx::Insets clip_insets_;
 
   // Layout --------------------------------------------------------------------
 
@@ -1392,7 +1385,8 @@ class VIEWS_EXPORT View : public ui::LayerDelegate,
 
   // Accelerated painting ------------------------------------------------------
 
-  scoped_ptr<internal::LayerHelper> layer_helper_;
+  bool paint_to_layer_;
+  scoped_ptr<ui::Layer> layer_;
 
   // Accelerators --------------------------------------------------------------
 
@@ -1406,7 +1400,7 @@ class VIEWS_EXPORT View : public ui::LayerDelegate,
   // The list of accelerators. List elements in the range
   // [0, registered_accelerator_count_) are already registered to FocusManager,
   // and the rest are not yet.
-  scoped_ptr<std::vector<Accelerator> > accelerators_;
+  scoped_ptr<std::vector<ui::Accelerator> > accelerators_;
   size_t registered_accelerator_count_;
 
   // Focus ---------------------------------------------------------------------
@@ -1437,7 +1431,8 @@ class VIEWS_EXPORT View : public ui::LayerDelegate,
 
   // The Windows-specific accessibility implementation for this view.
 #if defined(OS_WIN)
-  scoped_refptr<NativeViewAccessibilityWin> native_view_accessibility_win_;
+  base::win::ScopedComPtr<NativeViewAccessibilityWin>
+      native_view_accessibility_win_;
 #endif
 
   DISALLOW_COPY_AND_ASSIGN(View);
@@ -1445,4 +1440,4 @@ class VIEWS_EXPORT View : public ui::LayerDelegate,
 
 }  // namespace views
 
-#endif  // VIEWS_VIEW_H_
+#endif  // UI_VIEWS_VIEW_H_

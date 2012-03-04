@@ -462,62 +462,6 @@ STDMETHODIMP NativeViewAccessibilityWin::get_accValue(
   return S_OK;
 }
 
-// Helper functions.
-
-bool NativeViewAccessibilityWin::IsNavDirNext(int nav_dir) const {
-  if (nav_dir == NAVDIR_RIGHT || nav_dir == NAVDIR_DOWN ||
-      nav_dir == NAVDIR_NEXT) {
-      return true;
-  }
-  return false;
-}
-
-bool NativeViewAccessibilityWin::IsValidNav(
-    int nav_dir, int start_id, int lower_bound, int upper_bound) const {
-  if (IsNavDirNext(nav_dir)) {
-    if ((start_id + 1) > upper_bound) {
-      return false;
-    }
-  } else {
-    if ((start_id - 1) <= lower_bound) {
-      return false;
-    }
-  }
-  return true;
-}
-
-bool NativeViewAccessibilityWin::IsValidId(const VARIANT& child) const {
-  // View accessibility returns an IAccessible for each view so we only support
-  // the CHILDID_SELF id.
-  return (VT_I4 == child.vt) && (CHILDID_SELF == child.lVal);
-}
-
-void NativeViewAccessibilityWin::SetState(
-    VARIANT* msaa_state, views::View* view) {
-  // Ensure the output param is initialized to zero.
-  msaa_state->lVal = 0;
-
-  // Default state; all views can have accessibility focus.
-  msaa_state->lVal |= STATE_SYSTEM_FOCUSABLE;
-
-  if (!view)
-    return;
-
-  if (!view->IsEnabled())
-    msaa_state->lVal |= STATE_SYSTEM_UNAVAILABLE;
-  if (!view->IsVisible())
-    msaa_state->lVal |= STATE_SYSTEM_INVISIBLE;
-  if (view->IsHotTracked())
-    msaa_state->lVal |= STATE_SYSTEM_HOTTRACKED;
-  if (view->HasFocus())
-    msaa_state->lVal |= STATE_SYSTEM_FOCUSED;
-
-  // Add on any view-specific states.
-   ui::AccessibleViewState view_state;
-   view->GetAccessibleState(&view_state);
-   msaa_state->lVal |= MSAAState(view_state.state);
-}
-
 // IAccessible functions not supported.
 
 STDMETHODIMP NativeViewAccessibilityWin::get_accSelection(VARIANT* selected) {

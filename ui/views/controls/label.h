@@ -2,13 +2,15 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef VIEWS_CONTROLS_LABEL_H_
-#define VIEWS_CONTROLS_LABEL_H_
+#ifndef UI_VIEWS_CONTROLS_LABEL_H_
+#define UI_VIEWS_CONTROLS_LABEL_H_
 #pragma once
 
 #include <string>
 
+#include "base/compiler_specific.h"
 #include "base/gtest_prod_util.h"
+#include "base/string16.h"
 // #include "googleurl/src/gurl.h"
 #include "third_party/skia/include/core/SkColor.h"
 #include "ui/gfx/font.h"
@@ -52,21 +54,21 @@ class VIEWS_EXPORT Label : public View {
   static const int kFocusBorderPadding;
 
   Label();
-  explicit Label(const std::wstring& text);
-  Label(const std::wstring& text, const gfx::Font& font);
+  explicit Label(const string16& text);
+  Label(const string16& text, const gfx::Font& font);
   virtual ~Label();
 
   // Set the font.
   virtual void SetFont(const gfx::Font& font);
 
   // Set the label text.
-  void SetText(const std::wstring& text);
+  void SetText(const string16& text);
 
   // Return the font used by this label.
   gfx::Font font() const { return font_; }
 
   // Return the label text.
-  const std::wstring GetText() const;
+  const string16 GetText() const;
 
   // Set URL Value - text_ is set to spec().
   // void SetURL(const GURL& url);
@@ -74,11 +76,22 @@ class VIEWS_EXPORT Label : public View {
   // Return the label URL.
   // const GURL GetURL() const;
 
-  // Set the color
-  virtual void SetColor(const SkColor& color);
+  // Enables or disables auto-color-readability (enabled by default).  If this
+  // is enabled, then calls to set any foreground or background color will
+  // trigger an automatic mapper that uses color_utils::GetReadableColor() to
+  // ensure that the foreground colors are readable over the background color.
+  void SetAutoColorReadabilityEnabled(bool enabled);
 
-  // Return a reference to the currently used color.
-  virtual SkColor GetColor() const;
+  // Set the color.  This will automatically force the color to be readable
+  // over the current background color.
+  virtual void SetEnabledColor(const SkColor& color);
+  void SetDisabledColor(const SkColor& color);
+
+  SkColor enabled_color() const { return actual_enabled_color_; }
+
+  // Set the background color.  This won't be explicitly drawn, but the label
+  // will force the text color to be readable over it.
+  void SetBackgroundColor(const SkColor& color);
 
   // Set horizontal alignment. If the locale is RTL, and the RTL alignment
   // setting is set as USE_UI_ALIGNMENT, the alignment is flipped around.
@@ -154,16 +167,14 @@ class VIEWS_EXPORT Label : public View {
   void SetHasFocusBorder(bool has_focus_border);
 
   // Overridden from View:
-  virtual gfx::Insets GetInsets() const;
+  virtual gfx::Insets GetInsets() const OVERRIDE;
   virtual int GetBaseline() const OVERRIDE;
   // Overridden to compute the size required to display this label.
   virtual gfx::Size GetPreferredSize() OVERRIDE;
   // Return the height necessary to display this label with the provided width.
   // This method is used to layout multi-line labels. It is equivalent to
   // GetPreferredSize().height() if the receiver is not multi-line.
-  virtual int GetHeightForWidth(int w);
-  // Sets the enabled state. Setting the enabled state resets the color.
-  virtual void OnEnabledChanged() OVERRIDE;
+  virtual int GetHeightForWidth(int w) OVERRIDE;
   virtual std::string GetClassName() const OVERRIDE;
   virtual bool HitTest(const gfx::Point& l) const OVERRIDE;
   // Mouse enter/exit are overridden to render mouse over background color.
@@ -176,19 +187,22 @@ class VIEWS_EXPORT Label : public View {
   // when the label is multiline, in which case it just returns false (no
   // tooltip).  If a custom tooltip has been specified with SetTooltipText()
   // it is returned instead.
-  virtual bool GetTooltipText(const gfx::Point& p, string16* tooltip) OVERRIDE;
+  virtual bool GetTooltipText(const gfx::Point& p,
+                              string16* tooltip) const OVERRIDE;
 
  protected:
   // Called by Paint to paint the text.  Override this to change how
   // text is painted.
   virtual void PaintText(gfx::Canvas* canvas,
-                         const std::wstring& text,
+                         const string16& text,
                          const gfx::Rect& text_bounds,
                          int flags);
 
   void invalidate_text_size() { text_size_valid_ = false; }
 
   virtual gfx::Size GetTextSize() const;
+
+  SkColor disabled_color() const { return actual_disabled_color_; }
 
   // Overridden from View:
   // Overridden to dirty our text bounds if we're multi-line.
@@ -208,7 +222,9 @@ class VIEWS_EXPORT Label : public View {
 
   static gfx::Font GetDefaultFont();
 
-  void Init(const std::wstring& text, const gfx::Font& font);
+  void Init(const string16& text, const gfx::Font& font);
+
+  void RecalculateColors();
 
   // If the mouse is over the text, SetContainsMouse(true) is invoked, otherwise
   // SetContainsMouse(false) is invoked.
@@ -227,14 +243,19 @@ class VIEWS_EXPORT Label : public View {
   gfx::Rect GetAvailableRect() const;
 
   // Returns parameters to be used for the DrawString call.
-  void CalculateDrawStringParams(std::wstring* paint_text,
+  void CalculateDrawStringParams(string16* paint_text,
                                  gfx::Rect* text_bounds,
                                  int* flags) const;
 
   string16 text_;
   // GURL url_;
   gfx::Font font_;
-  SkColor color_;
+  SkColor requested_enabled_color_;
+  SkColor actual_enabled_color_;
+  SkColor requested_disabled_color_;
+  SkColor actual_disabled_color_;
+  SkColor background_color_;
+  bool auto_color_readability_;
   mutable gfx::Size text_size_;
   mutable bool text_size_valid_;
   bool is_multi_line_;
@@ -265,4 +286,4 @@ class VIEWS_EXPORT Label : public View {
 
 }  // namespace views
 
-#endif  // VIEWS_CONTROLS_LABEL_H_
+#endif  // UI_VIEWS_CONTROLS_LABEL_H_

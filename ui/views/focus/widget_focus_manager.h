@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef VIEWS_FOCUS_WIDGET_FOCUS_MANAGER_H_
-#define VIEWS_FOCUS_WIDGET_FOCUS_MANAGER_H_
+#ifndef UI_VIEWS_FOCUS_WIDGET_FOCUS_MANAGER_H_
+#define UI_VIEWS_FOCUS_WIDGET_FOCUS_MANAGER_H_
 #pragma once
 
 #include "base/basictypes.h"
@@ -22,8 +22,8 @@ namespace views {
 // children of a single top-level native-view.
 class WidgetFocusChangeListener {
  public:
-  virtual void NativeFocusWillChange(gfx::NativeView focused_before,
-                                     gfx::NativeView focused_now) = 0;
+  virtual void OnNativeFocusChange(gfx::NativeView focused_before,
+                                   gfx::NativeView focused_now) = 0;
 
  protected:
   virtual ~WidgetFocusChangeListener() {}
@@ -79,4 +79,4 @@ class VIEWS_EXPORT AutoNativeNotificationDisabler {
 
 }  // namespace views
 
-#endif  // VIEWS_FOCUS_WIDGET_FOCUS_MANAGER_H_
+#endif  // UI_VIEWS_FOCUS_WIDGET_FOCUS_MANAGER_H_

@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef VIEWS_WINDOW_NATIVE_FRAME_VIEW_H_
-#define VIEWS_WINDOW_NATIVE_FRAME_VIEW_H_
+#ifndef UI_VIEWS_WINDOW_NATIVE_FRAME_VIEW_H_
+#define UI_VIEWS_WINDOW_NATIVE_FRAME_VIEW_H_
 #pragma once
 
 #include "ui/views/window/non_client_view.h"
@@ -24,7 +24,6 @@ class VIEWS_EXPORT NativeFrameView : public NonClientFrameView {
   virtual int NonClientHitTest(const gfx::Point& point) OVERRIDE;
   virtual void GetWindowMask(const gfx::Size& size,
                              gfx::Path* window_mask) OVERRIDE;
-  virtual void EnableClose(bool enable) OVERRIDE;
   virtual void ResetWindowControls() OVERRIDE;
   virtual void UpdateWindowIcon() OVERRIDE;
 
@@ -45,4 +44,4 @@ class VIEWS_EXPORT NativeFrameView : public NonClientFrameView {
 
 }  // namespace views
 
-#endif  // #ifndef VIEWS_WINDOW_NATIVE_FRAME_VIEW_H_
+#endif  // UI_VIEWS_WINDOW_NATIVE_FRAME_VIEW_H_

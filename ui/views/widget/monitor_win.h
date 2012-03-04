@@ -2,11 +2,12 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef VIEWS_WIDGET_MONITOR_WIN_H_
-#define VIEWS_WIDGET_MONITOR_WIN_H_
+#ifndef UI_VIEWS_WIDGET_MONITOR_WIN_H_
+#define UI_VIEWS_WIDGET_MONITOR_WIN_H_
 #pragma once
 
 #include <windows.h>
+
 #include "ui/views/views_export.h"
 
 namespace gfx {
@@ -26,4 +27,4 @@ VIEWS_EXPORT HWND GetTopmostAutoHideTaskbarForEdge(UINT edge, HMONITOR monitor);
 
 }  // namespace views
 
-#endif  // VIEWS_WIDGET_MONITOR_WIN_H_
+#endif  // UI_VIEWS_WIDGET_MONITOR_WIN_H_

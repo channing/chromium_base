@@ -5,6 +5,7 @@
 #include "ui/views/touchui/touch_selection_controller_impl.h"
 
 #include "base/time.h"
+#include "base/utf_string_conversions.h"
 #include "grit/ui_strings.h"
 #include "third_party/skia/include/effects/SkGradientShader.h"
 #include "ui/base/l10n/l10n_util.h"
@@ -20,8 +21,8 @@
 #include "ui/views/controls/button/button.h"
 #include "ui/views/controls/button/custom_button.h"
 #include "ui/views/controls/button/text_button.h"
-#include "ui/views/controls/menu/menu_config.h"
 #include "ui/views/controls/label.h"
+#include "ui/views/controls/menu/menu_config.h"
 #include "ui/views/layout/box_layout.h"
 #include "ui/views/widget/widget.h"
 
@@ -81,7 +82,7 @@ void PaintCircle(const Circle& circle, gfx::Canvas* canvas) {
            SkIntToScalar(bounds.right()), SkIntToScalar(bounds.bottom()));
   SkScalar radius = SkIntToScalar(circle.radius);
   path.addRoundRect(rect, radius, radius);
-  canvas->AsCanvasSkia()->drawPath(path, paint);
+  canvas->GetSkCanvas()->drawPath(path, paint);
 }
 
 // The points may not match exactly, since the selection range computation may
@@ -190,15 +191,15 @@ class ContextMenuButtonBackground : public Background {
     }
     int w = view->width();
     int h = view->height();
-    canvas->FillRectInt(background_color, 1, 1, w - 2, h - 2);
-    canvas->FillRectInt(border_color, 2, 0, w - 4, 1);
-    canvas->FillRectInt(border_color, 1, 1, 1, 1);
-    canvas->FillRectInt(border_color, 0, 2, 1, h - 4);
-    canvas->FillRectInt(border_color, 1, h - 2, 1, 1);
-    canvas->FillRectInt(border_color, 2, h - 1, w - 4, 1);
-    canvas->FillRectInt(border_color, w - 2, 1, 1, 1);
-    canvas->FillRectInt(border_color, w - 1, 2, 1, h - 4);
-    canvas->FillRectInt(border_color, w - 2, h - 2, 1, 1);
+    canvas->FillRect(background_color, gfx::Rect(1, 1, w - 2, h - 2));
+    canvas->FillRect(border_color, gfx::Rect(2, 0, w - 4, 1));
+    canvas->FillRect(border_color, gfx::Rect(1, 1, 1, 1));
+    canvas->FillRect(border_color, gfx::Rect(0, 2, 1, h - 4));
+    canvas->FillRect(border_color, gfx::Rect(1, h - 2, 1, 1));
+    canvas->FillRect(border_color, gfx::Rect(2, h - 1, w - 4, 1));
+    canvas->FillRect(border_color, gfx::Rect(w - 2, 1, 1, 1));
+    canvas->FillRect(border_color, gfx::Rect(w - 1, 2, 1, h - 4));
+    canvas->FillRect(border_color, gfx::Rect(w - 2, h - 2, 1, 1));
   }
 
  private:
@@ -275,11 +276,11 @@ class TouchSelectionControllerImpl::TouchContextMenuView
     paint.setStyle(SkPaint::kFill_Style);
     paint.setXfermodeMode(SkXfermode::kSrc_Mode);
 
-    canvas->DrawRectInt(0, 0, width(), height(), paint);
+    canvas->DrawRect(GetLocalBounds(), paint);
 #else
     // This is the same as COLOR_TOOLBAR.
-    canvas->AsCanvasSkia()->drawColor(SkColorSetRGB(210, 225, 246),
-                                      SkXfermode::kSrc_Mode);
+    canvas->GetSkCanvas()->drawColor(SkColorSetRGB(210, 225, 246),
+                                     SkXfermode::kSrc_Mode);
 #endif
   }
 
@@ -298,8 +299,8 @@ class TouchSelectionControllerImpl::TouchContextMenuView
     for (size_t i = 0; i < arraysize(kContextMenuCommands); i++) {
       int command_id = kContextMenuCommands[i];
       if (controller_->IsCommandIdEnabled(command_id)) {
-        TextButton* button = new TextButton(this,
-            UTF16ToWide(l10n_util::GetStringUTF16(command_id)));
+        TextButton* button = new TextButton(
+            this, l10n_util::GetStringUTF16(command_id));
         button->set_focusable(true);
         button->set_request_focus_on_press(false);
         button->set_prefix_type(TextButton::PREFIX_HIDE);
@@ -492,11 +493,11 @@ gfx::Point TouchSelectionControllerImpl::GetSelectionHandle2Position() {
 }
 
 bool TouchSelectionControllerImpl::IsSelectionHandle1Visible() {
-  return selection_handle_1_->IsVisible();
+  return selection_handle_1_->visible();
 }
 
 bool TouchSelectionControllerImpl::IsSelectionHandle2Visible() {
-  return selection_handle_2_->IsVisible();
+  return selection_handle_2_->visible();
 }
 
 TouchSelectionController* TouchSelectionController::create(

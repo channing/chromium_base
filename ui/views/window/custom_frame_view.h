@@ -2,14 +2,15 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef VIEWS_WINDOW_CUSTOM_FRAME_VIEW_H_
-#define VIEWS_WINDOW_CUSTOM_FRAME_VIEW_H_
+#ifndef UI_VIEWS_WINDOW_CUSTOM_FRAME_VIEW_H_
+#define UI_VIEWS_WINDOW_CUSTOM_FRAME_VIEW_H_
 #pragma once
 
 #include "ui/views/controls/button/image_button.h"
 #include "ui/views/widget/widget.h"
 #include "ui/views/window/non_client_view.h"
 
+class SkBitmap;
 namespace gfx {
 class Canvas;
 class Font;
@@ -19,6 +20,8 @@ class Point;
 }
 
 namespace views {
+
+class FrameBackground;
 
 ///////////////////////////////////////////////////////////////////////////////
 //
@@ -41,7 +44,6 @@ class CustomFrameView : public NonClientFrameView,
   virtual int NonClientHitTest(const gfx::Point& point) OVERRIDE;
   virtual void GetWindowMask(const gfx::Size& size, gfx::Path* window_mask)
       OVERRIDE;
-  virtual void EnableClose(bool enable) OVERRIDE;
   virtual void ResetWindowControls() OVERRIDE;
   virtual void UpdateWindowIcon() OVERRIDE;
 
@@ -92,6 +94,10 @@ class CustomFrameView : public NonClientFrameView,
   void PaintTitleBar(gfx::Canvas* canvas);
   void PaintRestoredClientEdge(gfx::Canvas* canvas);
 
+  // Compute aspects of the frame needed to paint the frame background.
+  SkColor GetFrameColor() const;
+  SkBitmap* GetFrameBitmap() const;
+
   // Layout various sub-components of this view.
   void LayoutWindowControls();
   void LayoutTitleBar();
@@ -115,6 +121,9 @@ class CustomFrameView : public NonClientFrameView,
   // The window that owns this view.
   Widget* frame_;
 
+  // Background painter for the window frame.
+  scoped_ptr<FrameBackground> frame_background_;
+
   // Initialize various static resources.
   static void InitClass();
   static gfx::Font* title_font_;
@@ -124,4 +133,4 @@ class CustomFrameView : public NonClientFrameView,
 
 }  // namespace views
 
-#endif  // VIEWS_WINDOW_CUSTOM_FRAME_VIEW_H_
+#endif  // UI_VIEWS_WINDOW_CUSTOM_FRAME_VIEW_H_

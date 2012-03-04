@@ -2,10 +2,11 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef VIEWS_LAYOUT_FILL_LAYOUT_H_
-#define VIEWS_LAYOUT_FILL_LAYOUT_H_
+#ifndef UI_VIEWS_LAYOUT_FILL_LAYOUT_H_
+#define UI_VIEWS_LAYOUT_FILL_LAYOUT_H_
 #pragma once
 
+#include "base/compiler_specific.h"
 #include "ui/views/layout/layout_manager.h"
 #include "ui/views/view.h"
 
@@ -24,8 +25,8 @@ class VIEWS_EXPORT FillLayout : public LayoutManager {
   virtual ~FillLayout();
 
   // Overridden from LayoutManager:
-  virtual void Layout(View* host);
-  virtual gfx::Size GetPreferredSize(View* host);
+  virtual void Layout(View* host) OVERRIDE;
+  virtual gfx::Size GetPreferredSize(View* host) OVERRIDE;
 
  private:
   DISALLOW_COPY_AND_ASSIGN(FillLayout);
@@ -33,4 +34,4 @@ class VIEWS_EXPORT FillLayout : public LayoutManager {
 
 }  // namespace views
 
-#endif  // VIEWS_LAYOUT_FILL_LAYOUT_H_
+#endif  // UI_VIEWS_LAYOUT_FILL_LAYOUT_H_
