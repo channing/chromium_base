@@ -1,9 +1,9 @@
-// Copyright (c) 2011 The Chromium Authors. All rights reserved.
+// Copyright (c) 2012 The Chromium Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef VIEWS_EVENTS_EVENT_H_
-#define VIEWS_EVENTS_EVENT_H_
+#ifndef UI_VIEWS_EVENTS_EVENT_H_
+#define UI_VIEWS_EVENTS_EVENT_H_
 #pragma once
 
 #include "base/basictypes.h"
@@ -11,31 +11,36 @@
 #include "ui/base/events.h"
 #include "ui/base/keycodes/keyboard_codes.h"
 #include "ui/gfx/point.h"
-#include "views/native_types.h"
-#include "views/views_export.h"
-
-#if defined(USE_X11)
-typedef union _XEvent XEvent;
-#endif
+#include "ui/views/views_export.h"
 
 namespace ui {
 class OSExchangeData;
 }
-using ui::OSExchangeData;
+
+#if defined(USE_AURA)
+namespace aura {
+class Event;
+}
+#endif
+
+// TODO(msw): Remove GTK support from views event code when possible.
+#if defined(TOOLKIT_USES_GTK)
+typedef union _GdkEvent GdkEvent;
+#endif
 
 namespace views {
+
+#if defined(USE_AURA)
+typedef aura::Event* NativeEvent;
+#else
+typedef base::NativeEvent NativeEvent;
+#endif
 
 class View;
 
 namespace internal {
-class NativeWidgetView;
 class RootView;
 }
-
-#if defined(OS_WIN) || defined(USE_AURA)
-VIEWS_EXPORT bool IsClientMouseEvent(const views::NativeEvent& native_event);
-VIEWS_EXPORT bool IsNonClientMouseEvent(const views::NativeEvent& native_event);
-#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 //
@@ -51,15 +56,16 @@ VIEWS_EXPORT bool IsNonClientMouseEvent(const views::NativeEvent& native_event);
 ////////////////////////////////////////////////////////////////////////////////
 class VIEWS_EXPORT Event {
  public:
-  // This type exists to distinguish between the NativeEvent and NativeEvent2
-  // constructors.
-  // TODO(beng): remove once we rid views of Gtk/Gdk.
-  struct FromNativeEvent2 {};
-
   const NativeEvent& native_event() const { return native_event_; }
-  const NativeEvent2& native_event_2() const { return native_event_2_; }
+#if defined(TOOLKIT_USES_GTK)
+  GdkEvent* gdk_event() const { return gdk_event_; }
+#endif
   ui::EventType type() const { return type_; }
   const base::Time& time_stamp() const { return time_stamp_; }
+
+  // Required for Gesture testing purposes.
+  void set_time_stamp(base::Time time_stamp) { time_stamp_ = time_stamp; }
+
   int flags() const { return flags_; }
   void set_flags(int flags) { flags_ = flags; }
 
@@ -88,26 +94,18 @@ class VIEWS_EXPORT Event {
            type_ == ui::ET_TOUCH_CANCELLED;
   }
 
-#if defined(OS_WIN) && !defined(USE_AURA)
-  // Returns the EventFlags in terms of windows flags.
-  int GetWindowsFlags() const;
-#elif defined(OS_LINUX)
-  // Get the views::Event flags from a native GdkEvent.
-  static int GetFlagsFromGdkEvent(NativeEvent native_event);
-#endif
-
  protected:
   Event(ui::EventType type, int flags);
-  Event(NativeEvent native_event, ui::EventType type, int flags);
-  // Because the world is complicated, sometimes we have two different kinds of
-  // NativeEvent in play in the same executable. See native_types.h for the tale
-  // of woe.
-  Event(NativeEvent2 native_event, ui::EventType type, int flags,
-        FromNativeEvent2);
+  Event(const NativeEvent& native_event, ui::EventType type, int flags);
+#if defined(TOOLKIT_USES_GTK)
+  Event(GdkEvent* gdk_event, ui::EventType type, int flags);
+#endif
 
   Event(const Event& model)
       : native_event_(model.native_event()),
-        native_event_2_(model.native_event_2()),
+#if defined(TOOLKIT_USES_GTK)
+        gdk_event_(model.gdk_event_),
+#endif
         type_(model.type()),
         time_stamp_(model.time_stamp()),
         flags_(model.flags()) {
@@ -118,13 +116,10 @@ class VIEWS_EXPORT Event {
  private:
   void operator=(const Event&);
 
-  // Safely initializes the native event members of this class.
-  void Init();
-  void InitWithNativeEvent(NativeEvent native_event);
-  void InitWithNativeEvent2(NativeEvent2 native_event_2, FromNativeEvent2);
-
   NativeEvent native_event_;
-  NativeEvent2 native_event_2_;
+#if defined(TOOLKIT_USES_GTK)
+  GdkEvent* gdk_event_;
+#endif
   ui::EventType type_;
   base::Time time_stamp_;
   int flags_;
@@ -145,8 +140,10 @@ class VIEWS_EXPORT LocatedEvent : public Event {
   const gfx::Point& location() const { return location_; }
 
  protected:
-  explicit LocatedEvent(NativeEvent native_event);
-  LocatedEvent(NativeEvent2 native_event_2, FromNativeEvent2 from_native);
+  explicit LocatedEvent(const NativeEvent& native_event);
+#if defined(TOOLKIT_USES_GTK)
+  explicit LocatedEvent(GdkEvent* gdk_event);
+#endif
 
   // TODO(msw): Kill this legacy constructor when we update uses.
   // Simple initialization from cracked metadata.
@@ -175,8 +172,10 @@ class TouchEvent;
 ////////////////////////////////////////////////////////////////////////////////
 class VIEWS_EXPORT MouseEvent : public LocatedEvent {
  public:
-  explicit MouseEvent(NativeEvent native_event);
-  MouseEvent(NativeEvent2 native_event_2, FromNativeEvent2 from_native);
+  explicit MouseEvent(const NativeEvent& native_event);
+#if defined(TOOLKIT_USES_GTK)
+  explicit MouseEvent(GdkEvent* gdk_event);
+#endif
 
   // Create a new MouseEvent which is identical to the provided model.
   // If source / target views are provided, the model location will be converted
@@ -188,7 +187,7 @@ class VIEWS_EXPORT MouseEvent : public LocatedEvent {
   // mapped from the TouchEvent to appropriate MouseEvent attributes.
   // GestureManager uses this to convert TouchEvents that are not handled by any
   // view.
-  MouseEvent(const TouchEvent& touch, FromNativeEvent2 from_native);
+  explicit MouseEvent(const TouchEvent& touch);
 
   // TODO(msw): Kill this legacy constructor when we update uses.
   // Create a new mouse event
@@ -198,30 +197,30 @@ class VIEWS_EXPORT MouseEvent : public LocatedEvent {
 
   // Conveniences to quickly test what button is down
   bool IsOnlyLeftMouseButton() const {
-    return (flags() & ui::EF_LEFT_BUTTON_DOWN) &&
-      !(flags() & (ui::EF_MIDDLE_BUTTON_DOWN | ui::EF_RIGHT_BUTTON_DOWN));
+    return (flags() & ui::EF_LEFT_MOUSE_BUTTON) &&
+      !(flags() & (ui::EF_MIDDLE_MOUSE_BUTTON | ui::EF_RIGHT_MOUSE_BUTTON));
   }
 
   bool IsLeftMouseButton() const {
-    return (flags() & ui::EF_LEFT_BUTTON_DOWN) != 0;
+    return (flags() & ui::EF_LEFT_MOUSE_BUTTON) != 0;
   }
 
   bool IsOnlyMiddleMouseButton() const {
-    return (flags() & ui::EF_MIDDLE_BUTTON_DOWN) &&
-      !(flags() & (ui::EF_LEFT_BUTTON_DOWN | ui::EF_RIGHT_BUTTON_DOWN));
+    return (flags() & ui::EF_MIDDLE_MOUSE_BUTTON) &&
+      !(flags() & (ui::EF_LEFT_MOUSE_BUTTON | ui::EF_RIGHT_MOUSE_BUTTON));
   }
 
   bool IsMiddleMouseButton() const {
-    return (flags() & ui::EF_MIDDLE_BUTTON_DOWN) != 0;
+    return (flags() & ui::EF_MIDDLE_MOUSE_BUTTON) != 0;
   }
 
   bool IsOnlyRightMouseButton() const {
-    return (flags() & ui::EF_RIGHT_BUTTON_DOWN) &&
-      !(flags() & (ui::EF_LEFT_BUTTON_DOWN | ui::EF_MIDDLE_BUTTON_DOWN));
+    return (flags() & ui::EF_RIGHT_MOUSE_BUTTON) &&
+      !(flags() & (ui::EF_LEFT_MOUSE_BUTTON | ui::EF_MIDDLE_MOUSE_BUTTON));
   }
 
   bool IsRightMouseButton() const {
-    return (flags() & ui::EF_RIGHT_BUTTON_DOWN) != 0;
+    return (flags() & ui::EF_RIGHT_MOUSE_BUTTON) != 0;
   }
 
  protected:
@@ -230,7 +229,6 @@ class VIEWS_EXPORT MouseEvent : public LocatedEvent {
   }
 
  private:
-  friend class internal::NativeWidgetView;
   friend class internal::RootView;
 
   DISALLOW_COPY_AND_ASSIGN(MouseEvent);
@@ -247,7 +245,7 @@ class VIEWS_EXPORT MouseEvent : public LocatedEvent {
 ////////////////////////////////////////////////////////////////////////////////
 class VIEWS_EXPORT TouchEvent : public LocatedEvent {
  public:
-  TouchEvent(NativeEvent2 native_event_2, FromNativeEvent2 from_native);
+  explicit TouchEvent(const NativeEvent& native_event);
 
   // Create a new touch event.
   TouchEvent(ui::EventType type,
@@ -273,7 +271,6 @@ class VIEWS_EXPORT TouchEvent : public LocatedEvent {
   float force() const { return force_; }
 
  private:
-  friend class internal::NativeWidgetView;
   friend class internal::RootView;
 
   TouchEvent(const TouchEvent& model, View* root);
@@ -305,8 +302,10 @@ class VIEWS_EXPORT TouchEvent : public LocatedEvent {
 ////////////////////////////////////////////////////////////////////////////////
 class VIEWS_EXPORT KeyEvent : public Event {
  public:
-  explicit KeyEvent(NativeEvent native_event);
-  KeyEvent(NativeEvent2 native_event_2, FromNativeEvent2 from_native);
+  explicit KeyEvent(const NativeEvent& native_event);
+#if defined(TOOLKIT_USES_GTK)
+  explicit KeyEvent(GdkEvent* gdk_event);
+#endif
 
   // Creates a new KeyEvent synthetically (i.e. not in response to an input
   // event from the host environment). This is typically only used in testing as
@@ -336,30 +335,6 @@ class VIEWS_EXPORT KeyEvent : public Event {
   uint16 GetUnmodifiedCharacter() const;
 
  private:
-  // A helper function to get the character generated by a key event in a
-  // platform independent way. It supports control characters as well.
-  // It assumes a US keyboard layout is used, so it may only be used when there
-  // is no native event or no better way to get the character.
-  // For example, if a virtual keyboard implementation can only generate key
-  // events with key_code and flags information, then there is no way for us to
-  // determine the actual character that should be generate by the key. Because
-  // a key_code only represents a physical key on the keyboard, it has nothing
-  // to do with the actual character printed on that key. In such case, the only
-  // thing we can do is to assume that we are using a US keyboard and get the
-  // character according to US keyboard layout definition.
-  // If a virtual keyboard implementation wants to support other keyboard
-  // layouts, that may generate different text for a certain key than on a US
-  // keyboard, a special native event object should be introduced to carry extra
-  // information to help determine the correct character.
-  // Take XKeyEvent as an example, it contains not only keycode and modifier
-  // flags but also group and other extra XKB information to help determine the
-  // correct character. That's why we can use XLookupString() function to get
-  // the correct text generated by a X key event (See how is GetCharacter()
-  // implemented in event_x.cc).
-  // TODO(suzhe): define a native event object for virtual keyboard. We may need
-  // to take the actual feature requirement into account.
-  static uint16 GetCharacterFromKeyCode(ui::KeyboardCode key_code, int flags);
-
   ui::KeyboardCode key_code_;
 
   uint16 character_;
@@ -381,15 +356,16 @@ class VIEWS_EXPORT MouseWheelEvent : public MouseEvent {
   // See |offset| for details.
   static const int kWheelDelta;
 
-  explicit MouseWheelEvent(NativeEvent native_event);
-  MouseWheelEvent(NativeEvent2 native_event_2, FromNativeEvent2 from_native);
+  explicit MouseWheelEvent(const NativeEvent& native_event);
+#if defined(TOOLKIT_USES_GTK)
+  explicit MouseWheelEvent(GdkEvent* gdk_event);
+#endif
 
   // The amount to scroll. This is in multiples of kWheelDelta.
   int offset() const { return offset_; }
 
  private:
   friend class internal::RootView;
-  friend class internal::NativeWidgetView;
 
   MouseWheelEvent(const MouseWheelEvent& model, View* root)
       : MouseEvent(model, root),
@@ -411,7 +387,7 @@ class VIEWS_EXPORT MouseWheelEvent : public MouseEvent {
 ////////////////////////////////////////////////////////////////////////////////
 class VIEWS_EXPORT DropTargetEvent : public LocatedEvent {
  public:
-  DropTargetEvent(const OSExchangeData& data,
+  DropTargetEvent(const ui::OSExchangeData& data,
                   int x,
                   int y,
                   int source_operations)
@@ -421,12 +397,12 @@ class VIEWS_EXPORT DropTargetEvent : public LocatedEvent {
     // TODO(msw): Hook up key state flags for CTRL + drag and drop, etc.
   }
 
-  const OSExchangeData& data() const { return data_; }
+  const ui::OSExchangeData& data() const { return data_; }
   int source_operations() const { return source_operations_; }
 
  private:
   // Data associated with the drag/drop session.
-  const OSExchangeData& data_;
+  const ui::OSExchangeData& data_;
 
   // Bitmask of supported ui::DragDropTypes::DragOperation by the source.
   int source_operations_;
@@ -434,6 +410,57 @@ class VIEWS_EXPORT DropTargetEvent : public LocatedEvent {
   DISALLOW_COPY_AND_ASSIGN(DropTargetEvent);
 };
 
+class VIEWS_EXPORT ScrollEvent : public MouseEvent {
+ public:
+  explicit ScrollEvent(const NativeEvent& native_event);
+  float x_offset() const { return x_offset_; }
+  float y_offset() const { return y_offset_; }
+
+ private:
+  float x_offset_;
+  float y_offset_;
+
+  DISALLOW_COPY_AND_ASSIGN(ScrollEvent);
+};
+
+////////////////////////////////////////////////////////////////////////////////
+// GestureEvent class
+//
+////////////////////////////////////////////////////////////////////////////////
+class VIEWS_EXPORT GestureEvent : public LocatedEvent {
+ public:
+  explicit GestureEvent(const NativeEvent& native_event);
+
+  // Create a new GestureEvent which is identical to the provided model.
+  // If source / target views are provided, the model location will be converted
+  // from |source| coordinate system to |target| coordinate system.
+  GestureEvent(const GestureEvent& model, View* source, View* target);
+
+  float delta_x() const { return delta_x_; }
+  float delta_y() const { return delta_y_; }
+
+ protected:
+  GestureEvent(ui::EventType type, int x, int y, int flags);
+
+ private:
+  friend class internal::RootView;
+
+  GestureEvent(const GestureEvent& model, View* root);
+
+  float delta_x_;
+  float delta_y_;
+
+  DISALLOW_COPY_AND_ASSIGN(GestureEvent);
+};
+
+class VIEWS_EXPORT GestureEventForTest : public GestureEvent {
+ public:
+  GestureEventForTest(ui::EventType type, int x, int y, int flags);
+
+ private:
+  DISALLOW_COPY_AND_ASSIGN(GestureEventForTest);
+};
+
 }  // namespace views
 
-#endif  // VIEWS_EVENTS_EVENT_H_
+#endif  // UI_VIEWS_EVENTS_EVENT_H_
