@@ -1,4 +1,4 @@
-// Copyright (c) 2011 The Chromium Authors. All rights reserved.
+// Copyright (c) 2012 The Chromium Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -12,12 +12,16 @@
 
 #include <ios>
 
+#include "base/bind.h"
+#include "base/bind_helpers.h"
 #include "base/command_line.h"
 #include "base/debug/stack_trace.h"
 #include "base/logging.h"
 #include "base/memory/scoped_ptr.h"
+#include "base/message_loop.h"
 #include "base/metrics/histogram.h"
 #include "base/sys_info.h"
+#include "base/win/object_watcher.h"
 #include "base/win/scoped_handle.h"
 #include "base/win/windows_version.h"
 
@@ -36,6 +40,9 @@ const DWORD kNormalTerminationExitCode = 0;
 const DWORD kDebuggerInactiveExitCode = 0xC0000354;
 const DWORD kKeyboardInterruptExitCode = 0xC000013A;
 const DWORD kDebuggerTerminatedExitCode = 0x40010004;
+
+// Maximum amount of time (in milliseconds) to wait for the process to exit.
+static const int kWaitInterval = 2000;
 
 // This exit code is used by the Windows task manager when it kills a
 // process.  It's value is obviously not that unique, and it's
@@ -101,6 +108,60 @@ void OnNoMemory() {
   // address 0 for an attacker to utilize.
   __debugbreak();
   _exit(1);
+}
+
+class TimerExpiredTask : public win::ObjectWatcher::Delegate {
+ public:
+  explicit TimerExpiredTask(ProcessHandle process);
+  ~TimerExpiredTask();
+
+  void TimedOut();
+
+  // MessageLoop::Watcher -----------------------------------------------------
+  virtual void OnObjectSignaled(HANDLE object);
+
+ private:
+  void KillProcess();
+
+  // The process that we are watching.
+  ProcessHandle process_;
+
+  win::ObjectWatcher watcher_;
+
+  DISALLOW_COPY_AND_ASSIGN(TimerExpiredTask);
+};
+
+TimerExpiredTask::TimerExpiredTask(ProcessHandle process) : process_(process) {
+  watcher_.StartWatching(process_, this);
+}
+
+TimerExpiredTask::~TimerExpiredTask() {
+  TimedOut();
+  DCHECK(!process_) << "Make sure to close the handle.";
+}
+
+void TimerExpiredTask::TimedOut() {
+  if (process_)
+    KillProcess();
+}
+
+void TimerExpiredTask::OnObjectSignaled(HANDLE object) {
+  CloseHandle(process_);
+  process_ = NULL;
+}
+
+void TimerExpiredTask::KillProcess() {
+  // Stop watching the process handle since we're killing it.
+  watcher_.StopWatching();
+
+  // OK, time to get frisky.  We don't actually care when the process
+  // terminates.  We just care that it eventually terminates, and that's what
+  // TerminateProcess should do for us. Don't check for the result code since
+  // it fails quite often. This should be investigated eventually.
+  base::KillProcess(process_, kProcessKilledExitCode, false);
+
+  // Now, just cleanup as if the process exited normally.
+  OnObjectSignaled(process_);
 }
 
 }  // namespace
@@ -276,7 +337,7 @@ bool LaunchProcess(const string16& cmdline,
   if (options.job_handle) {
     if (0 == AssignProcessToJobObject(options.job_handle,
                                       process_info.hProcess)) {
-      LOG(ERROR) << "Could not AssignProcessToObject.";
+      DLOG(ERROR) << "Could not AssignProcessToObject.";
       KillProcess(process_info.hProcess, kProcessKilledExitCode, true);
       return false;
     }
@@ -303,6 +364,17 @@ bool LaunchProcess(const CommandLine& cmdline,
                    const LaunchOptions& options,
                    ProcessHandle* process_handle) {
   return LaunchProcess(cmdline.GetCommandLineString(), options, process_handle);
+}
+
+bool SetJobObjectAsKillOnJobClose(HANDLE job_object) {
+  JOBOBJECT_EXTENDED_LIMIT_INFORMATION limit_info = {0};
+  limit_info.BasicLimitInformation.LimitFlags =
+      JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE;
+  return 0 != SetInformationJobObject(
+      job_object,
+      JobObjectExtendedLimitInformation,
+      &limit_info,
+      sizeof(limit_info));
 }
 
 // Attempts to kill the process identified by the given process
@@ -520,7 +592,7 @@ bool WaitForProcessesToExit(const std::wstring& executable_name,
   DWORD start_time = GetTickCount();
 
   NamedProcessIterator iter(executable_name, filter);
-  while (entry = iter.NextProcessEntry()) {
+  while ((entry = iter.NextProcessEntry())) {
     DWORD remaining_wait =
         std::max<int64>(0, wait_milliseconds - (GetTickCount() - start_time));
     HANDLE process = OpenProcess(SYNCHRONIZE,
@@ -535,8 +607,10 @@ bool WaitForProcessesToExit(const std::wstring& executable_name,
 }
 
 bool WaitForSingleProcess(ProcessHandle handle, int64 wait_milliseconds) {
-  bool retval = WaitForSingleObject(handle, wait_milliseconds) == WAIT_OBJECT_0;
-  return retval;
+  int exit_code;
+  if (!WaitForExitCodeWithTimeout(handle, &exit_code, wait_milliseconds))
+    return false;
+  return exit_code == 0;
 }
 
 bool CleanupProcesses(const std::wstring& executable_name,
@@ -549,6 +623,22 @@ bool CleanupProcesses(const std::wstring& executable_name,
   if (!exited_cleanly)
     KillProcesses(executable_name, exit_code, filter);
   return exited_cleanly;
+}
+
+void EnsureProcessTerminated(ProcessHandle process) {
+  DCHECK(process != GetCurrentProcess());
+
+  // If already signaled, then we are done!
+  if (WaitForSingleObject(process, 0) == WAIT_OBJECT_0) {
+    CloseHandle(process);
+    return;
+  }
+
+  MessageLoop::current()->PostDelayedTask(
+      FROM_HERE,
+      base::Bind(&TimerExpiredTask::TimedOut,
+                 base::Owned(new TimerExpiredTask(process))),
+      kWaitInterval);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -902,7 +992,7 @@ size_t GetSystemCommitCharge() {
 
   PERFORMANCE_INFORMATION info;
   if (!InternalGetPerformanceInfo(&info, sizeof(info))) {
-    LOG(ERROR) << "Failed to fetch internal performance info.";
+    DLOG(ERROR) << "Failed to fetch internal performance info.";
     return 0;
   }
   return (info.CommitTotal * system_info.dwPageSize) / 1024;
