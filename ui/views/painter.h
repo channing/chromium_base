@@ -2,11 +2,12 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef VIEWS_PAINTER_H_
-#define VIEWS_PAINTER_H_
+#ifndef UI_VIEWS_PAINTER_H_
+#define UI_VIEWS_PAINTER_H_
 #pragma once
 
 #include "base/basictypes.h"
+#include "base/compiler_specific.h"
 #include "third_party/skia/include/core/SkColor.h"
 #include "ui/views/views_export.h"
 
@@ -61,7 +62,7 @@ class VIEWS_EXPORT HorizontalPainter : public Painter {
   virtual ~HorizontalPainter() {}
 
   // Paints the images.
-  virtual void Paint(int w, int h, gfx::Canvas* canvas);
+  virtual void Paint(int w, int h, gfx::Canvas* canvas) OVERRIDE;
 
   // Height of the images.
   int height() const { return height_; }
@@ -84,4 +85,4 @@ class VIEWS_EXPORT HorizontalPainter : public Painter {
 
 }  // namespace views
 
-#endif  // VIEWS_PAINTER_H_
+#endif  // UI_VIEWS_PAINTER_H_

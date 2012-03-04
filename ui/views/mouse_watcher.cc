@@ -4,22 +4,21 @@
 
 #include "ui/views/mouse_watcher.h"
 
+#include "base/bind.h"
 #include "base/compiler_specific.h"
+#include "base/event_types.h"
+#include "base/memory/weak_ptr.h"
 #include "base/message_loop.h"
-#include "base/task.h"
+#include "ui/base/events.h"
 #include "ui/gfx/screen.h"
 #include "ui/views/view.h"
 #include "ui/views/widget/widget.h"
-
-#if defined(USE_WAYLAND)
-#include "ui/wayland/events/wayland_event.h"
-#endif
 
 namespace views {
 
 // Amount of time between when the mouse moves outside the view's zone and when
 // the listener is notified.
-static const int kNotifyListenerTimeMs = 300;
+const int kNotifyListenerTimeMs = 300;
 
 class MouseWatcher::Observer : public MessageLoopForUI::Observer {
  public:
@@ -35,10 +34,12 @@ class MouseWatcher::Observer : public MessageLoopForUI::Observer {
 
   // MessageLoop::Observer implementation:
 #if defined(OS_WIN)
-  void WillProcessMessage(const MSG& msg) OVERRIDE {
+  virtual base::EventStatus WillProcessEvent(
+      const base::NativeEvent& event) OVERRIDE {
+    return base::EVENT_CONTINUE;
   }
 
-  void DidProcessMessage(const MSG& msg) OVERRIDE {
+  virtual void DidProcessEvent(const base::NativeEvent& event) OVERRIDE {
     // We spy on three different Windows messages here to see if the mouse has
     // moved out of the bounds of the view. The messages are:
     //
@@ -50,24 +51,24 @@ class MouseWatcher::Observer : public MessageLoopForUI::Observer {
     // WM_NCMOUSELEAVE:
     //   For notification when the mouse leaves the _non-client_ area.
     //
-  switch (msg.message) {
-    case WM_MOUSEMOVE:
-      HandleGlobalMouseMoveEvent(false);
-      break;
-    case WM_MOUSELEAVE:
-    case WM_NCMOUSELEAVE:
-      HandleGlobalMouseMoveEvent(true);
-      break;
-  }
-}
-#elif defined(USE_WAYLAND)
-  MessageLoopForUI::Observer::EventStatus WillProcessEvent(
-      ui::WaylandEvent* event) OVERRIDE {
-    switch (event->type) {
-      case ui::WAYLAND_MOTION:
+    switch (event.message) {
+      case WM_MOUSEMOVE:
         HandleGlobalMouseMoveEvent(false);
         break;
-      case ui::WAYLAND_POINTER_FOCUS:
+      case WM_MOUSELEAVE:
+      case WM_NCMOUSELEAVE:
+        HandleGlobalMouseMoveEvent(true);
+        break;
+    }
+  }
+#elif defined(USE_WAYLAND)
+  virtual MessageLoopForUI::Observer::EventStatus WillProcessEvent(
+      base::wayland::WaylandEvent* event) OVERRIDE {
+    switch (event->type) {
+      case base::wayland::WAYLAND_MOTION:
+        HandleGlobalMouseMoveEvent(false);
+        break;
+      case base::wayland::WAYLAND_POINTER_FOCUS:
         if (!event->pointer_focus.state)
           HandleGlobalMouseMoveEvent(true);
         break;
@@ -76,11 +77,30 @@ class MouseWatcher::Observer : public MessageLoopForUI::Observer {
     }
     return EVENT_CONTINUE;
   }
+#elif defined(USE_AURA)
+  virtual base::EventStatus WillProcessEvent(
+      const base::NativeEvent& event) OVERRIDE {
+    return base::EVENT_CONTINUE;
+  }
+  virtual void DidProcessEvent(const base::NativeEvent& event) OVERRIDE {
+    switch (ui::EventTypeFromNative(event)) {
+      case ui::ET_MOUSE_MOVED:
+      case ui::ET_MOUSE_DRAGGED:
+        // DRAGGED is a special case of MOVED. See events_win.cc/events_x.cc.
+        HandleGlobalMouseMoveEvent(false);
+        break;
+      case ui::ET_MOUSE_EXITED:
+        HandleGlobalMouseMoveEvent(true);
+        break;
+      default:
+        break;
+    }
+  }
 #elif defined(TOOLKIT_USES_GTK)
-  void WillProcessEvent(GdkEvent* event) OVERRIDE {
+  virtual void WillProcessEvent(GdkEvent* event) OVERRIDE {
   }
 
-  void DidProcessEvent(GdkEvent* event) OVERRIDE {
+  virtual void DidProcessEvent(GdkEvent* event) OVERRIDE {
     switch (event->type) {
       case GDK_MOTION_NOTIFY:
         HandleGlobalMouseMoveEvent(false);
@@ -91,11 +111,6 @@ class MouseWatcher::Observer : public MessageLoopForUI::Observer {
       default:
         break;
     }
-  }
-#else
-  EventStatus WillProcessXEvent(XEvent* event) OVERRIDE {
-    // TODO(davemoore) Implement.
-    return EVENT_CONTINUE;
   }
 #endif
 
@@ -135,18 +150,18 @@ class MouseWatcher::Observer : public MessageLoopForUI::Observer {
     if (!in_view || (check_window && !IsMouseOverWindow())) {
       // Mouse moved outside the view's zone, start a timer to notify the
       // listener.
-      if (notify_listener_factory_.empty()) {
+      if (!notify_listener_factory_.HasWeakPtrs()) {
         MessageLoop::current()->PostDelayedTask(
             FROM_HERE,
-            notify_listener_factory_.NewRunnableMethod(
-                &Observer::NotifyListener),
+            base::Bind(&Observer::NotifyListener,
+                       notify_listener_factory_.GetWeakPtr()),
             !in_view ? kNotifyListenerTimeMs :
                        mouse_watcher_->notify_on_exit_time_ms_);
       }
     } else {
       // Mouse moved quickly out of the view and then into it again, so cancel
       // the timer.
-      notify_listener_factory_.RevokeAll();
+      notify_listener_factory_.InvalidateWeakPtrs();
     }
   }
 
@@ -159,7 +174,7 @@ class MouseWatcher::Observer : public MessageLoopForUI::Observer {
   MouseWatcher* mouse_watcher_;
 
   // A factory that is used to construct a delayed callback to the listener.
-  ScopedRunnableMethodFactory<Observer> notify_listener_factory_;
+  base::WeakPtrFactory<Observer> notify_listener_factory_;
 
   DISALLOW_COPY_AND_ASSIGN(Observer);
 };

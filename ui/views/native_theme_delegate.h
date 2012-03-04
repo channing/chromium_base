@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef VIEWS_NATIVE_THEME_DELEGATE_H_
-#define VIEWS_NATIVE_THEME_DELEGATE_H_
+#ifndef UI_VIEWS_NATIVE_THEME_DELEGATE_H_
+#define UI_VIEWS_NATIVE_THEME_DELEGATE_H_
 #pragma once
 
 #include "ui/gfx/native_theme.h"
@@ -50,4 +50,4 @@ class VIEWS_EXPORT NativeThemeDelegate {
 
 }  // namespace views
 
-#endif  // VIEWS_NATIVE_THEME_DELEGATE_H_
+#endif  // UI_VIEWS_NATIVE_THEME_DELEGATE_H_

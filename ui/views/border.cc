@@ -1,4 +1,4 @@
-// Copyright (c) 2006-2008 The Chromium Authors. All rights reserved.
+// Copyright (c) 2012 The Chromium Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -6,6 +6,7 @@
 
 #include "base/logging.h"
 #include "ui/gfx/canvas.h"
+#include "ui/views/painter.h"
 
 namespace views {
 
@@ -35,15 +36,15 @@ SolidBorder::SolidBorder(int thickness, SkColor color)
 
 void SolidBorder::Paint(const View& view, gfx::Canvas* canvas) const {
   // Top border.
-  canvas->FillRectInt(color_, 0, 0, view.width(), insets_.top());
+  canvas->FillRect(color_, gfx::Rect(0, 0, view.width(), insets_.top()));
   // Left border.
-  canvas->FillRectInt(color_, 0, 0, insets_.left(), view.height());
+  canvas->FillRect(color_, gfx::Rect(0, 0, insets_.left(), view.height()));
   // Bottom border.
-  canvas->FillRectInt(color_, 0, view.height() - insets_.bottom(),
-                      view.width(), insets_.bottom());
+  canvas->FillRect(color_, gfx::Rect(0, view.height() - insets_.bottom(),
+                                     view.width(), insets_.bottom()));
   // Right border.
-  canvas->FillRectInt(color_, view.width() - insets_.right(), 0,
-                      insets_.right(), view.height());
+  canvas->FillRect(color_, gfx::Rect(view.width() - insets_.right(), 0,
+                                     insets_.right(), view.height()));
 }
 
 void SolidBorder::GetInsets(gfx::Insets* insets) const {
@@ -71,7 +72,35 @@ class EmptyBorder : public Border {
 
   DISALLOW_COPY_AND_ASSIGN(EmptyBorder);
 };
-}
+
+class BorderPainter : public Border {
+ public:
+  BorderPainter(Painter* painter)
+      : painter_(painter) {
+    DCHECK(painter);
+  }
+
+  virtual ~BorderPainter() {
+    delete painter_;
+  }
+
+  void Paint(const View& view, gfx::Canvas* canvas) const {
+    Painter::PaintPainterAt(0, 0, view.width(), view.height(), canvas,
+                            painter_);
+  }
+
+  virtual void GetInsets(gfx::Insets* insets) const {
+    DCHECK(insets);
+    insets->Set(0, 0, 0, 0);
+  }
+
+ private:
+  Painter* painter_;
+
+  DISALLOW_COPY_AND_ASSIGN(BorderPainter);
+};
+
+} // namespace
 
 Border::Border() {
 }
@@ -87,6 +116,11 @@ Border* Border::CreateSolidBorder(int thickness, SkColor color) {
 // static
 Border* Border::CreateEmptyBorder(int top, int left, int bottom, int right) {
   return new EmptyBorder(top, left, bottom, right);
+}
+
+//static
+Border* Border::CreateBorderPainter(Painter* painter) {
+  return new BorderPainter(painter);
 }
 
 }  // namespace views

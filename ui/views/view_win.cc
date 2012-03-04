@@ -5,9 +5,9 @@
 #include "ui/views/view.h"
 
 // Necessary to define oleacc GUID's.
+#include <windows.h>
 #include <initguid.h>
 #include <oleacc.h>
-#include <windows.h>
 
 #include "ui/views/accessibility/native_view_accessibility_win.h"
 

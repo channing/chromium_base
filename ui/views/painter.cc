@@ -1,4 +1,4 @@
-// Copyright (c) 2009 The Chromium Authors. All rights reserved.
+// Copyright (c) 2011 The Chromium Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -11,6 +11,7 @@
 #include "ui/gfx/canvas.h"
 #include "ui/gfx/canvas_skia.h"
 #include "ui/gfx/insets.h"
+#include "ui/gfx/point.h"
 
 namespace views {
 
@@ -44,7 +45,7 @@ class GradientPainter : public Painter {
     // Need to unref shader, otherwise never deleted.
     s->unref();
 
-    canvas->AsCanvasSkia()->drawRectCoords(
+    canvas->GetSkCanvas()->drawRectCoords(
         SkIntToScalar(0), SkIntToScalar(0), SkIntToScalar(w), SkIntToScalar(h),
         paint);
   }
@@ -149,7 +150,7 @@ void Painter::PaintPainterAt(int x, int y, int w, int h,
   if (w < 0 || h < 0)
     return;
   canvas->Save();
-  canvas->TranslateInt(x, y);
+  canvas->Translate(gfx::Point(x, y));
   painter->Paint(w, h, canvas);
   canvas->Restore();
 }

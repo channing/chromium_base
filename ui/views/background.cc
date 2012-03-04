@@ -25,7 +25,7 @@ class SolidBackground : public Background {
   void Paint(gfx::Canvas* canvas, View* view) const {
     // Fill the background. Note that we don't constrain to the bounds as
     // canvas is already clipped for us.
-    canvas->AsCanvasSkia()->drawColor(get_color());
+    canvas->GetSkCanvas()->drawColor(get_color());
   }
 
  private:
@@ -94,8 +94,13 @@ Background* Background::CreateSolidBackground(const SkColor& color) {
 
 //static
 Background* Background::CreateStandardPanelBackground() {
+  // TODO(beng): Should be in NativeTheme.
+#if defined(USE_AURA)
+  return CreateSolidBackground(SK_ColorWHITE);
+#else
   return CreateVerticalGradientBackground(SkColorSetRGB(246, 250, 255),
                                           SkColorSetRGB(219, 235, 255));
+#endif
 }
 
 //static

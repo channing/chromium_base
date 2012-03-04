@@ -1,9 +1,9 @@
-// Copyright (c) 2011 The Chromium Authors. All rights reserved.
+// Copyright (c) 2012 The Chromium Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef VIEWS_BORDER_H_
-#define VIEWS_BORDER_H_
+#ifndef UI_VIEWS_BORDER_H_
+#define UI_VIEWS_BORDER_H_
 #pragma once
 
 #include "third_party/skia/include/core/SkColor.h"
@@ -16,6 +16,7 @@ class Canvas;
 
 namespace views {
 
+class Painter;
 class View;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -47,6 +48,10 @@ class VIEWS_EXPORT Border {
   // paint anything.
   static Border* CreateEmptyBorder(int top, int left, int bottom, int right);
 
+  // Creates a Border from the specified Painter. The border owns the painter,
+  // thus the painter is deleted when the Border is deleted.
+  static Border* CreateBorderPainter(Painter* painter);
+
   // Renders the border for the specified view.
   virtual void Paint(const View& view, gfx::Canvas* canvas) const = 0;
 
@@ -59,4 +64,4 @@ class VIEWS_EXPORT Border {
 
 }  // namespace views
 
-#endif  // VIEWS_BORDER_H_
+#endif  // UI_VIEWS_BORDER_H_
