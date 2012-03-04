@@ -1,4 +1,4 @@
-// Copyright (c) 2011 The Chromium Authors. All rights reserved.
+// Copyright (c) 2012 The Chromium Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -27,7 +27,7 @@
 #include "ui/views/controls/menu/menu_2.h"
 #include "ui/views/controls/menu/menu_win.h"
 #include "ui/views/controls/native/native_view_host.h"
-// #include "ui/views/controls/textfield/native_textfield_views.h"
+#include "ui/views/controls/textfield/native_textfield_views.h"
 #include "ui/views/controls/textfield/textfield.h"
 #include "ui/views/controls/textfield/textfield_controller.h"
 #include "ui/views/focus/focus_manager.h"
@@ -100,7 +100,7 @@ NativeTextfieldWin::NativeTextfieldWin(Textfield* textfield)
     did_load_library_ = !!LoadLibrary(L"riched20.dll");
 
   DWORD style = kDefaultEditStyle | ES_AUTOHSCROLL;
-  if (textfield_->style() & Textfield::STYLE_PASSWORD)
+  if (textfield_->style() & Textfield::STYLE_OBSCURED)
     style |= ES_PASSWORD;
 
   if (textfield_->read_only())
@@ -113,7 +113,7 @@ NativeTextfieldWin::NativeTextfieldWin(Textfield* textfield)
   Create(textfield_->GetWidget()->GetNativeView(), r, NULL, style, ex_style);
 
   if (textfield_->style() & Textfield::STYLE_LOWERCASE) {
-    DCHECK((textfield_->style() & Textfield::STYLE_PASSWORD) == 0);
+    DCHECK((textfield_->style() & Textfield::STYLE_OBSCURED) == 0);
     SetEditStyle(SES_LOWERCASE, SES_LOWERCASE);
   }
 
@@ -173,15 +173,16 @@ void NativeTextfieldWin::AttachHack() {
 
 string16 NativeTextfieldWin::GetText() const {
   int len = GetTextLength() + 1;
-  std::wstring str;
-  GetWindowText(WriteInto(&str, len), len);
+  string16 str;
+  if (len > 1)
+    GetWindowText(WriteInto(&str, len), len);
   // The text get from GetWindowText() might be wrapped with explicit bidi
   // control characters. Refer to UpdateText() for detail. Without such
   // wrapping, in RTL chrome, a pure LTR string ending with parenthesis will
   // not be displayed correctly in a textfield. For example, "Yahoo!" will be
   // displayed as "!Yahoo", and "Google (by default)" will be displayed as
   // "(Google (by default".
-  return base::i18n::StripWrappingBidiControlCharacters(WideToUTF16(str));
+  return base::i18n::StripWrappingBidiControlCharacters(str);
 }
 
 void NativeTextfieldWin::UpdateText() {
@@ -203,15 +204,11 @@ void NativeTextfieldWin::AppendText(const string16& text) {
 }
 
 string16 NativeTextfieldWin::GetSelectedText() const {
-  // Figure out the length of the selection.
-  long start;
-  long end;
-  GetSel(start, end);
-
-  // Grab the selected text.
-  std::wstring str;
-  GetSelText(WriteInto(&str, end - start + 1));
-
+  CHARRANGE sel;
+  GetSel(sel);
+  string16 str;
+  if (sel.cpMin != sel.cpMax)
+    GetSelText(WriteInto(&str, sel.cpMax - sel.cpMin + 1));
   return str;
 }
 
@@ -263,14 +260,14 @@ void NativeTextfieldWin::UpdateFont() {
   UpdateTextColor();
 }
 
-void NativeTextfieldWin::UpdateIsPassword() {
+void NativeTextfieldWin::UpdateIsObscured() {
   // TODO: Need to implement for Windows.
-  UpdateAccessibleState(STATE_SYSTEM_PROTECTED, textfield_->IsPassword());
+  UpdateAccessibleState(STATE_SYSTEM_PROTECTED, textfield_->IsObscured());
 }
 
 void NativeTextfieldWin::UpdateEnabled() {
-  SendMessage(m_hWnd, WM_ENABLE, textfield_->IsEnabled(), 0);
-  UpdateAccessibleState(STATE_SYSTEM_UNAVAILABLE, !textfield_->IsEnabled());
+  SendMessage(m_hWnd, WM_ENABLE, textfield_->enabled(), 0);
+  UpdateAccessibleState(STATE_SYSTEM_UNAVAILABLE, !textfield_->enabled());
 }
 
 gfx::Insets NativeTextfieldWin::CalculateInsets() {
@@ -344,6 +341,14 @@ void NativeTextfieldWin::SelectRange(const ui::Range& range) {
   NOTREACHED();
 }
 
+void NativeTextfieldWin::GetSelectionModel(gfx::SelectionModel* sel) const {
+  NOTREACHED();
+}
+
+void NativeTextfieldWin::SelectSelectionModel(const gfx::SelectionModel& sel) {
+  NOTREACHED();
+}
+
 size_t NativeTextfieldWin::GetCursorPosition() const {
   NOTREACHED();
   return 0U;
@@ -363,7 +368,7 @@ void NativeTextfieldWin::HandleFocus() {
 void NativeTextfieldWin::HandleBlur() {
 }
 
-TextInputClient* NativeTextfieldWin::GetTextInputClient() {
+ui::TextInputClient* NativeTextfieldWin::GetTextInputClient() {
   return NULL;
 }
 
@@ -379,6 +384,10 @@ void NativeTextfieldWin::ClearEditHistory() {
   NOTREACHED();
 }
 
+int NativeTextfieldWin::GetFontHeight() {
+  return textfield_->font().GetHeight();
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // NativeTextfieldWin, ui::SimpleMenuModel::Delegate implementation:
 
@@ -390,8 +399,8 @@ bool NativeTextfieldWin::IsCommandIdEnabled(int command_id) const {
   switch (command_id) {
     case IDS_APP_UNDO:       return !textfield_->read_only() && !!CanUndo();
     case IDS_APP_CUT:        return !textfield_->read_only() &&
-                                    !textfield_->IsPassword() && !!CanCut();
-    case IDS_APP_COPY:       return !!CanCopy() && !textfield_->IsPassword();
+                                    !textfield_->IsObscured() && !!CanCut();
+    case IDS_APP_COPY:       return !!CanCopy() && !textfield_->IsObscured();
     case IDS_APP_PASTE:      return !textfield_->read_only() && !!CanPaste();
     case IDS_APP_SELECT_ALL: return !!CanSelectAll();
     default:                 NOTREACHED();
@@ -405,13 +414,13 @@ bool NativeTextfieldWin::GetAcceleratorForCommandId(int command_id,
   // anywhere so we need to check for them explicitly here.
   switch (command_id) {
     case IDS_APP_CUT:
-      *accelerator = views::Accelerator(ui::VKEY_X, false, true, false);
+      *accelerator = ui::Accelerator(ui::VKEY_X, false, true, false);
       return true;
     case IDS_APP_COPY:
-      *accelerator = views::Accelerator(ui::VKEY_C, false, true, false);
+      *accelerator = ui::Accelerator(ui::VKEY_C, false, true, false);
       return true;
     case IDS_APP_PASTE:
-      *accelerator = views::Accelerator(ui::VKEY_V, false, true, false);
+      *accelerator = ui::Accelerator(ui::VKEY_V, false, true, false);
       return true;
   }
   return container_view_->GetWidget()->GetAccelerator(command_id, accelerator);
@@ -485,7 +494,7 @@ void NativeTextfieldWin::UpdateAccessibleState(uint32 state_flag,
                    CHILDID_SELF);
 }
 
-void NativeTextfieldWin::UpdateAccessibleValue(const std::wstring& value) {
+void NativeTextfieldWin::UpdateAccessibleValue(const string16& value) {
   base::win::ScopedComPtr<IAccPropServices> pAccPropServices;
   HRESULT hr = CoCreateInstance(CLSID_AccPropServices, NULL, CLSCTX_SERVER,
       IID_IAccPropServices, reinterpret_cast<void**>(&pAccPropServices));
@@ -517,11 +526,10 @@ void NativeTextfieldWin::OnContextMenu(HWND window, const POINT& point) {
 }
 
 void NativeTextfieldWin::OnCopy() {
-  if (textfield_->IsPassword())
+  if (textfield_->IsObscured())
     return;
 
-  const std::wstring text(GetSelectedText());
-
+  const string16 text(GetSelectedText());
   if (!text.empty() && ViewsDelegate::views_delegate) {
     ui::ScopedClipboardWriter scw(
         ViewsDelegate::views_delegate->GetClipboard());
@@ -530,7 +538,7 @@ void NativeTextfieldWin::OnCopy() {
 }
 
 void NativeTextfieldWin::OnCut() {
-  if (textfield_->read_only() || textfield_->IsPassword())
+  if (textfield_->read_only() || textfield_->IsObscured())
     return;
 
   OnCopy();
@@ -856,7 +864,7 @@ void NativeTextfieldWin::OnNCPaint(HRGN region) {
   if (base::win::GetVersion() < base::win::VERSION_VISTA) {
     part = EP_EDITTEXT;
 
-    if (!textfield_->IsEnabled())
+    if (!textfield_->enabled())
       state = ETS_DISABLED;
     else if (textfield_->read_only())
       state = ETS_READONLY;
@@ -867,7 +875,7 @@ void NativeTextfieldWin::OnNCPaint(HRGN region) {
   } else {
     part = EP_EDITBORDER_HVSCROLL;
 
-    if (!textfield_->IsEnabled())
+    if (!textfield_->enabled())
       state = EPSHV_DISABLED;
     else if (GetFocus() == m_hWnd)
       state = EPSHV_FOCUSED;
@@ -879,7 +887,7 @@ void NativeTextfieldWin::OnNCPaint(HRGN region) {
   }
 
   int classic_state =
-      (!textfield_->IsEnabled() || textfield_->read_only()) ? DFCS_INACTIVE : 0;
+      (!textfield_->enabled() || textfield_->read_only()) ? DFCS_INACTIVE : 0;
 
   gfx::NativeThemeWin::instance()->PaintTextField(hdc, part, state,
                                                   classic_state, &window_rect,
@@ -908,7 +916,7 @@ void NativeTextfieldWin::OnPaste() {
                                     ui::Clipboard::BUFFER_STANDARD))
     return;
 
-  std::wstring clipboard_str;
+  string16 clipboard_str;
   clipboard->ReadText(ui::Clipboard::BUFFER_STANDARD, &clipboard_str);
   if (!clipboard_str.empty()) {
     string16 collapsed(CollapseWhitespace(clipboard_str, false));
@@ -1012,7 +1020,7 @@ void NativeTextfieldWin::OnAfterPossibleChange(bool should_redraw_text) {
     SetSel(new_sel);
   }
 
-  std::wstring new_text(GetText());
+  string16 new_text(GetText());
   if (new_text != text_before_change_) {
     if (ime_discard_composition_ && ime_composition_start_ >= 0 &&
         ime_composition_length_ > 0) {
@@ -1031,7 +1039,7 @@ void NativeTextfieldWin::OnAfterPossibleChange(bool should_redraw_text) {
     if (should_redraw_text) {
       CHARRANGE original_sel;
       GetSel(original_sel);
-      std::wstring text = GetText();
+      string16 text(GetText());
       ScopedSuspendUndo suspend_undo(GetTextObjectModel());
 
       SelectAll();
@@ -1150,11 +1158,8 @@ void NativeTextfieldWin::BuildContextMenu() {
 // static
 NativeTextfieldWrapper* NativeTextfieldWrapper::CreateWrapper(
     Textfield* field) {
-  if (views::Widget::IsPureViews()) {
-    NOTREACHED();
-    return NULL;
-    //return new NativeTextfieldViews(field);
-  }
+  if (views::Widget::IsPureViews())
+    return new NativeTextfieldViews(field);
   return new NativeTextfieldWin(field);
 }
 

@@ -1,9 +1,9 @@
-// Copyright (c) 2011 The Chromium Authors. All rights reserved.
+// Copyright (c) 2012 The Chromium Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef VIEWS_CONTROLS_TEXTFIELD_NATIVE_TEXTFIELD_WIN_H_
-#define VIEWS_CONTROLS_TEXTFIELD_NATIVE_TEXTFIELD_WIN_H_
+#ifndef UI_VIEWS_CONTROLS_TEXTFIELD_NATIVE_TEXTFIELD_WIN_H_
+#define UI_VIEWS_CONTROLS_TEXTFIELD_NATIVE_TEXTFIELD_WIN_H_
 #pragma once
 
 #include <atlbase.h>
@@ -15,10 +15,15 @@
 #include <tom.h>  // For ITextDocument, a COM interface to CRichEditCtrl
 #include <vsstyle.h>
 
+#include "base/string16.h"
 #include "base/win/scoped_comptr.h"
 #include "ui/base/models/simple_menu_model.h"
 #include "ui/gfx/insets.h"
 #include "ui/views/controls/textfield/native_textfield_wrapper.h"
+
+namespace gfx {
+class SelectionModel;
+}
 
 namespace views {
 
@@ -69,7 +74,7 @@ class NativeTextfieldWin
   virtual void UpdateBackgroundColor() OVERRIDE;
   virtual void UpdateReadOnly() OVERRIDE;
   virtual void UpdateFont() OVERRIDE;
-  virtual void UpdateIsPassword() OVERRIDE;
+  virtual void UpdateIsObscured() OVERRIDE;
   virtual void UpdateEnabled() OVERRIDE;
   virtual gfx::Insets CalculateInsets() OVERRIDE;
   virtual void UpdateHorizontalMargins() OVERRIDE;
@@ -80,15 +85,18 @@ class NativeTextfieldWin
   virtual bool IsIMEComposing() const OVERRIDE;
   virtual void GetSelectedRange(ui::Range* range) const OVERRIDE;
   virtual void SelectRange(const ui::Range& range) OVERRIDE;
+  virtual void GetSelectionModel(gfx::SelectionModel* sel) const OVERRIDE;
+  virtual void SelectSelectionModel(const gfx::SelectionModel& sel) OVERRIDE;
   virtual size_t GetCursorPosition() const OVERRIDE;
   virtual bool HandleKeyPressed(const views::KeyEvent& event) OVERRIDE;
   virtual bool HandleKeyReleased(const views::KeyEvent& event) OVERRIDE;
   virtual void HandleFocus() OVERRIDE;
   virtual void HandleBlur() OVERRIDE;
-  virtual TextInputClient* GetTextInputClient() OVERRIDE;
+  virtual ui::TextInputClient* GetTextInputClient() OVERRIDE;
   virtual void ApplyStyleRange(const gfx::StyleRange& style) OVERRIDE;
   virtual void ApplyDefaultStyle() OVERRIDE;
   virtual void ClearEditHistory() OVERRIDE;
+  virtual int GetFontHeight() OVERRIDE;
 
   // Overridden from ui::SimpleMenuModel::Delegate:
   virtual bool IsCommandIdChecked(int command_id) const OVERRIDE;
@@ -101,7 +109,7 @@ class NativeTextfieldWin
   // Update accessibility information.
   void InitializeAccessibilityInfo();
   void UpdateAccessibleState(uint32 state_flag, bool set_value);
-  void UpdateAccessibleValue(const std::wstring& value);
+  void UpdateAccessibleValue(const string16& value);
 
   // CWindowImpl
   BEGIN_MSG_MAP(Edit)
@@ -284,4 +292,4 @@ class NativeTextfieldWin
 
 }  // namespace views
 
-#endif  // VIEWS_CONTROLS_TEXTFIELD_NATIVE_TEXTFIELD_WIN_H_
+#endif  // UI_VIEWS_CONTROLS_TEXTFIELD_NATIVE_TEXTFIELD_WIN_H_

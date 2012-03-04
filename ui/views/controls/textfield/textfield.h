@@ -1,9 +1,9 @@
-// Copyright (c) 2011 The Chromium Authors. All rights reserved.
+// Copyright (c) 2012 The Chromium Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef VIEWS_CONTROLS_TEXTFIELD_TEXTFIELD_H_
-#define VIEWS_CONTROLS_TEXTFIELD_TEXTFIELD_H_
+#ifndef UI_VIEWS_CONTROLS_TEXTFIELD_TEXTFIELD_H_
+#define UI_VIEWS_CONTROLS_TEXTFIELD_TEXTFIELD_H_
 #pragma once
 
 #include "build/build_config.h"
@@ -31,6 +31,7 @@ struct StyleRange;
 
 namespace ui {
 class Range;
+class TextInputClient;
 }  // namespace ui
 
 namespace views {
@@ -46,7 +47,7 @@ class VIEWS_EXPORT Textfield : public View {
 
   enum StyleFlags {
     STYLE_DEFAULT   = 0,
-    STYLE_PASSWORD  = 1 << 0,
+    STYLE_OBSCURED  = 1 << 0,
     STYLE_LOWERCASE = 1 << 1
   };
 
@@ -62,12 +63,13 @@ class VIEWS_EXPORT Textfield : public View {
   bool read_only() const { return read_only_; }
   void SetReadOnly(bool read_only);
 
-  // Gets/Sets whether or not this Textfield is a password field.
-  // TODO(bryeung): Currently this is only used in
+  // Gets/sets the STYLE_OBSCURED bit, controlling whether characters in this
+  // Textfield are displayed as asterisks/bullets.
+  // TODO(bryeung): Currently SetObscured is only used in
   // chrome/browser/chromeos/options/wifi_config_view.cc, which is being
-  // converted to WebUI.  Please remove this when that happens.
-  bool IsPassword() const;
-  void SetPassword(bool password);
+  // converted to WebUI.  Please remove it when that happens.
+  bool IsObscured() const;
+  void SetObscured(bool obscured);
 
   // Gets/Sets the input type of this textfield.
   ui::TextInputType GetTextInputType() const;
@@ -186,6 +188,14 @@ class VIEWS_EXPORT Textfield : public View {
   // has to be called after the wrapper is created.
   void SelectRange(const ui::Range& range);
 
+  // Gets the selection model. This is views-implementation only and
+  // has to be called after the wrapper is created.
+  void GetSelectionModel(gfx::SelectionModel* sel) const;
+
+  // Selects the text given by |sel|. This is views-implementation only and
+  // has to be called after the wrapper is created.
+  void SelectSelectionModel(const gfx::SelectionModel& sel);
+
   // Returns the current cursor position. This is views-implementation
   // only and has to be called after the wrapper is created.
   size_t GetCursorPosition() const;
@@ -216,7 +226,6 @@ class VIEWS_EXPORT Textfield : public View {
   // Overridden from View:
   virtual void Layout() OVERRIDE;
   virtual gfx::Size GetPreferredSize() OVERRIDE;
-  virtual bool IsFocusable() const OVERRIDE;
   virtual void AboutToRequestFocusFromTabTraversal(bool reverse) OVERRIDE;
   virtual bool SkipDefaultKeyEventProcessing(const KeyEvent& e) OVERRIDE;
   virtual void OnEnabledChanged() OVERRIDE;
@@ -227,7 +236,7 @@ class VIEWS_EXPORT Textfield : public View {
   virtual void OnFocus() OVERRIDE;
   virtual void OnBlur() OVERRIDE;
   virtual void GetAccessibleState(ui::AccessibleViewState* state) OVERRIDE;
-  virtual TextInputClient* GetTextInputClient() OVERRIDE;
+  virtual ui::TextInputClient* GetTextInputClient() OVERRIDE;
 
  protected:
   virtual void ViewHierarchyChanged(bool is_add, View* parent,
@@ -303,4 +312,4 @@ class VIEWS_EXPORT Textfield : public View {
 
 }  // namespace views
 
-#endif  // VIEWS_CONTROLS_TEXTFIELD_TEXTFIELD_H_
+#endif  // UI_VIEWS_CONTROLS_TEXTFIELD_TEXTFIELD_H_
