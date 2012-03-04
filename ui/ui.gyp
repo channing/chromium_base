@@ -55,6 +55,12 @@
         'base/strings/app_locale_settings.grd',
         'gfx/codec/png_codec.h',
         'gfx/codec/png_codec.cc',
+	
+	'base/accelerators/accelerator.cc',
+        'base/accelerators/accelerator.h',
+        'base/accelerators/accelerator_manager.cc',
+        'base/accelerators/accelerator_manager.h',
+	
         'base/accessibility/accessibility_types.h',
         'base/accessibility/accessible_view_state.h',
         'base/accessibility/accessible_view_state.cc',
@@ -105,7 +111,6 @@
         'base/keycodes/keyboard_codes_win.h',
         'base/l10n/l10n_font_util.cc',
         'base/l10n/l10n_font_util.h',
-        'base/models/accelerator.h',
         'base/models/button_menu_item_model.cc',
         'base/models/button_menu_item_model.h',
         'base/models/combobox_model.h',
