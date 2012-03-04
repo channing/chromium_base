@@ -50,7 +50,7 @@ AnimationView::AnimationView(ui::Tween::Type type) {
 void AnimationView::OnPaint(gfx::Canvas* canvas){
     SkColor color = HasFocus() ? SkColorSetRGB(255, 0, 0) 
         : SkColorSetRGB(0, 255, 0);
-    canvas->FillRectInt(color, 2, 2, width() - 4 , height() - 4);
+    canvas->FillRect(color, gfx::Rect(2, 2, width() - 4 , height() - 4));
     View::OnPaint(canvas);
 }
 
@@ -202,7 +202,7 @@ int main(int argc, char** argv) {
     view.Init();
 
     views::AcceleratorHandler accelerator_handler;
-    MessageLoopForUI::current()->Run(&accelerator_handler);
+    MessageLoopForUI::current()->RunWithDispatcher(&accelerator_handler);
 
 #if defined(OS_WIN)
     OleUninitialize();

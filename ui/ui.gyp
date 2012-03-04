@@ -136,6 +136,8 @@
         'base/range/range_win.cc',
         'base/text/text_elider.cc',
         'base/text/text_elider.h',
+        'base/win/atl_module.h',
+        'base/win/events_win.cc',
         'base/win/hwnd_util.cc',
         'base/win/hwnd_util.h',
         'base/win/ime_input.cc',
