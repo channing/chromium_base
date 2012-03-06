@@ -100,7 +100,7 @@ ScrollBarView::ScrollBarView() : v_(0), h_(0) {
     v_scroll_bar_ = new views::NativeScrollBar(false);
     h_scroll_bar_ = new views::NativeScrollBar(true);
     label_ = new views::Label();
-    label_->SetColor(SkColorSetRGB(255, 0, 0));
+    label_->SetBackgroundColor(SkColorSetRGB(255, 0, 0));
     label_->SetMultiLine(true);
     v_scroll_bar_->set_controller(this);
     h_scroll_bar_->set_controller(this);
@@ -207,7 +207,7 @@ int main(int argc, char** argv) {
     view.Init();
 
     views::AcceleratorHandler accelerator_handler;
-    MessageLoopForUI::current()->Run(&accelerator_handler);
+    MessageLoopForUI::current()->RunWithDispatcher(&accelerator_handler);
 
 #if defined(OS_WIN)
     OleUninitialize();

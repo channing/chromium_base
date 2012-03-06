@@ -37,7 +37,7 @@ public:
 
     virtual bool OnMousePressed(const views::MouseEvent& event) OVERRIDE;
     virtual gfx::Size GetPreferredSize() OVERRIDE;
-    virtual bool GetTooltipText(const gfx::Point& p, string16* tooltip) OVERRIDE;
+    virtual bool GetTooltipText(const gfx::Point& p, string16* tooltip) const OVERRIDE;
     virtual void OnFocus() OVERRIDE;
 
     void SetTooltipText(const string16& tooltip_text);
@@ -70,7 +70,7 @@ void tooltipView::SetTooltipText() {
     TooltipTextChanged();
 }
 
-bool tooltipView::GetTooltipText(const gfx::Point& p, string16* tooltip) {
+bool tooltipView::GetTooltipText(const gfx::Point& p, string16* tooltip) const {
     DCHECK(tooltip);
     if (tooltip_text_.empty())
         return false;
@@ -206,7 +206,7 @@ int main(int argc, char** argv) {
     view.Init();
 
     views::AcceleratorHandler accelerator_handler;
-    MessageLoopForUI::current()->Run(&accelerator_handler);
+    MessageLoopForUI::current()->RunWithDispatcher(&accelerator_handler);
 
 #if defined(OS_WIN)
     OleUninitialize();
