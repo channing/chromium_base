@@ -3,7 +3,6 @@
 *.pyc
 .gclient_entries
 #generate folder
-Debug/
 Release/
 Purify/
 #visual studio files
@@ -23,3 +22,4 @@ Purify/
 *.aps
 #generate log file
 *.log
+*.swp
