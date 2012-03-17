@@ -234,6 +234,31 @@ private:
 	friend class base::RefCountedThreadSafe<Task1>;
 };
 
+class TaskFoo : public base::RefCountedThreadSafe<TaskFoo>
+{
+public:
+	TaskFoo(){
+
+	}
+
+	void Run() {
+		++count_;
+		if (count_ == 99999) {
+			AfxMessageBox(L"99999");
+		}
+	}
+
+private:
+	~TaskFoo() {}
+
+	static int count_;
+
+private:
+	friend class base::RefCountedThreadSafe<TaskFoo>;
+};
+
+int TaskFoo::count_ = 0;
+
 void CMfcChromiumMsgLoopTestDlg::OnBnClickedButton1()
 {
 	// TODO: Add your control notification handler code here
@@ -243,4 +268,9 @@ void CMfcChromiumMsgLoopTestDlg::OnBnClickedButton1()
 
 	scoped_refptr<Task1> task = new Task1;
 	CefThread::PostTask(CefThread::FILE, FROM_HERE, base::Bind(&Task1::Run, task));
+
+	for (int i = 0; i < 100000; ++i) {
+		scoped_refptr<TaskFoo> task = new TaskFoo;
+		CefThread::PostTask(CefThread::IO, FROM_HERE, base::Bind(&TaskFoo::Run, task));
+	}
 }
