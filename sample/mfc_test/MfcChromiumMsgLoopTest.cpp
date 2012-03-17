@@ -109,17 +109,18 @@ BOOL CMfcChromiumMsgLoopTestApp::InitInstance()
 	// such as the name of your company or organization
 	SetRegistryKey(_T("Local AppWizard-Generated Applications"));
 
-	//CMfcChromiumMsgLoopTestDlg dlg;
-	//m_pMainWnd = &dlg;
-	//dlg.Create( IDD_MFCCHROMIUMMSGLOOPTEST_DIALOG );
-	//
-	//dlg.ShowWindow( SW_SHOW );
+	//int* p = new int[10];
 
+	CMfcChromiumMsgLoopTestDlg dlg;
+	m_pMainWnd = &dlg;
+	dlg.Create( IDD_MFCCHROMIUMMSGLOOPTEST_DIALOG );
+	dlg.ShowWindow( SW_SHOW );
 
-	//base::AtExitManager exit_manager;
+	base::AtExitManager exit_manager;
 
-	//MfcProcess process;
-	//process.CreateThreads();
+	MfcProcess process;
+	process.CreateThreads();
+	process.RunMessageLoop();
 
 	//scoped_ptr<base::Thread> thread(new base::Thread("my name"));
 	//base::Thread::Options options;
@@ -129,9 +130,9 @@ BOOL CMfcChromiumMsgLoopTestApp::InitInstance()
 	//process.RunMessageLoop();
 
 
-	using namespace logging;
+	//using namespace logging;
 
-	base::AtExitManager atexit;
+	//base::AtExitManager atexit;
 
 
 	//// Platform thread test
@@ -153,14 +154,6 @@ BOOL CMfcChromiumMsgLoopTestApp::InitInstance()
 	//	DELETE_OLD_LOG_FILE,
 	//	DISABLE_DCHECK_FOR_NON_OFFICIAL_RELEASE_BUILDS);
 
-	// base::Thread test
-	//_CrtSetBreakAlloc(520);
-	base::Thread thread("");
-	thread.Start();
-	thread.Stop();
-	//int* p = new int(10);
-	//tracked_objects::ThreadData::ShutdownSingleThreadedCleanup(false);
-
 	//MessageLoop* messageloop = thread.message_loop();
 	//scoped_refptr<Foo> foo(new Foo());
 	//messageloop->PostTask(FROM_HERE, 
@@ -170,15 +163,6 @@ BOOL CMfcChromiumMsgLoopTestApp::InitInstance()
 	//base::PlatformThread::Sleep(2000);
 	//thread.Stop();
 
-
-	//MessageLoop main_message_loop(MessageLoop::TYPE_UI);
-	//MessageLoopForUI::current()->RunWithDispatcher(NULL);
-
-	//MSG msg;
-	//while( GetMessage( &msg, NULL, 0, 0 ) ) {
-	//	TranslateMessage( &msg );
-	//	DispatchMessage( &msg );
-	//}
 
 	// Delete the shell manager created above.
 	//if (pShellManager != NULL)

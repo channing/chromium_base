@@ -19,8 +19,8 @@ MfcProcess::~MfcProcess()
 void MfcProcess::CreateThreads()
 {
 	CreateUIThread();
-	//CreateFileThread();
-	//CreateIOThread();
+	CreateFileThread();
+	CreateIOThread();
 }
 
 void MfcProcess::RunMessageLoop()
@@ -41,7 +41,6 @@ void MfcProcess::CreateFileThread()
 	//options.message_loop_type = MessageLoop::TYPE_DEFAULT;
 	if (!m_FileThread->StartWithOptions(options))
 		return;
-	//m_FileThread->Stop();
 }
 
 void MfcProcess::CreateIOThread()

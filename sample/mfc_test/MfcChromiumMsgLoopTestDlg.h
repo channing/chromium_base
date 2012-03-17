@@ -34,4 +34,5 @@ public:
 	afx_msg void OnDestroy();
 	virtual void OnOK();
 	virtual void OnCancel();
+	afx_msg void OnBnClickedButton1();
 };

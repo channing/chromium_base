@@ -6,6 +6,10 @@
 #include "MfcChromiumMsgLoopTest.h"
 #include "MfcChromiumMsgLoopTestDlg.h"
 #include "afxdialogex.h"
+#include "base\memory\ref_counted.h"
+#include "base\threading\platform_thread.h"
+#include "cef_thread.h"
+#include "base/bind.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -64,6 +68,7 @@ BEGIN_MESSAGE_MAP(CMfcChromiumMsgLoopTestDlg, CDialogEx)
 	ON_WM_PAINT()
 	ON_WM_QUERYDRAGICON()
 	ON_WM_DESTROY()
+	ON_BN_CLICKED(IDC_BUTTON1, &CMfcChromiumMsgLoopTestDlg::OnBnClickedButton1)
 END_MESSAGE_MAP()
 
 
@@ -180,4 +185,62 @@ void CMfcChromiumMsgLoopTestDlg::OnCancel()
 	CDialogEx::OnCancel();
 
 	DestroyWindow();
+}
+
+class Task2 : public base::RefCountedThreadSafe<Task2>
+{
+public:
+	Task2(int thread_id, std::string name)
+		:thread_id_(thread_id),
+		name_(name)
+	{
+
+	}
+
+	void Run() {
+		CString msg;
+		CString sub(name_.c_str());
+		msg += sub;
+		sub.Format(L"\n%d\n%d\n", thread_id_, base::PlatformThread::CurrentId());
+		msg += sub;
+		AfxMessageBox(msg);
+	}
+
+private:
+	~Task2() {}
+	int thread_id_;
+	std::string name_;
+
+private:
+	friend class base::RefCountedThreadSafe<Task2>;
+};
+
+class Task1 : public base::RefCountedThreadSafe<Task1>
+{
+public:
+	Task1(){
+
+	}
+
+	void Run() {
+		scoped_refptr<Task2> task2 = new Task2(base::PlatformThread::CurrentId(), base::PlatformThread::GetName());
+		CefThread::PostTask(CefThread::UI, FROM_HERE, base::Bind(&Task2::Run, task2));
+	}
+
+private:
+	~Task1() {}
+
+private:
+	friend class base::RefCountedThreadSafe<Task1>;
+};
+
+void CMfcChromiumMsgLoopTestDlg::OnBnClickedButton1()
+{
+	// TODO: Add your control notification handler code here
+	CString msg;
+	msg.Format(L"Current thread id: %d", base::PlatformThread::CurrentId());
+	AfxMessageBox(msg);
+
+	scoped_refptr<Task1> task = new Task1;
+	CefThread::PostTask(CefThread::FILE, FROM_HERE, base::Bind(&Task1::Run, task));
 }
