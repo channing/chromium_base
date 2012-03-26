@@ -3,3 +3,15 @@ base\tracked_objects.cc (396)
 base\tracked_objects.cc (340)
 base\tracked_objects.cc (344)
 base\tracked_objects.cc (377)
+
+//// singletons
+ui\views\focus\focus_manager_factory.cc (43)
+base\win\windows_version.cc (21)
+ui\base\view_prop.cc (21)
+ui\views\view.cc (427)
+
+//// static variables
+ui\views\window\dialog_client_view.cc (579)
+ui\gfx\native_theme_win.cc (195)
+ui\gfx\canvas_skia.cc (206)
+ui\gfx\canvas_skia.cc (209)

@@ -9,6 +9,9 @@
         'use_of_mfc': 1,
         #'no_minmax': 0,
       },
+      'dependencies': [
+        '../views.gyp:locales',
+      ],
       'sources': [
         'MfcChromiumMsgLoopTest.cpp',
         'MfcChromiumMsgLoopTest.h',

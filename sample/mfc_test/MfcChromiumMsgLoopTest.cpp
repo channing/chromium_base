@@ -16,6 +16,9 @@
 #include "base/memory/scoped_ptr.h"
 #include "base/bind.h"
 #include "base/tracked_objects.h"
+#include "ui/base/resource/resource_bundle.h"
+#include "ui/base/ui_base_paths.h"
+#include "base/process_util.h"
 
 
 #ifdef _DEBUG
@@ -110,17 +113,27 @@ BOOL CMfcChromiumMsgLoopTestApp::InitInstance()
 	SetRegistryKey(_T("Local AppWizard-Generated Applications"));
 
 	//int* p = new int[10];
+	base::AtExitManager exit_manager;
+
+	OleInitialize(NULL);
+
+	CommandLine::Init(0, NULL);
+    base::EnableTerminationOnHeapCorruption();
+
+	ui::RegisterPathProvider();
+    ui::ResourceBundle::InitSharedInstance("en-US");
 
 	CMfcChromiumMsgLoopTestDlg dlg;
 	m_pMainWnd = &dlg;
 	dlg.Create( IDD_MFCCHROMIUMMSGLOOPTEST_DIALOG );
 	dlg.ShowWindow( SW_SHOW );
 
-	base::AtExitManager exit_manager;
-
 	MfcProcess process;
 	process.CreateThreads();
 	process.RunMessageLoop();
+
+	ui::ResourceBundle::CleanupSharedInstance();
+	CommandLine::Reset();
 
 	//scoped_ptr<base::Thread> thread(new base::Thread("my name"));
 	//base::Thread::Options options;

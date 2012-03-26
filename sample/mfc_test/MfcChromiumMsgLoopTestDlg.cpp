@@ -10,6 +10,8 @@
 #include "base\threading\platform_thread.h"
 #include "cef_thread.h"
 #include "base/bind.h"
+#include "ui/views/widget/widget.h"
+
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -69,6 +71,7 @@ BEGIN_MESSAGE_MAP(CMfcChromiumMsgLoopTestDlg, CDialogEx)
 	ON_WM_QUERYDRAGICON()
 	ON_WM_DESTROY()
 	ON_BN_CLICKED(IDC_BUTTON1, &CMfcChromiumMsgLoopTestDlg::OnBnClickedButton1)
+	ON_BN_CLICKED(IDC_BTN_SHOWDIALOG, &CMfcChromiumMsgLoopTestDlg::OnBnClickedBtnShowdialog)
 END_MESSAGE_MAP()
 
 
@@ -164,7 +167,8 @@ void CMfcChromiumMsgLoopTestDlg::OnDestroy()
 	CDialogEx::OnDestroy();
 
 	// TODO: Add your message handler code here
-	PostQuitMessage(0);
+	//PostQuitMessage(0);
+	MessageLoop::current()->Quit();
 }
 
 
@@ -273,4 +277,27 @@ void CMfcChromiumMsgLoopTestDlg::OnBnClickedButton1()
 		scoped_refptr<TaskFoo> task = new TaskFoo;
 		CefThread::PostTask(CefThread::IO, FROM_HERE, base::Bind(&TaskFoo::Run, task));
 	}
+}
+
+void TestDialogView::DeleteDelegate()
+{
+	delete this;
+}
+
+gfx::Size TestDialogView::GetPreferredSize()
+{
+	return gfx::Size(300, 200);
+}
+
+views::View* TestDialogView::GetContentsView()
+{
+	return this;
+}
+
+void CMfcChromiumMsgLoopTestDlg::OnBnClickedBtnShowdialog()
+{
+	// TODO: Add your control notification handler code here
+	views::DialogDelegateView* default_dialog = new TestDialogView;
+	views::Widget* test_dlg = views::Widget::CreateWindowWithParent(default_dialog, m_hWnd);
+	test_dlg->Show();
 }

@@ -5,6 +5,7 @@
 #pragma once
 
 #include "afxdialogex.h"
+#include "ui/views/window/dialog_delegate.h"
 
 // CMfcChromiumMsgLoopTestDlg dialog
 class CMfcChromiumMsgLoopTestDlg : public CDialogEx
@@ -35,4 +36,14 @@ public:
 	virtual void OnOK();
 	virtual void OnCancel();
 	afx_msg void OnBnClickedButton1();
+	afx_msg void OnBnClickedBtnShowdialog();
+};
+
+
+class TestDialogView : public views::DialogDelegateView {
+public:
+	virtual void DeleteDelegate() OVERRIDE;
+	virtual gfx::Size GetPreferredSize() OVERRIDE;
+
+	virtual views::View* GetContentsView() OVERRIDE;
 };

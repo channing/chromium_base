@@ -1,3 +1,5 @@
+#include <vld.h>
+
 #include "base/at_exit.h"
 #include "base/command_line.h"
 #include "base/process_util.h"
@@ -182,6 +184,10 @@ int main(int argc, char** argv) {
 
     views::AcceleratorHandler accelerator_handler;
     MessageLoopForUI::current()->RunWithDispatcher(&accelerator_handler);
+
+	ui::ResourceBundle::CleanupSharedInstance();
+	CommandLine::Reset();
+
 
 #if defined(OS_WIN)
     OleUninitialize();
