@@ -11,6 +11,10 @@
 #include "cef_thread.h"
 #include "base/bind.h"
 #include "ui/views/widget/widget.h"
+#include "ui/views/controls/menu/menu_item_view.h"
+#include "ui/views/controls/menu/menu_delegate.h"
+#include "ui/views/controls/menu/menu_runner.h"
+#include "menu/menu_test.h"
 
 
 #ifdef _DEBUG
@@ -72,6 +76,8 @@ BEGIN_MESSAGE_MAP(CMfcChromiumMsgLoopTestDlg, CDialogEx)
 	ON_WM_DESTROY()
 	ON_BN_CLICKED(IDC_BUTTON1, &CMfcChromiumMsgLoopTestDlg::OnBnClickedButton1)
 	ON_BN_CLICKED(IDC_BTN_SHOWDIALOG, &CMfcChromiumMsgLoopTestDlg::OnBnClickedBtnShowdialog)
+	ON_BN_CLICKED(IDC_BTN_SHOWMENU, &CMfcChromiumMsgLoopTestDlg::OnBnClickedBtnShowmenu)
+	ON_WM_HOTKEY()
 END_MESSAGE_MAP()
 
 
@@ -107,6 +113,8 @@ BOOL CMfcChromiumMsgLoopTestDlg::OnInitDialog()
 	SetIcon(m_hIcon, FALSE);		// Set small icon
 
 	// TODO: Add extra initialization here
+
+	RegisterHotKey(GetSafeHwnd(), 0, MOD_CONTROL | MOD_SHIFT, 'W');
 
 	return TRUE;  // return TRUE  unless you set the focus to a control
 }
@@ -300,4 +308,86 @@ void CMfcChromiumMsgLoopTestDlg::OnBnClickedBtnShowdialog()
 	views::DialogDelegateView* default_dialog = new TestDialogView;
 	views::Widget* test_dlg = views::Widget::CreateWindowWithParent(default_dialog, m_hWnd);
 	test_dlg->Show();
+}
+
+class TestMenuDelegate : public views::MenuDelegate {
+public:
+
+	virtual void ExecuteCommand(int id)  {
+		CString msg;
+		msg.Format(L"You selected item %d", id);
+		AfxMessageBox(msg);
+	}
+
+};
+
+namespace {
+	void ShowTestMenu() {
+		scoped_ptr<TestMenuDelegate> menu_delegate;
+		menu_delegate.reset(new TestMenuDelegate());
+		views::MenuItemView* root_item = new views::MenuItemView(menu_delegate.get());
+		int id = 100;
+		root_item->AppendMenuItem(id++, L"first item", views::MenuItemView::NORMAL);
+		root_item->AppendMenuItem(id++, L"second item", views::MenuItemView::NORMAL);
+		root_item->AppendSeparator();
+		root_item->AppendSubMenu(id, L"submenu");
+
+
+		scoped_ptr<views::MenuRunner> menu_runner;
+		menu_runner.reset(new views::MenuRunner(root_item));
+		menu_runner->RunMenuAt(NULL, NULL, gfx::Rect(500, 500, 500, 500),
+			views::MenuItemView::TOPRIGHT, views::MenuRunner::HAS_MNEMONICS);
+	}
+}
+
+void CMfcChromiumMsgLoopTestDlg::OnBnClickedBtnShowmenu()
+{
+	// TODO: Add your control notification handler code here
+	ShowOwnTestMenu();
+}
+
+static BOOL ForceForegroundWindow( HWND hwnd )
+{
+    HWND hwndForeground = GetForegroundWindow();
+    if ( hwnd == hwndForeground ) {
+        return TRUE;
+    }
+
+    if ( IsIconic( hwnd ) ) {
+        ShowWindow( hwnd, SW_RESTORE );
+    }
+
+    //Important:try the simplest way first
+    SetForegroundWindow( hwnd );
+    hwndForeground = GetForegroundWindow();
+    if ( hwnd == hwndForeground ) {
+        return TRUE;
+    }
+
+    DWORD dwThreadHwnd = GetWindowThreadProcessId( hwnd, NULL );
+    DWORD dwThreadForeground = GetWindowThreadProcessId( hwndForeground, NULL );
+
+    BOOL bRet = FALSE;
+    if ( dwThreadHwnd != dwThreadForeground ) {
+        if ( AttachThreadInput( dwThreadForeground, dwThreadHwnd, TRUE ) ) {
+            bRet = SetForegroundWindow( hwnd );
+            AttachThreadInput( dwThreadForeground, dwThreadHwnd, FALSE );
+        }
+    }
+    else {
+        bRet = SetForegroundWindow( hwnd );
+    }
+
+    return bRet;
+}
+
+void CMfcChromiumMsgLoopTestDlg::OnHotKey(UINT nHotKeyId, UINT nKey1, UINT nKey2)
+{
+	// TODO: Add your message handler code here and/or call default
+    ShowWindow(SW_HIDE);
+    ShowWindow(SW_SHOW);
+    ForceForegroundWindow(GetSafeHwnd());
+	//ShowTestMenu();
+
+	CDialogEx::OnHotKey(nHotKeyId, nKey1, nKey2);
 }
