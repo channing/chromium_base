@@ -8,7 +8,9 @@ MenuItemView::MenuItemView()
 	: controller_(NULL),
 	  parent_menu_item_(NULL),
 	  selected_(false),
-	  submenu_(NULL)
+	  submenu_(NULL),
+      requested_menu_position_(POSITION_BEST_FIT),
+      actual_menu_position_(requested_menu_position_)
 {
 	set_id(kMenuItemViewID);
 }

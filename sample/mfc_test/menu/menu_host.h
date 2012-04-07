@@ -24,6 +24,8 @@ public:
 	// Returns true if the menu host is visible.
 	bool IsMenuHostVisible();
 
+  // Hides the menu host.
+  void HideMenuHost();
 	// Destroys and deletes the menu host.
 	void DestroyMenuHost();
 

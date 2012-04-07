@@ -4,13 +4,12 @@
 #include "submenu_view.h"
 #include "menu_controller.h"
 
-void ShowOwnTestMenu() {
+void ShowOwnTestMenu(int x, int y) {
 	scoped_ptr<MenuItemView> root(new MenuItemView());
 	root->AppendMenuItem(new TestMenuItemView());
 	root->AppendMenuItem(new TestMenuItemView());
 	root->AppendMenuItem(new TestMenuItemView());
-	gfx::Rect bounds(500, 500, 0, 0);
     scoped_ptr<MenuController> controller(new MenuController);
-    controller->Run(NULL, root.get(), bounds, MenuItemView::TOPRIGHT);
+    controller->Run(NULL, root.get(), gfx::Rect(x, y, 0, 0), MenuItemView::TOPLEFT);
 }
 

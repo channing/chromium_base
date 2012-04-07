@@ -1,3 +1,3 @@
 #pragma once
 
-void ShowOwnTestMenu();
+void ShowOwnTestMenu(int x, int y);

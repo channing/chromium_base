@@ -343,7 +343,11 @@ namespace {
 void CMfcChromiumMsgLoopTestDlg::OnBnClickedBtnShowmenu()
 {
 	// TODO: Add your control notification handler code here
-	ShowOwnTestMenu();
+    CRect btn;
+    ::GetClientRect(GetDlgItem(IDC_BTN_SHOWMENU)->GetSafeHwnd(), &btn);
+    CPoint pt(btn.left, btn.bottom);
+    ::ClientToScreen(GetDlgItem(IDC_BTN_SHOWMENU)->GetSafeHwnd(), &pt);
+	ShowOwnTestMenu(pt.x, pt.y);
 }
 
 static BOOL ForceForegroundWindow( HWND hwnd )
@@ -384,10 +388,10 @@ static BOOL ForceForegroundWindow( HWND hwnd )
 void CMfcChromiumMsgLoopTestDlg::OnHotKey(UINT nHotKeyId, UINT nKey1, UINT nKey2)
 {
 	// TODO: Add your message handler code here and/or call default
-    ShowWindow(SW_HIDE);
-    ShowWindow(SW_SHOW);
-    ForceForegroundWindow(GetSafeHwnd());
-	//ShowTestMenu();
+    //ShowWindow(SW_HIDE);
+    //ShowWindow(SW_SHOW);
+    //ForceForegroundWindow(GetSafeHwnd());
+	ShowTestMenu();
 
 	CDialogEx::OnHotKey(nHotKeyId, nKey1, nKey2);
 }
