@@ -182,11 +182,11 @@ bool MenuController::Dispatch(const MSG& msg) {
 
         //                     // NOTE: focus wasn't changed when the menu was shown. As such, don't
         //                     // dispatch key events otherwise the focused window will get the events.
-        //case WM_KEYDOWN: {
-        //    bool result = OnKeyDown(ui::KeyboardCodeFromNative(msg));
-        //    TranslateMessage(&msg);
-        //    return result;
-        //                 }
+    case WM_KEYDOWN: {
+        bool result = OnKeyDown(ui::KeyboardCodeFromNative(msg));
+        TranslateMessage(&msg);
+        return result;
+                     }
         //case WM_CHAR:
         //    return !SelectByChar(static_cast<char16>(msg.wParam));
         //    
@@ -214,6 +214,75 @@ bool MenuController::Dispatch(const MSG& msg) {
     return exit_type_ == EXIT_NONE;
 }
 
+
+bool MenuController::OnKeyDown(ui::KeyboardCode key_code) {
+  switch (key_code) {
+    case ui::VKEY_UP:
+      IncrementSelection(-1);
+      break;
+
+    case ui::VKEY_DOWN:
+      IncrementSelection(1);
+      break;
+
+    //// Handling of VK_RIGHT and VK_LEFT is different depending on the UI
+    //// layout.
+    //case ui::VKEY_RIGHT:
+    //  if (base::i18n::IsRTL())
+    //    CloseSubmenu();
+    //  else
+    //    OpenSubmenuChangeSelectionIfCan();
+    //  break;
+
+    //case ui::VKEY_LEFT:
+    //  if (base::i18n::IsRTL())
+    //    OpenSubmenuChangeSelectionIfCan();
+    //  else
+    //    CloseSubmenu();
+    //  break;
+
+    //case ui::VKEY_SPACE:
+    //  if (SendAcceleratorToHotTrackedView() == ACCELERATOR_PROCESSED_EXIT)
+    //    return false;
+    //  break;
+
+    //case ui::VKEY_RETURN:
+    //  if (pending_state_.item) {
+    //    if (pending_state_.item->HasSubmenu()) {
+    //      OpenSubmenuChangeSelectionIfCan();
+    //    } else {
+    //      SendAcceleratorResultType result = SendAcceleratorToHotTrackedView();
+    //      if (result == ACCELERATOR_NOT_PROCESSED &&
+    //          pending_state_.item->enabled()) {
+    //        Accept(pending_state_.item, 0);
+    //        return false;
+    //      } else if (result == ACCELERATOR_PROCESSED_EXIT) {
+    //        return false;
+    //      }
+    //    }
+    //  }
+    //  break;
+
+    //case ui::VKEY_ESCAPE:
+    //  if (!state_.item->GetParentMenuItem() ||
+    //      (!state_.item->GetParentMenuItem()->GetParentMenuItem() &&
+    //       (!state_.item->HasSubmenu() ||
+    //        !state_.item->GetSubmenu()->IsShowing()))) {
+    //    // User pressed escape and only one menu is shown, cancel it.
+    //    Cancel(EXIT_OUTERMOST);
+    //    return false;
+    //  }
+    //  CloseSubmenu();
+    //  break;
+
+    case VK_APPS:
+      break;
+
+    default:
+      break;
+  }
+  return true;
+}
 MenuController::MenuController() :
 showing_(false),
     exit_type_(EXIT_NONE),
@@ -554,6 +623,58 @@ gfx::Rect MenuController::CalculateMenuBounds(MenuItemView* item,
 int MenuController::MenuDepth(MenuItemView* item) {
     return item ? (MenuDepth(item->GetParentMenuItem()) + 1) : 0;
 }
+
+void MenuController::IncrementSelection(int delta) {
+  MenuItemView* item = pending_state_.item;
+  DCHECK(item);
+  if (pending_state_.submenu_open && item->HasSubmenu() &&
+      item->GetSubmenu()->IsShowing()) {
+    // A menu is selected and open, but none of its children are selected,
+    // select the first menu item.
+    if (item->GetSubmenu()->GetMenuItemCount()) {
+      SetSelection(item->GetSubmenu()->GetMenuItemAt(0), SELECTION_DEFAULT);
+      //ScrollToVisible(item->GetSubmenu()->GetMenuItemAt(0));
+      return;
+    }
+  }
+
+  MenuItemView* parent = item->GetParentMenuItem();
+  if (parent) {
+    int parent_count = parent->GetSubmenu()->GetMenuItemCount();
+    if (parent_count > 1) {
+      for (int i = 0; i < parent_count; ++i) {
+        if (parent->GetSubmenu()->GetMenuItemAt(i) == item) {
+          MenuItemView* to_select =
+              FindNextSelectableMenuItem(parent, i, delta);
+          if (!to_select)
+            break;
+          //ScrollToVisible(to_select);
+          SetSelection(to_select, SELECTION_DEFAULT);
+          break;
+        }
+      }
+    }
+  }
+}
+
+MenuItemView* MenuController::FindNextSelectableMenuItem(MenuItemView* parent,
+                                                         int index,
+                                                         int delta) {
+  int start_index = index;
+  int parent_count = parent->GetSubmenu()->GetMenuItemCount();
+  // Loop through the menu items skipping any invisible menus. The loop stops
+  // when we wrap or find a visible child.
+  do {
+    index = (index + delta + parent_count) % parent_count;
+    if (index == start_index)
+      return NULL;
+    MenuItemView* child = parent->GetSubmenu()->GetMenuItemAt(index);
+    if (child->visible())
+      return child;
+  } while (index != start_index);
+  return NULL;
+}
+
 void MenuController::SetExitType(ExitType type) {
     exit_type_ = type;
 }

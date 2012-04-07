@@ -28,7 +28,7 @@ friend class MenuController;
     // ID used to identify menu items.
     static const int kMenuItemViewID;
 
-    MenuItemView();
+    MenuItemView(MenuItemView* parent);
     virtual ~MenuItemView();
 
     void AppendMenuItem(views::View* view);

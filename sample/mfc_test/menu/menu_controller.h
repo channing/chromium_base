@@ -91,6 +91,11 @@ private:
     void SetSelection(MenuItemView* menu_item, int selection_types);
     virtual bool Dispatch(const MSG& msg) OVERRIDE;
 
+  // Key processing. The return value of this is returned from Dispatch.
+  // In other words, if this returns false (which happens if escape was
+  // pressed, or a matching mnemonic was found) the message loop returns.
+  bool OnKeyDown(ui::KeyboardCode key_code);
+
   void UpdateInitialLocation(const gfx::Rect& bounds,
                              MenuItemView::AnchorPosition position);
     // Opens/Closes the necessary menus such that state_ matches that of
@@ -138,6 +143,16 @@ private:
 
     // Returns the depth of the menu.
     static int MenuDepth(MenuItemView* item);
+
+  // Selects the next/previous menu item.
+  void IncrementSelection(int delta);
+
+  // Returns the next selectable child menu item of |parent| starting at |index|
+  // and incrementing index by |delta|. If there are no more selected menu items
+  // NULL is returned.
+  MenuItemView* FindNextSelectableMenuItem(MenuItemView* parent,
+                                           int index,
+                                           int delta);
     // Sets exit type.
     void SetExitType(ExitType type);
 

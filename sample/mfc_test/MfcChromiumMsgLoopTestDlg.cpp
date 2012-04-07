@@ -348,6 +348,8 @@ void CMfcChromiumMsgLoopTestDlg::OnBnClickedBtnShowmenu()
     CPoint pt(btn.left, btn.bottom);
     ::ClientToScreen(GetDlgItem(IDC_BTN_SHOWMENU)->GetSafeHwnd(), &pt);
 	ShowOwnTestMenu(pt.x, pt.y);
+
+    //ShowTestMenu();
 }
 
 static BOOL ForceForegroundWindow( HWND hwnd )

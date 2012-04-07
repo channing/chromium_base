@@ -4,9 +4,9 @@
 
 const int MenuItemView::kMenuItemViewID = 1201;
 
-MenuItemView::MenuItemView()
+MenuItemView::MenuItemView(MenuItemView* parent)
 	: controller_(NULL),
-	  parent_menu_item_(NULL),
+	  parent_menu_item_(parent),
 	  selected_(false),
 	  submenu_(NULL),
       requested_menu_position_(POSITION_BEST_FIT),
@@ -21,6 +21,7 @@ MenuItemView::~MenuItemView() {
 
 void MenuItemView::SetSelected(bool selected) {
 	selected_ = selected;
+    SchedulePaint();
 }
 
 void MenuItemView::AppendMenuItem(views::View* view) {
