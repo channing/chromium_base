@@ -153,6 +153,13 @@ private:
   MenuItemView* FindNextSelectableMenuItem(MenuItemView* parent,
                                            int index,
                                            int delta);
+
+  // If the selected item has a submenu and it isn't currently open, the
+  // the selection is changed such that the menu opens immediately.
+  void OpenSubmenuChangeSelectionIfCan();
+
+  // If possible, closes the submenu.
+  void CloseSubmenu();
     // Sets exit type.
     void SetExitType(ExitType type);
 

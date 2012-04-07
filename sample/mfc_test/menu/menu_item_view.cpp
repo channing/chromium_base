@@ -25,6 +25,10 @@ void MenuItemView::SetSelected(bool selected) {
 }
 
 void MenuItemView::AppendMenuItem(views::View* view) {
+    if (view->id() == kMenuItemViewID) {
+        MenuItemView* menu_item = static_cast<MenuItemView*>(view);
+        DCHECK(menu_item->GetParentMenuItem() == this);
+    }
 	if (!submenu_)
 		CreateSubmenu();
 	submenu_->AddChildView(view);

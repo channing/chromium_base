@@ -5,10 +5,18 @@
 #include "menu_controller.h"
 
 void ShowOwnTestMenu(int x, int y) {
-	scoped_ptr<MenuItemView> root(new MenuItemView(NULL));
-	root->AppendMenuItem(new TestMenuItemView(root.get()));
-	root->AppendMenuItem(new TestMenuItemView(root.get()));
-	root->AppendMenuItem(new TestMenuItemView(root.get()));
+	MenuItemView* root = new MenuItemView(NULL);
+	root->AppendMenuItem(new TestMenuItemView(root));
+	root->AppendMenuItem(new TestMenuItemView(root));
+    MenuItemView* submenu1 = new TestMenuItemView(root);
+    submenu1->AppendMenuItem(new TestMenuItemView(submenu1));
+    submenu1->AppendMenuItem(new TestMenuItemView(submenu1));
+    submenu1->AppendMenuItem(new TestMenuItemView(submenu1));
+    submenu1->AppendMenuItem(new TestMenuItemView(submenu1));
+    root->AppendMenuItem(submenu1);
+	root->AppendMenuItem(new TestMenuItemView(root));
+
+    scoped_ptr<MenuItemView> root_holder(root);
     scoped_ptr<MenuController> controller(new MenuController);
-    controller->Run(NULL, root.get(), gfx::Rect(x, y, 0, 0), MenuItemView::TOPLEFT);
+    controller->Run(NULL, root, gfx::Rect(x, y, 0, 0), MenuItemView::TOPLEFT);
 }
