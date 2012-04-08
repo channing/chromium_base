@@ -16,6 +16,12 @@ void ShowOwnTestMenu(int x, int y) {
     root->AppendMenuItem(submenu1);
 	root->AppendMenuItem(new TestMenuItemView(root));
 
+    MenuItemView* submenu2 = new TestMenuItemView(root);
+    root->AppendMenuItem(submenu2);
+    for (int i = 0; i < 40; ++i) {
+        submenu2->AppendMenuItem(new TestMenuItemView(submenu2));
+    }
+
     scoped_ptr<MenuItemView> root_holder(root);
     scoped_ptr<MenuController> controller(new MenuController);
     controller->Run(NULL, root, gfx::Rect(x, y, 0, 0), MenuItemView::TOPLEFT);

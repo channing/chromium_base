@@ -6,22 +6,29 @@
 #include "menu_host.h"
 #include "menu_item_view.h"
 #include "menu_controller.h"
+#include "menu_scroll_view_container.h"
 
 namespace {
     const int kMenuWidth = 400;
 }
 
 const int SubmenuView::kSubmenuBorderSize = 3;
+
 SubmenuView::SubmenuView(MenuItemView* parent)
     : parent_menu_item_(parent),
-    host_(NULL)
+    host_(NULL),
+    scroll_view_container_(NULL)
 {
     DCHECK(parent);
     set_parent_owned(false);
 }
 
 SubmenuView::~SubmenuView() {
-    Close();
+  // The menu may not have been closed yet (it will be hidden, but not
+  // necessarily closed).
+  Close();
+
+  delete scroll_view_container_;
 }
 
 int SubmenuView::GetMenuItemCount() {
@@ -45,6 +52,14 @@ MenuItemView* SubmenuView::GetMenuItemAt(int index) {
 }
 
 void SubmenuView::Layout() {
+    // We're in a ScrollView, and need to set our width/height ourselves.
+    if (!parent())
+        return;
+
+    // Use our current y, unless it means part of the menu isn't visible anymore.
+    gfx::Size pref = GetPreferredSize();
+    SetBounds(x(), y(), parent()->width(), pref.height());
+
     gfx::Insets insets = GetInsets();
     int x = insets.left();
     int y = insets.top();
@@ -78,16 +93,20 @@ gfx::Size SubmenuView::GetPreferredSize() {
         height + insets.height());
 }
 
-
 bool SubmenuView::IsShowing() {
   return host_ && host_->IsMenuHostVisible();
 }
+
 void SubmenuView::ShowAt(views::Widget* parent, const gfx::Rect& bounds) {
     if (host_) {
         host_->Show();
     } else {
         host_ = new MenuHost(this);
-        host_->InitMenuHost(parent, bounds, this);
+        // Force construction of the scroll view container.
+        GetScrollViewContainer();
+        // Make sure the first row is visible.
+        ScrollRectToVisible(gfx::Rect(gfx::Size(1, 1)));
+        host_->InitMenuHost(parent, bounds, scroll_view_container_);
     }
 }
 
@@ -112,15 +131,14 @@ MenuItemView* SubmenuView::GetMenuItem() const {
     return parent_menu_item_;
 }
 
-
-//MenuScrollViewContainer* SubmenuView::GetScrollViewContainer() {
-//  if (!scroll_view_container_) {
-//    scroll_view_container_ = new MenuScrollViewContainer(this);
-//    // Otherwise MenuHost would delete us.
-//    scroll_view_container_->set_parent_owned(false);
-//  }
-//  return scroll_view_container_;
-//}
+MenuScrollViewContainer* SubmenuView::GetScrollViewContainer() {
+  if (!scroll_view_container_) {
+    scroll_view_container_ = new MenuScrollViewContainer(this);
+    // Otherwise MenuHost would delete us.
+    scroll_view_container_->set_parent_owned(false);
+  }
+  return scroll_view_container_;
+}
 
 void SubmenuView::MenuHostDestroyed() {
     host_ = NULL;

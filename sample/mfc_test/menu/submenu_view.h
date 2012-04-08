@@ -4,6 +4,7 @@
 
 class MenuItemView;
 class MenuHost;
+class MenuScrollViewContainer;
 
 class SubmenuView : public views::View {
 public:
@@ -49,8 +50,9 @@ public:
     MenuItemView* GetMenuItem() const;
 
 
-    //// Returns the container for the SubmenuView.
-    //MenuScrollViewContainer* GetScrollViewContainer();
+
+    // Returns the container for the SubmenuView.
+    MenuScrollViewContainer* GetScrollViewContainer();
 
     // Invoked if the menu is prematurely destroyed. This can happen if the window
     // closes while the menu is shown. If invoked the SubmenuView must drop all
@@ -69,6 +71,10 @@ private:
     // Widget subclass used to show the children. This is deleted when we invoke
     // |DestroyMenuHost|, or |MenuHostDestroyed| is invoked back on us.
     MenuHost* host_;
+
+
+    // Ancestor of the SubmenuView, lazily created.
+    MenuScrollViewContainer* scroll_view_container_;
 
     DISALLOW_COPY_AND_ASSIGN(SubmenuView);
 };

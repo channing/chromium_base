@@ -35,6 +35,8 @@
         'menu/menu_item_view_impl.h',
         'menu/menu_runner.cpp',
         'menu/menu_runner.h',
+        'menu/menu_scroll_view_container.cpp',
+        'menu/menu_scroll_view_container.h',
         'menu/menu_test.cpp',
         'menu/menu_test.h',
         'menu/submenu_view.cpp',

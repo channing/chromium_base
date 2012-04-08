@@ -2,6 +2,7 @@
 #include "menu_controller.h"
 #include "menu_item_view.h"
 #include "submenu_view.h"
+#include "menu_scroll_view_container.h"
 #include "ui\gfx\screen.h"
 #include "ui\base\events.h"
 
@@ -607,132 +608,133 @@ void MenuController::StopShowTimer() {
 
 gfx::Rect MenuController::CalculateMenuBounds(MenuItemView* item,
     bool prefer_leading,
-    bool* is_leading) {
-        DCHECK(item);
+    bool* is_leading)
+{
+    DCHECK(item);
 
-        SubmenuView* submenu = item->GetSubmenu();
-        DCHECK(submenu);
+    SubmenuView* submenu = item->GetSubmenu();
+    DCHECK(submenu);
 
-        gfx::Size pref = submenu->GetPreferredSize();
+    gfx::Size pref = submenu->GetScrollViewContainer()->GetPreferredSize();
 
-        // Don't let the menu go too wide.
-        if (item->actual_menu_position() != MenuItemView::POSITION_OVER_BOUNDS)
-            pref.set_width(std::min(pref.width(), kMaxMenuWidth));
-        //item->GetDelegate()->GetMaxWidthForMenu(item)));
-        if (!state_.monitor_bounds.IsEmpty())
-            pref.set_width(std::min(pref.width(), state_.monitor_bounds.width()));
+    // Don't let the menu go too wide.
+    if (item->actual_menu_position() != MenuItemView::POSITION_OVER_BOUNDS)
+        pref.set_width(std::min(pref.width(), kMaxMenuWidth));
+    //item->GetDelegate()->GetMaxWidthForMenu(item)));
+    if (!state_.monitor_bounds.IsEmpty())
+        pref.set_width(std::min(pref.width(), state_.monitor_bounds.width()));
 
-        // Assume we can honor prefer_leading.
-        *is_leading = prefer_leading;
+    // Assume we can honor prefer_leading.
+    *is_leading = prefer_leading;
 
-        int x, y;
+    int x, y;
 
-        if (!item->GetParentMenuItem()) {
-            // First item, position relative to initial location.
-            x = state_.initial_bounds.x();
-            if (item->actual_menu_position() == MenuItemView::POSITION_OVER_BOUNDS)
-                y = state_.initial_bounds.y();
-            else
-                y = state_.initial_bounds.bottom();
-            if (state_.anchor == MenuItemView::TOPRIGHT)
-                x = x + state_.initial_bounds.width() - pref.width();
+    if (!item->GetParentMenuItem()) {
+        // First item, position relative to initial location.
+        x = state_.initial_bounds.x();
+        if (item->actual_menu_position() == MenuItemView::POSITION_OVER_BOUNDS)
+            y = state_.initial_bounds.y();
+        else
+            y = state_.initial_bounds.bottom();
+        if (state_.anchor == MenuItemView::TOPRIGHT)
+            x = x + state_.initial_bounds.width() - pref.width();
 
-            if (!state_.monitor_bounds.IsEmpty() &&
-                pref.height() > state_.monitor_bounds.height() &&
-                item->actual_menu_position() == MenuItemView::POSITION_OVER_BOUNDS) {
-                    // Handle very tall menus.
-                    pref.set_height(state_.monitor_bounds.height());
-                    y = state_.monitor_bounds.y();
-            } else if (!state_.monitor_bounds.IsEmpty() &&
-                y + pref.height() > state_.monitor_bounds.bottom() &&
-                item->actual_menu_position() != MenuItemView::POSITION_OVER_BOUNDS) {
-                    // The menu doesn't fit on screen. The menu position with
-                    // respect to the bounds will be preserved if it has already
-                    // been drawn. On the first drawing if the first location is
-                    // above the half way point then show from the mouse location to
-                    // bottom of screen, otherwise show from the top of the screen
-                    // to the location of the mouse.  While odd, this behavior
-                    // matches IE.
-                    if (item->actual_menu_position() == MenuItemView::POSITION_BELOW_BOUNDS ||
-                        (item->actual_menu_position() == MenuItemView::POSITION_BEST_FIT &&
-                        y < (state_.monitor_bounds.y() +
-                        state_.monitor_bounds.height() / 2))) {
-                            pref.set_height(std::min(pref.height(),
-                                state_.monitor_bounds.bottom() - y));
-                            item->set_actual_menu_position(MenuItemView::POSITION_BELOW_BOUNDS);
-                    } else {
+        if (!state_.monitor_bounds.IsEmpty() &&
+            pref.height() > state_.monitor_bounds.height() &&
+            item->actual_menu_position() == MenuItemView::POSITION_OVER_BOUNDS) {
+                // Handle very tall menus.
+                pref.set_height(state_.monitor_bounds.height());
+                y = state_.monitor_bounds.y();
+        } else if (!state_.monitor_bounds.IsEmpty() &&
+            y + pref.height() > state_.monitor_bounds.bottom() &&
+            item->actual_menu_position() != MenuItemView::POSITION_OVER_BOUNDS) {
+                // The menu doesn't fit on screen. The menu position with
+                // respect to the bounds will be preserved if it has already
+                // been drawn. On the first drawing if the first location is
+                // above the half way point then show from the mouse location to
+                // bottom of screen, otherwise show from the top of the screen
+                // to the location of the mouse.  While odd, this behavior
+                // matches IE.
+                if (item->actual_menu_position() == MenuItemView::POSITION_BELOW_BOUNDS ||
+                    (item->actual_menu_position() == MenuItemView::POSITION_BEST_FIT &&
+                    y < (state_.monitor_bounds.y() +
+                    state_.monitor_bounds.height() / 2))) {
                         pref.set_height(std::min(pref.height(),
-                            state_.initial_bounds.y() - state_.monitor_bounds.y()));
-                        y = state_.initial_bounds.y() - pref.height();
-                        item->set_actual_menu_position(MenuItemView::POSITION_ABOVE_BOUNDS);
-                    }
-            } else if (item->actual_menu_position() ==
-                MenuItemView::POSITION_ABOVE_BOUNDS) {
+                            state_.monitor_bounds.bottom() - y));
+                        item->set_actual_menu_position(MenuItemView::POSITION_BELOW_BOUNDS);
+                } else {
                     pref.set_height(std::min(pref.height(),
                         state_.initial_bounds.y() - state_.monitor_bounds.y()));
                     y = state_.initial_bounds.y() - pref.height();
-            } else if (item->actual_menu_position() ==
-                MenuItemView::POSITION_OVER_BOUNDS) {
-                    // Center vertically assuming all items have the same height.
-                    int middle = state_.initial_bounds.y() - pref.height() / 2;
-                    if (submenu->GetMenuItemCount() > 0)
-                        middle += submenu->GetMenuItemAt(0)->GetPreferredSize().height() / 2;
-                    y = std::max(state_.monitor_bounds.y(), middle);
-                    if (y + pref.height() > state_.monitor_bounds.bottom())
-                        y = state_.monitor_bounds.bottom() - pref.height();
-            } else {
-                item->set_actual_menu_position(MenuItemView::POSITION_BELOW_BOUNDS);
-            }
-        } else {
-            // Not the first menu; position it relative to the bounds of the menu
-            // item.
-            gfx::Point item_loc;
-            views::View::ConvertPointToScreen(item, &item_loc);
-
-            // We must make sure we take into account the UI layout. If the layout is
-            // RTL, then a 'leading' menu is positioned to the left of the parent menu
-            // item and not to the right.
-            bool layout_is_rtl = base::i18n::IsRTL();
-            bool create_on_the_right = (prefer_leading && !layout_is_rtl) ||
-                (!prefer_leading && layout_is_rtl);
-
-            if (create_on_the_right) {
-                x = item_loc.x() + item->width() - kSubmenuHorizontalInset;
-                if (state_.monitor_bounds.width() != 0 &&
-                    x + pref.width() > state_.monitor_bounds.right()) {
-                        if (layout_is_rtl)
-                            *is_leading = true;
-                        else
-                            *is_leading = false;
-                        x = item_loc.x() - pref.width() + kSubmenuHorizontalInset;
+                    item->set_actual_menu_position(MenuItemView::POSITION_ABOVE_BOUNDS);
                 }
-            } else {
-                x = item_loc.x() - pref.width() + kSubmenuHorizontalInset;
-                if (state_.monitor_bounds.width() != 0 && x < state_.monitor_bounds.x()) {
-                    if (layout_is_rtl)
-                        *is_leading = false;
-                    else
-                        *is_leading = true;
-                    x = item_loc.x() + item->width() - kSubmenuHorizontalInset;
-                }
-            }
-            y = item_loc.y() - SubmenuView::kSubmenuBorderSize;
-            if (state_.monitor_bounds.width() != 0) {
-                pref.set_height(std::min(pref.height(), state_.monitor_bounds.height()));
+        } else if (item->actual_menu_position() ==
+            MenuItemView::POSITION_ABOVE_BOUNDS) {
+                pref.set_height(std::min(pref.height(),
+                    state_.initial_bounds.y() - state_.monitor_bounds.y()));
+                y = state_.initial_bounds.y() - pref.height();
+        } else if (item->actual_menu_position() ==
+            MenuItemView::POSITION_OVER_BOUNDS) {
+                // Center vertically assuming all items have the same height.
+                int middle = state_.initial_bounds.y() - pref.height() / 2;
+                if (submenu->GetMenuItemCount() > 0)
+                    middle += submenu->GetMenuItemAt(0)->GetPreferredSize().height() / 2;
+                y = std::max(state_.monitor_bounds.y(), middle);
                 if (y + pref.height() > state_.monitor_bounds.bottom())
                     y = state_.monitor_bounds.bottom() - pref.height();
-                if (y < state_.monitor_bounds.y())
-                    y = state_.monitor_bounds.y();
+        } else {
+            item->set_actual_menu_position(MenuItemView::POSITION_BELOW_BOUNDS);
+        }
+    } else {
+        // Not the first menu; position it relative to the bounds of the menu
+        // item.
+        gfx::Point item_loc;
+        views::View::ConvertPointToScreen(item, &item_loc);
+
+        // We must make sure we take into account the UI layout. If the layout is
+        // RTL, then a 'leading' menu is positioned to the left of the parent menu
+        // item and not to the right.
+        bool layout_is_rtl = base::i18n::IsRTL();
+        bool create_on_the_right = (prefer_leading && !layout_is_rtl) ||
+            (!prefer_leading && layout_is_rtl);
+
+        if (create_on_the_right) {
+            x = item_loc.x() + item->width() - kSubmenuHorizontalInset;
+            if (state_.monitor_bounds.width() != 0 &&
+                x + pref.width() > state_.monitor_bounds.right()) {
+                    if (layout_is_rtl)
+                        *is_leading = true;
+                    else
+                        *is_leading = false;
+                    x = item_loc.x() - pref.width() + kSubmenuHorizontalInset;
+            }
+        } else {
+            x = item_loc.x() - pref.width() + kSubmenuHorizontalInset;
+            if (state_.monitor_bounds.width() != 0 && x < state_.monitor_bounds.x()) {
+                if (layout_is_rtl)
+                    *is_leading = false;
+                else
+                    *is_leading = true;
+                x = item_loc.x() + item->width() - kSubmenuHorizontalInset;
             }
         }
-
+        y = item_loc.y() - SubmenuView::kSubmenuBorderSize;
         if (state_.monitor_bounds.width() != 0) {
-            if (x + pref.width() > state_.monitor_bounds.right())
-                x = state_.monitor_bounds.right() - pref.width();
-            if (x < state_.monitor_bounds.x())
-                x = state_.monitor_bounds.x();
+            pref.set_height(std::min(pref.height(), state_.monitor_bounds.height()));
+            if (y + pref.height() > state_.monitor_bounds.bottom())
+                y = state_.monitor_bounds.bottom() - pref.height();
+            if (y < state_.monitor_bounds.y())
+                y = state_.monitor_bounds.y();
         }
-        return gfx::Rect(x, y, pref.width(), pref.height());
+    }
+
+    if (state_.monitor_bounds.width() != 0) {
+        if (x + pref.width() > state_.monitor_bounds.right())
+            x = state_.monitor_bounds.right() - pref.width();
+        if (x < state_.monitor_bounds.x())
+            x = state_.monitor_bounds.x();
+    }
+    return gfx::Rect(x, y, pref.width(), pref.height());
 }
 
 // static
