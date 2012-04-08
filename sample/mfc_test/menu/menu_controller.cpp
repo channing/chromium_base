@@ -22,6 +22,12 @@ static const int kSubmenuHorizontalInset = 3;
 
 static const int kMaxMenuWidth = 500;
 
+
+// Convenience for scrolling the view such that the origin is visible.
+static void ScrollToVisible(views::View* view) {
+  view->ScrollRectToVisible(view->GetLocalBounds());
+}
+
 // Recurses through the child views of |view| returning the first view starting
 // at |start| that is focusable. A value of -1 for |start| indicates to start at
 // the first view (if |forward| is false, iterating starts at the last view). If
@@ -364,12 +370,34 @@ MenuItemView* MenuController::GetMenuItemAt(views::View* source, int x, int y) {
     return NULL;
 }
 
+
+bool MenuController::IsScrollButtonAt(SubmenuView* source,
+    int x,
+    int y,
+    MenuPart::Type* part) {
+        MenuScrollViewContainer* scroll_view = source->GetScrollViewContainer();
+        views::View* child_under_mouse =
+            scroll_view->GetEventHandlerForPoint(gfx::Point(x, y));
+        if (child_under_mouse && child_under_mouse->enabled()) {
+            if (child_under_mouse == scroll_view->scroll_up_button()) {
+                *part = MenuPart::SCROLL_UP;
+                return true;
+            }
+            if (child_under_mouse == scroll_view->scroll_down_button()) {
+                *part = MenuPart::SCROLL_DOWN;
+                return true;
+            }
+        }
+        return false;
+}
+
 MenuController::MenuPart MenuController::GetMenuPart(
     SubmenuView* source,
-    const gfx::Point& source_loc) {
-        gfx::Point screen_loc(source_loc);
-        views::View::ConvertPointToScreen(source, &screen_loc);
-        return GetMenuPartByScreenCoordinateUsingMenu(state_.item, screen_loc);
+    const gfx::Point& source_loc)
+{
+    gfx::Point screen_loc(source_loc);
+    views::View::ConvertPointToScreen(source->GetScrollViewContainer(), &screen_loc);
+    return GetMenuPartByScreenCoordinateUsingMenu(state_.item, screen_loc);
 }
 
 MenuController::MenuPart MenuController::GetMenuPartByScreenCoordinateUsingMenu(
@@ -392,8 +420,7 @@ bool MenuController::GetMenuPartByScreenCoordinateImpl(
     MenuPart* part) {
         // Is the mouse over the scroll buttons?
         gfx::Point scroll_view_loc = screen_loc;
-        //View* scroll_view_container = menu->GetScrollViewContainer();
-        views::View* scroll_view_container = menu;
+        views::View* scroll_view_container = menu->GetScrollViewContainer();
         views::View::ConvertPointToView(NULL, scroll_view_container, &scroll_view_loc);
         if (scroll_view_loc.x() < 0 ||
             scroll_view_loc.x() >= scroll_view_container->width() ||
@@ -402,11 +429,11 @@ bool MenuController::GetMenuPartByScreenCoordinateImpl(
                 // Point isn't contained in menu.
                 return false;
         }
-        //if (IsScrollButtonAt(menu, scroll_view_loc.x(), scroll_view_loc.y(),
-        //                     &(part->type))) {
-        //  part->submenu = menu;
-        //  return true;
-        //}
+        if (IsScrollButtonAt(menu, scroll_view_loc.x(), scroll_view_loc.y(),
+            &(part->type))) {
+                part->submenu = menu;
+                return true;
+        }
 
         // Not over the scroll button. Check the actual menu.
         if (DoesSubmenuContainLocation(menu, screen_loc)) {
@@ -751,7 +778,7 @@ void MenuController::IncrementSelection(int delta) {
             // select the first menu item.
             if (item->GetSubmenu()->GetMenuItemCount()) {
                 SetSelection(item->GetSubmenu()->GetMenuItemAt(0), SELECTION_DEFAULT);
-                //ScrollToVisible(item->GetSubmenu()->GetMenuItemAt(0));
+                ScrollToVisible(item->GetSubmenu()->GetMenuItemAt(0));
                 return;
             }
     }
@@ -766,7 +793,7 @@ void MenuController::IncrementSelection(int delta) {
                         FindNextSelectableMenuItem(parent, i, delta);
                     if (!to_select)
                         break;
-                    //ScrollToVisible(to_select);
+                    ScrollToVisible(to_select);
                     SetSelection(to_select, SELECTION_DEFAULT);
                     break;
                 }

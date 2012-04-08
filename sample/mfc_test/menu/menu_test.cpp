@@ -9,17 +9,19 @@ void ShowOwnTestMenu(int x, int y) {
 	root->AppendMenuItem(new TestMenuItemView(root));
 	root->AppendMenuItem(new TestMenuItemView(root));
     MenuItemView* submenu1 = new TestMenuItemView(root);
-    submenu1->AppendMenuItem(new TestMenuItemView(submenu1));
-    submenu1->AppendMenuItem(new TestMenuItemView(submenu1));
-    submenu1->AppendMenuItem(new TestMenuItemView(submenu1));
-    submenu1->AppendMenuItem(new TestMenuItemView(submenu1));
+    submenu1->AppendMenuItem(new TestMenuItemView(submenu1, L"main 1"));
+    submenu1->AppendMenuItem(new TestMenuItemView(submenu1, L"main 2"));
+    submenu1->AppendMenuItem(new TestMenuItemView(submenu1, L"main 3"));
+    submenu1->AppendMenuItem(new TestMenuItemView(submenu1, L"main 4"));
     root->AppendMenuItem(submenu1);
 	root->AppendMenuItem(new TestMenuItemView(root));
 
     MenuItemView* submenu2 = new TestMenuItemView(root);
     root->AppendMenuItem(submenu2);
     for (int i = 0; i < 40; ++i) {
-        submenu2->AppendMenuItem(new TestMenuItemView(submenu2));
+        CString label;
+        label.Format(L"sub %d", i);
+        submenu2->AppendMenuItem(new TestMenuItemView(submenu2, label));
     }
 
     scoped_ptr<MenuItemView> root_holder(root);

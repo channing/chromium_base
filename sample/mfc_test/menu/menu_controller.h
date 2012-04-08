@@ -147,6 +147,14 @@ private:
     MenuItemView* GetMenuItemAt(views::View* menu, int x, int y);
 
 
+  // Returns true if the coordinate is over the scroll buttons of the
+  // SubmenuView's MenuScrollViewContainer. If true is returned, part is set to
+  // indicate which scroll button the coordinate is.
+  bool IsScrollButtonAt(SubmenuView* source,
+                        int x,
+                        int y,
+                        MenuPart::Type* part);
+
     // Returns the target for the mouse event. The coordinates are in terms of
     // source's scroll view container.
     MenuPart GetMenuPart(SubmenuView* source, const gfx::Point& source_loc);
