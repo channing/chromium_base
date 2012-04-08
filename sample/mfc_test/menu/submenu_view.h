@@ -60,10 +60,11 @@ public:
     void MenuHostDestroyed();
 
 
-    virtual bool OnMousePressed( const views::MouseEvent& event ) override;
+    virtual bool OnMousePressed(const views::MouseEvent& event) override;
 
     // Padding around the edges of the submenu.
     static const int kSubmenuBorderSize;
+
 private:
     // Parent menu item.
     MenuItemView* parent_menu_item_;
@@ -72,9 +73,9 @@ private:
     // |DestroyMenuHost|, or |MenuHostDestroyed| is invoked back on us.
     MenuHost* host_;
 
-
     // Ancestor of the SubmenuView, lazily created.
     MenuScrollViewContainer* scroll_view_container_;
 
     DISALLOW_COPY_AND_ASSIGN(SubmenuView);
+
 };

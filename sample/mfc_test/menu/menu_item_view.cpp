@@ -1,6 +1,8 @@
 #include "stdafx.h"
 #include "menu_item_view.h"
 #include "submenu_view.h"
+#include "menu_controller.h"
+#include "menu_scroll_view_container.h"
 
 const int MenuItemView::kMenuItemViewID = 1201;
 
@@ -82,4 +84,13 @@ void MenuItemView::DestroyAllMenuHosts() {
 
 bool MenuItemView::HasSubmenu() const {
     return (submenu_ != NULL);
+}
+
+void MenuItemView::OnMouseMoved(const views::MouseEvent& event) {
+    views::View::OnMouseMoved(event);
+    if (GetParentMenuItem()) {
+        SubmenuView* parent_submenu = GetParentMenuItem()->GetSubmenu();
+        views::MouseEvent e(event, this, parent_submenu->GetScrollViewContainer());
+        GetMenuController()->OnMouseMoved(parent_submenu, e);
+    }
 }

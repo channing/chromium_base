@@ -46,7 +46,11 @@ public:
     // NOTE: the coordinates of the events are in that of the
     // MenuScrollViewContainer.
     void OnMousePressed(SubmenuView* source, const views::MouseEvent& event);
+  void OnMouseMoved(SubmenuView* source, const views::MouseEvent& event);
 private:
+
+    class MenuScrollTask;
+
     // Values supplied to SetSelection.
     enum SetSelectionTypes {
         SELECTION_DEFAULT               = 0,
@@ -147,13 +151,13 @@ private:
     MenuItemView* GetMenuItemAt(views::View* menu, int x, int y);
 
 
-  // Returns true if the coordinate is over the scroll buttons of the
-  // SubmenuView's MenuScrollViewContainer. If true is returned, part is set to
-  // indicate which scroll button the coordinate is.
-  bool IsScrollButtonAt(SubmenuView* source,
-                        int x,
-                        int y,
-                        MenuPart::Type* part);
+    // Returns true if the coordinate is over the scroll buttons of the
+    // SubmenuView's MenuScrollViewContainer. If true is returned, part is set to
+    // indicate which scroll button the coordinate is.
+    bool IsScrollButtonAt(SubmenuView* source,
+        int x,
+        int y,
+        MenuPart::Type* part);
 
     // Returns the target for the mouse event. The coordinates are in terms of
     // source's scroll view container.
@@ -238,9 +242,20 @@ private:
 
     // If possible, closes the submenu.
     void CloseSubmenu();
+
+    // Starts/stops scrolling as appropriate. part gives the part the mouse is
+    // over.
+    void UpdateScrolling(const MenuPart& part);
+
+    // Stops scrolling.
+    void StopScrolling();
+
     // Sets exit type.
     void SetExitType(ExitType type);
-
+    // Handles the mouse location event on the submenu |source|.
+    void HandleMouseLocation(SubmenuView* source,
+        const gfx::Point& mouse_location);
+
     // We need this hook to catch some messages send by SendMessage
     static LRESULT CALLBACK CallWndProc(int nCode, WPARAM wParam, LPARAM lParam);
 
@@ -271,4 +286,9 @@ private:
     views::Widget* owner_;
     // If true, we're in the middle of invoking ShowAt on a submenu.
     bool showing_submenu_;
+
+    // Task for scrolling the menu. If non-null indicates a scroll is currently
+    // underway.
+    scoped_ptr<MenuScrollTask> scroll_task_;
+
 };

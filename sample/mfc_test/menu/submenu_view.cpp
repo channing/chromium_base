@@ -146,7 +146,9 @@ void SubmenuView::MenuHostDestroyed() {
 
 bool SubmenuView::OnMousePressed(const views::MouseEvent& event) {
     if (!views::View::OnMousePressed(event)) {
-        GetMenuItem()->GetMenuController()->OnMousePressed(this, event);
+        // convert mouse location
+        views::MouseEvent e(event, this, scroll_view_container_);
+        GetMenuItem()->GetMenuController()->OnMousePressed(this, e);
     }
     return true;
 }

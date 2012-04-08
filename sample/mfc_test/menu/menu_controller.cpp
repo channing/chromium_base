@@ -22,6 +22,7 @@ static const int kSubmenuHorizontalInset = 3;
 
 static const int kMaxMenuWidth = 500;
 
+static const int kPrefMenuHeight = 22;
 
 // Convenience for scrolling the view such that the origin is visible.
 static void ScrollToVisible(views::View* view) {
@@ -77,6 +78,86 @@ static views::View* GetNextFocusableView(
     } while (parent != ancestor);
     return NULL;
 }
+
+// MenuScrollTask --------------------------------------------------------------
+
+// MenuScrollTask is used when the SubmenuView does not all fit on screen and
+// the mouse is over the scroll up/down buttons. MenuScrollTask schedules
+// itself with a RepeatingTimer. When Run is invoked MenuScrollTask scrolls
+// appropriately.
+
+class MenuController::MenuScrollTask {
+ public:
+  MenuScrollTask() : submenu_(NULL), is_scrolling_up_(false), start_y_(0) {
+    pixels_per_second_ = kPrefMenuHeight * 20;
+  }
+
+  void Update(const MenuController::MenuPart& part) {
+    if (!part.is_scroll()) {
+      StopScrolling();
+      return;
+    }
+    DCHECK(part.submenu);
+    SubmenuView* new_menu = part.submenu;
+    bool new_is_up = (part.type == MenuController::MenuPart::SCROLL_UP);
+    if (new_menu == submenu_ && is_scrolling_up_ == new_is_up)
+      return;
+
+    start_scroll_time_ = Time::Now();
+    start_y_ = part.submenu->GetVisibleBounds().y();
+    submenu_ = new_menu;
+    is_scrolling_up_ = new_is_up;
+
+    if (!scrolling_timer_.IsRunning()) {
+      scrolling_timer_.Start(FROM_HERE,
+                             TimeDelta::FromMilliseconds(kScrollTimerMS),
+                             this, &MenuScrollTask::Run);
+    }
+  }
+
+  void StopScrolling() {
+    if (scrolling_timer_.IsRunning()) {
+      scrolling_timer_.Stop();
+      submenu_ = NULL;
+    }
+  }
+
+  // The menu being scrolled. Returns null if not scrolling.
+  SubmenuView* submenu() const { return submenu_; }
+
+ private:
+  void Run() {
+    DCHECK(submenu_);
+    gfx::Rect vis_rect = submenu_->GetVisibleBounds();
+    const int delta_y = static_cast<int>(
+        (Time::Now() - start_scroll_time_).InMilliseconds() *
+        pixels_per_second_ / 1000);
+    vis_rect.set_y(is_scrolling_up_ ?
+        std::max(0, start_y_ - delta_y) :
+        std::min(submenu_->height() - vis_rect.height(), start_y_ + delta_y));
+    submenu_->ScrollRectToVisible(vis_rect);
+  }
+
+  // SubmenuView being scrolled.
+  SubmenuView* submenu_;
+
+  // Direction scrolling.
+  bool is_scrolling_up_;
+
+  // Timer to periodically scroll.
+  base::RepeatingTimer<MenuScrollTask> scrolling_timer_;
+
+  // Time we started scrolling at.
+  Time start_scroll_time_;
+
+  // How many pixels to scroll per second.
+  int pixels_per_second_;
+
+  // Y-coordinate of submenu_view_ when scrolling started.
+  int start_y_;
+
+  DISALLOW_COPY_AND_ASSIGN(MenuScrollTask);
+};
 
 // MenuController:State ------------------------------------------------------
 
@@ -154,6 +235,12 @@ void MenuController::OnMousePressed(SubmenuView* source,
             selection_types |= SELECTION_OPEN_SUBMENU;
     }
     SetSelection(part.menu, selection_types);
+}
+
+void MenuController::OnMouseMoved(SubmenuView* source,
+    const views::MouseEvent& event)
+{
+        HandleMouseLocation(source, event.location());
 }
 
 void MenuController::SetSelection(MenuItemView* menu_item, int selection_types) {
@@ -496,7 +583,7 @@ void MenuController::CommitPendingSelection() {
 
     if (!state_.item) {
         // Nothing to select.
-        //StopScrolling();
+        StopScrolling();
         return;
     }
 
@@ -521,18 +608,18 @@ void MenuController::CommitPendingSelection() {
             state_.item->GetSubmenu()->Hide();
     }
 
-    //if (scroll_task_.get() && scroll_task_->submenu()) {
-    //  // Stop the scrolling if none of the elements of the selection contain
-    //  // the menu being scrolled.
-    //  bool found = false;
-    //  for (MenuItemView* item = state_.item; item && !found;
-    //       item = item->GetParentMenuItem()) {
-    //    found = (item->HasSubmenu() && item->GetSubmenu()->IsShowing() &&
-    //             item->GetSubmenu() == scroll_task_->submenu());
-    //  }
-    //  if (!found)
-    //    StopScrolling();
-    //}
+    if (scroll_task_.get() && scroll_task_->submenu()) {
+      // Stop the scrolling if none of the elements of the selection contain
+      // the menu being scrolled.
+      bool found = false;
+      for (MenuItemView* item = state_.item; item && !found;
+           item = item->GetParentMenuItem()) {
+        found = (item->HasSubmenu() && item->GetSubmenu()->IsShowing() &&
+                 item->GetSubmenu() == scroll_task_->submenu());
+      }
+      if (!found)
+        StopScrolling();
+    }
 }
 
 void MenuController::CloseMenu(MenuItemView* item) {
@@ -844,8 +931,51 @@ void MenuController::CloseSubmenu() {
         SetSelection(item->GetParentMenuItem(), SELECTION_UPDATE_IMMEDIATELY);
 }
 
+
+void MenuController::UpdateScrolling(const MenuPart& part) {
+  if (!part.is_scroll() && !scroll_task_.get())
+    return;
+
+  if (!scroll_task_.get())
+    scroll_task_.reset(new MenuScrollTask());
+  scroll_task_->Update(part);
+}
+
+void MenuController::StopScrolling() {
+  scroll_task_.reset(NULL);
+}
+
 void MenuController::SetExitType(ExitType type) {
     exit_type_ = type;
+}
+
+void MenuController::HandleMouseLocation(SubmenuView* source,
+    const gfx::Point& mouse_location)
+{
+    if (showing_submenu_)
+        return;
+
+    MenuPart part = GetMenuPart(source, mouse_location);
+
+    UpdateScrolling(part);
+
+    //if (!blocking_run_)
+    //    return;
+
+    //if (part.type == MenuPart::NONE && ShowSiblingMenu(source, mouse_location))
+    //    return;
+
+    if (part.type == MenuPart::MENU_ITEM && part.menu) {
+        SetSelection(part.menu, SELECTION_OPEN_SUBMENU);
+    } else if (!part.is_scroll() && pending_state_.item &&
+        pending_state_.item->GetParentMenuItem() &&
+        (!pending_state_.item->HasSubmenu() ||
+        !pending_state_.item->GetSubmenu()->IsShowing())) {
+            // On exit if the user hasn't selected an item with a submenu, move the
+            // selection back to the parent menu item.
+            SetSelection(pending_state_.item->GetParentMenuItem(),
+                SELECTION_OPEN_SUBMENU);
+    }
 }
 
 LRESULT CALLBACK MenuController::CallWndProc(int nCode, WPARAM wParam, LPARAM lParam) {
