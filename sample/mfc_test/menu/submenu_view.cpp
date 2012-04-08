@@ -5,6 +5,7 @@
 #include "ui\gfx\insets.h"
 #include "menu_host.h"
 #include "menu_item_view.h"
+#include "menu_controller.h"
 
 namespace {
     const int kMenuWidth = 400;
@@ -111,6 +112,23 @@ MenuItemView* SubmenuView::GetMenuItem() const {
     return parent_menu_item_;
 }
 
+
+//MenuScrollViewContainer* SubmenuView::GetScrollViewContainer() {
+//  if (!scroll_view_container_) {
+//    scroll_view_container_ = new MenuScrollViewContainer(this);
+//    // Otherwise MenuHost would delete us.
+//    scroll_view_container_->set_parent_owned(false);
+//  }
+//  return scroll_view_container_;
+//}
+
 void SubmenuView::MenuHostDestroyed() {
     host_ = NULL;
+}
+
+bool SubmenuView::OnMousePressed(const views::MouseEvent& event) {
+    if (!views::View::OnMousePressed(event)) {
+        GetMenuItem()->GetMenuController()->OnMousePressed(this, event);
+    }
+    return true;
 }

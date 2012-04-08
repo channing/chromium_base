@@ -23,8 +23,8 @@ public:
     virtual void Layout() OVERRIDE;
     virtual gfx::Size GetPreferredSize() OVERRIDE;
 
-  // Returns true if the menu is showing.
-  bool IsShowing();
+    // Returns true if the menu is showing.
+    bool IsShowing();
     // Shows the menu at the specified location. Coordinates are in screen
     // coordinates. max_width gives the max width the view should be.
     void ShowAt(views::Widget* parent, const gfx::Rect& bounds);
@@ -35,18 +35,22 @@ public:
     // Closes the menu, destroying the host.
     void Close();
 
-  // Hides the hosting window.
-  //
-  // The hosting window is hidden first, then deleted (Close) when the menu is
-  // done running. This is done to avoid deletion ordering dependencies. In
-  // particular, during drag and drop (and when a modal dialog is shown as
-  // a result of choosing a context menu) it is possible that an event is
-  // being processed by the host, so that host is on the stack when we need to
-  // close the window. If we closed the window immediately (and deleted it),
-  // when control returned back to host we would crash as host was deleted.
-  void Hide();
+    // Hides the hosting window.
+    //
+    // The hosting window is hidden first, then deleted (Close) when the menu is
+    // done running. This is done to avoid deletion ordering dependencies. In
+    // particular, during drag and drop (and when a modal dialog is shown as
+    // a result of choosing a context menu) it is possible that an event is
+    // being processed by the host, so that host is on the stack when we need to
+    // close the window. If we closed the window immediately (and deleted it),
+    // when control returned back to host we would crash as host was deleted.
+    void Hide();
     // Returns the parent menu item we're showing children for.
     MenuItemView* GetMenuItem() const;
+
+
+    //// Returns the container for the SubmenuView.
+    //MenuScrollViewContainer* GetScrollViewContainer();
 
     // Invoked if the menu is prematurely destroyed. This can happen if the window
     // closes while the menu is shown. If invoked the SubmenuView must drop all
@@ -54,8 +58,10 @@ public:
     void MenuHostDestroyed();
 
 
-  // Padding around the edges of the submenu.
-  static const int kSubmenuBorderSize;
+    virtual bool OnMousePressed( const views::MouseEvent& event ) override;
+
+    // Padding around the edges of the submenu.
+    static const int kSubmenuBorderSize;
 private:
     // Parent menu item.
     MenuItemView* parent_menu_item_;

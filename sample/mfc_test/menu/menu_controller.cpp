@@ -3,6 +3,7 @@
 #include "menu_item_view.h"
 #include "submenu_view.h"
 #include "ui\gfx\screen.h"
+#include "ui\base\events.h"
 
 using base::Time;
 using base::TimeDelta;
@@ -124,6 +125,30 @@ void MenuController::Cancel(ExitType type) {
     // TODO: Hide menu
 }
 
+void MenuController::OnMousePressed(SubmenuView* source,
+    const views::MouseEvent& event)
+{
+    MenuPart part = GetMenuPart(source, event.location());
+    if (part.is_scroll())
+        return;  // Ignore presses on scroll buttons.
+
+    // On a press we immediately commit the selection, that way a submenu
+    // pops up immediately rather than after a delay.
+    int selection_types = SELECTION_UPDATE_IMMEDIATELY;
+    if (!part.menu) {
+        part.menu = part.parent;
+        selection_types |= SELECTION_OPEN_SUBMENU;
+    } else {
+        //if (part.menu->GetDelegate()->CanDrag(part.menu)) {
+        //  possible_drag_ = true;
+        //  press_pt_ = event.location();
+        //}
+        if (part.menu->HasSubmenu())
+            selection_types |= SELECTION_OPEN_SUBMENU;
+    }
+    SetSelection(part.menu, selection_types);
+}
+
 void MenuController::SetSelection(MenuItemView* menu_item, int selection_types) {
     size_t paths_differ_at = 0;
     std::vector<MenuItemView*> current_path;
@@ -182,6 +207,21 @@ bool MenuController::Dispatch(const MSG& msg) {
 
         //                     // NOTE: focus wasn't changed when the menu was shown. As such, don't
         //                     // dispatch key events otherwise the focused window will get the events.
+        //                     
+    case WM_LBUTTONDOWN: {
+        POINT native_point = {GET_X_LPARAM(msg.lParam), GET_Y_LPARAM(msg.lParam)};
+        ClientToScreen(msg.hwnd, &native_point);
+        gfx::Point screen_loc(native_point);
+        MenuPart part = GetMenuPartByScreenCoordinateUsingMenu(state_.item, screen_loc);
+        if (part.type == MenuPart::NONE ||
+            (part.type == MenuPart::MENU_ITEM && part.menu &&
+            part.menu->GetRootMenuItem() != state_.item->GetRootMenuItem())) {
+                // Mouse wasn't pressed over any menu, or the active menu, cancel.
+                Cancel(EXIT_ALL);
+        }
+        break;
+
+                         }
     case WM_KEYDOWN: {
         bool result = OnKeyDown(ui::KeyboardCodeFromNative(msg));
         TranslateMessage(&msg);
@@ -307,6 +347,90 @@ void MenuController::UpdateInitialLocation(
         // avoid repeated system queries for the info.
         pending_state_.monitor_bounds = gfx::Screen::GetMonitorWorkAreaNearestPoint(
             bounds.origin());
+}
+
+MenuItemView* MenuController::GetMenuItemAt(views::View* source, int x, int y) {
+    // Walk the view hierarchy until we find a menu item (or the root).
+    views::View* child_under_mouse = source->GetEventHandlerForPoint(gfx::Point(x, y));
+    while (child_under_mouse &&
+        child_under_mouse->id() != MenuItemView::kMenuItemViewID) {
+            child_under_mouse = child_under_mouse->parent();
+    }
+    if (child_under_mouse && child_under_mouse->enabled() &&
+        child_under_mouse->id() == MenuItemView::kMenuItemViewID) {
+            return static_cast<MenuItemView*>(child_under_mouse);
+    }
+    return NULL;
+}
+
+MenuController::MenuPart MenuController::GetMenuPart(
+    SubmenuView* source,
+    const gfx::Point& source_loc) {
+        gfx::Point screen_loc(source_loc);
+        views::View::ConvertPointToScreen(source, &screen_loc);
+        return GetMenuPartByScreenCoordinateUsingMenu(state_.item, screen_loc);
+}
+
+MenuController::MenuPart MenuController::GetMenuPartByScreenCoordinateUsingMenu(
+    MenuItemView* item,
+    const gfx::Point& screen_loc) {
+        MenuPart part;
+        for (; item; item = item->GetParentMenuItem()) {
+            if (item->HasSubmenu() && item->GetSubmenu()->IsShowing() &&
+                GetMenuPartByScreenCoordinateImpl(item->GetSubmenu(), screen_loc,
+                &part)) {
+                    return part;
+            }
+        }
+        return part;
+}
+
+bool MenuController::GetMenuPartByScreenCoordinateImpl(
+    SubmenuView* menu,
+    const gfx::Point& screen_loc,
+    MenuPart* part) {
+        // Is the mouse over the scroll buttons?
+        gfx::Point scroll_view_loc = screen_loc;
+        //View* scroll_view_container = menu->GetScrollViewContainer();
+        views::View* scroll_view_container = menu;
+        views::View::ConvertPointToView(NULL, scroll_view_container, &scroll_view_loc);
+        if (scroll_view_loc.x() < 0 ||
+            scroll_view_loc.x() >= scroll_view_container->width() ||
+            scroll_view_loc.y() < 0 ||
+            scroll_view_loc.y() >= scroll_view_container->height()) {
+                // Point isn't contained in menu.
+                return false;
+        }
+        //if (IsScrollButtonAt(menu, scroll_view_loc.x(), scroll_view_loc.y(),
+        //                     &(part->type))) {
+        //  part->submenu = menu;
+        //  return true;
+        //}
+
+        // Not over the scroll button. Check the actual menu.
+        if (DoesSubmenuContainLocation(menu, screen_loc)) {
+            gfx::Point menu_loc = screen_loc;
+            views::View::ConvertPointToView(NULL, menu, &menu_loc);
+            part->menu = GetMenuItemAt(menu, menu_loc.x(), menu_loc.y());
+            part->type = MenuPart::MENU_ITEM;
+            part->submenu = menu;
+            if (!part->menu)
+                part->parent = menu->GetMenuItem();
+            return true;
+        }
+
+        // While the mouse isn't over a menu item or the scroll buttons of menu, it
+        // is contained by menu and so we return true. If we didn't return true other
+        // menus would be searched, even though they are likely obscured by us.
+        return true;
+}
+
+bool MenuController::DoesSubmenuContainLocation(SubmenuView* submenu,
+    const gfx::Point& screen_loc) {
+        gfx::Point view_loc = screen_loc;
+        views::View::ConvertPointToView(NULL, submenu, &view_loc);
+        gfx::Rect vis_rect = submenu->GetVisibleBounds();
+        return vis_rect.Contains(view_loc.x(), view_loc.y());
 }
 
 void MenuController::CommitPendingSelection() {
