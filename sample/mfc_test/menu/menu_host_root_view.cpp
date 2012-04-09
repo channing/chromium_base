@@ -31,13 +31,13 @@ bool MenuHostRootView::OnMousePressed(const views::MouseEvent& event) {
 //  return RootView::OnMouseDragged(event);
 //}
 
-//void MenuHostRootView::OnMouseReleased(const views::MouseEvent& event) {
-//  RootView::OnMouseReleased(event);
-//  if (forward_drag_to_menu_controller_ && GetMenuController()) {
-//    forward_drag_to_menu_controller_ = false;
-//    GetMenuController()->OnMouseReleased(submenu_, event);
-//  }
-//}
+void MenuHostRootView::OnMouseReleased(const views::MouseEvent& event) {
+  RootView::OnMouseReleased(event);
+  if (forward_drag_to_menu_controller_ && GetMenuController()) {
+    forward_drag_to_menu_controller_ = false;
+    GetMenuController()->OnMouseReleased(submenu_, event);
+  }
+}
 
 void MenuHostRootView::OnMouseMoved(const views::MouseEvent& event) {
     RootView::OnMouseMoved(event);

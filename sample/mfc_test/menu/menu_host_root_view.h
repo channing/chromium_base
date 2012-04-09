@@ -21,7 +21,7 @@ public:
     // Overridden from View:
     virtual bool OnMousePressed(const views::MouseEvent& event) OVERRIDE;
     //virtual bool OnMouseDragged(const views::MouseEvent& event) OVERRIDE;
-    //virtual void OnMouseReleased(const views::MouseEvent& event) OVERRIDE;
+    virtual void OnMouseReleased(const views::MouseEvent& event) OVERRIDE;
     virtual void OnMouseMoved(const views::MouseEvent& event) OVERRIDE;
     virtual bool OnMouseWheel(const views::MouseWheelEvent& event) OVERRIDE;
 

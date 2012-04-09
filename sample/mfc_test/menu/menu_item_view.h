@@ -1,9 +1,11 @@
 #pragma once
 
 #include "ui/views/view.h"
+#include "menu_item_delegate.h"
 
 class SubmenuView;
 class MenuController;
+class MenuItemDelegate;
 
 class MenuItemView : public views::View {
 public:
@@ -28,8 +30,12 @@ public:
     // ID used to identify menu items.
     static const int kMenuItemViewID;
 
-    MenuItemView(MenuItemView* parent);
+    MenuItemView(MenuItemView* parent, MenuItemDelegate* delegate);
     virtual ~MenuItemView();
+
+    MenuItemDelegate* GetDelegate() {
+        return delegate_.get();
+    }
 
     void AppendMenuItem(views::View* view);
 
@@ -74,6 +80,9 @@ protected:
     void set_actual_menu_position(MenuPosition actual_menu_position) {
         actual_menu_position_ = actual_menu_position;
     }
+
+    // Delegate
+    scoped_ptr<MenuItemDelegate> delegate_;
 
     // The controller for the run operation, or NULL if the menu isn't showing.
     MenuController* controller_;

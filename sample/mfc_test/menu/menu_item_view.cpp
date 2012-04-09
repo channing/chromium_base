@@ -6,8 +6,9 @@
 
 const int MenuItemView::kMenuItemViewID = 1201;
 
-MenuItemView::MenuItemView(MenuItemView* parent)
-	: controller_(NULL),
+MenuItemView::MenuItemView(MenuItemView* parent, MenuItemDelegate* delegate)
+	: delegate_(delegate),
+      controller_(NULL),
 	  parent_menu_item_(parent),
 	  selected_(false),
 	  submenu_(NULL),

@@ -46,7 +46,8 @@ public:
     // NOTE: the coordinates of the events are in that of the
     // MenuScrollViewContainer.
     void OnMousePressed(SubmenuView* source, const views::MouseEvent& event);
-  void OnMouseMoved(SubmenuView* source, const views::MouseEvent& event);
+    void OnMouseReleased(SubmenuView* source, const views::MouseEvent& event);
+    void OnMouseMoved(SubmenuView* source, const views::MouseEvent& event);
 private:
 
     class MenuScrollTask;
@@ -143,6 +144,10 @@ private:
 
     void UpdateInitialLocation(const gfx::Rect& bounds,
         MenuItemView::AnchorPosition position);
+
+    // Invoked when the user accepts the selected item. This is only used
+    // when blocking. This schedules the loop to quit.
+    void Accept(MenuItemView* item, int mouse_event_flags);
 
     // Gets the enabled menu item at the specified location.
     // If over_any_menu is non-null it is set to indicate whether the location
@@ -277,6 +282,9 @@ private:
     // user moves the mouse all submenus don't immediately pop.
     State pending_state_;
     State state_;
+
+    // If the user accepted the selection, this is the result.
+    MenuItemView* result_;
 
     // As the mouse moves around submenus are not opened immediately. Instead
     // they open after this timer fires.

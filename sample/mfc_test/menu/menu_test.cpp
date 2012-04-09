@@ -5,7 +5,7 @@
 #include "menu_controller.h"
 
 void ShowOwnTestMenu(int x, int y) {
-	MenuItemView* root = new MenuItemView(NULL);
+	MenuItemView* root = new TestMenuItemView((MenuItemView*) NULL);
 	root->AppendMenuItem(new TestMenuItemView(root));
 	root->AppendMenuItem(new TestMenuItemView(root));
     MenuItemView* submenu1 = new TestMenuItemView(root);

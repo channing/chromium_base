@@ -31,6 +31,7 @@
         'menu/menu_host.h',
         'menu/menu_host_root_view.cpp',
         'menu/menu_host_root_view.h',
+        'menu/menu_item_delegate.h',
         'menu/menu_item_view.cpp',
         'menu/menu_item_view.h',
         'menu/menu_item_view_impl.cpp',
