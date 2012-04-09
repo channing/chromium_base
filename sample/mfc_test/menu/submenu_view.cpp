@@ -152,3 +152,28 @@ bool SubmenuView::OnMousePressed(const views::MouseEvent& event) {
     }
     return true;
 }
+
+void SubmenuView::ScrollDown(int delta_y) {
+    int new_y = y() - delta_y;
+    // height() - parent()->height() <= y <= 0
+    new_y = std::min(0, std::max(new_y, parent()->height() - height()));
+    SetY(new_y);
+    GetScrollViewContainer()->scroll_up_button()->SetVisible(new_y < 0);
+    GetScrollViewContainer()->scroll_down_button()->SetVisible(height() + new_y > parent()->height());
+}
+
+void SubmenuView::ScrollRectToVisible(const gfx::Rect& rect) {
+    views::View* scroll_up = GetScrollViewContainer()->scroll_up_button();
+    int top_visible = scroll_up->visible() ? scroll_up->height() : 0;
+    top_visible -= y();
+    if (rect.y() < top_visible) {
+        ScrollDown(rect.y() - top_visible);
+    }
+
+    views::View* scroll_down = GetScrollViewContainer()->scroll_down_button();
+    int bottom_visible = scroll_down->visible() ? parent()->height() - scroll_down->height() : parent()->height();
+    bottom_visible -= y();
+    if (rect.bottom() > bottom_visible) {
+        ScrollDown(rect.bottom() - bottom_visible);
+    }
+}

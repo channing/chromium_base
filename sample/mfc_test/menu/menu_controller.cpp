@@ -88,7 +88,7 @@ static views::View* GetNextFocusableView(
 
 class MenuController::MenuScrollTask {
  public:
-  MenuScrollTask() : submenu_(NULL), is_scrolling_up_(false), start_y_(0) {
+  MenuScrollTask() : submenu_(NULL), is_scrolling_up_(false) {
     pixels_per_second_ = kPrefMenuHeight * 20;
   }
 
@@ -103,8 +103,6 @@ class MenuController::MenuScrollTask {
     if (new_menu == submenu_ && is_scrolling_up_ == new_is_up)
       return;
 
-    start_scroll_time_ = Time::Now();
-    start_y_ = part.submenu->GetVisibleBounds().y();
     submenu_ = new_menu;
     is_scrolling_up_ = new_is_up;
 
@@ -128,14 +126,8 @@ class MenuController::MenuScrollTask {
  private:
   void Run() {
     DCHECK(submenu_);
-    gfx::Rect vis_rect = submenu_->GetVisibleBounds();
-    const int delta_y = static_cast<int>(
-        (Time::Now() - start_scroll_time_).InMilliseconds() *
-        pixels_per_second_ / 1000);
-    vis_rect.set_y(is_scrolling_up_ ?
-        std::max(0, start_y_ - delta_y) :
-        std::min(submenu_->height() - vis_rect.height(), start_y_ + delta_y));
-    submenu_->ScrollRectToVisible(vis_rect);
+    const int delta_y = pixels_per_second_ * kScrollTimerMS / 1000;
+    submenu_->ScrollDown(is_scrolling_up_ ? -delta_y : delta_y);
   }
 
   // SubmenuView being scrolled.
@@ -147,14 +139,8 @@ class MenuController::MenuScrollTask {
   // Timer to periodically scroll.
   base::RepeatingTimer<MenuScrollTask> scrolling_timer_;
 
-  // Time we started scrolling at.
-  Time start_scroll_time_;
-
   // How many pixels to scroll per second.
   int pixels_per_second_;
-
-  // Y-coordinate of submenu_view_ when scrolling started.
-  int start_y_;
 
   DISALLOW_COPY_AND_ASSIGN(MenuScrollTask);
 };
@@ -302,7 +288,8 @@ bool MenuController::Dispatch(const MSG& msg) {
         //                     // NOTE: focus wasn't changed when the menu was shown. As such, don't
         //                     // dispatch key events otherwise the focused window will get the events.
         //                     
-    case WM_LBUTTONDOWN: {
+    case WM_LBUTTONDOWN:
+    case WM_NCLBUTTONDOWN: {
         POINT native_point = {GET_X_LPARAM(msg.lParam), GET_Y_LPARAM(msg.lParam)};
         ClientToScreen(msg.hwnd, &native_point);
         gfx::Point screen_loc(native_point);

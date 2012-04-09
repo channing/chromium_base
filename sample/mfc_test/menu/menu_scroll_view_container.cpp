@@ -82,6 +82,11 @@ namespace {
                 canvas->FillRect(arrow_color, gfx::Rect(x, y, (i * 2) + 1, 1));
         }
 
+        virtual void OnMouseMoved(const views::MouseEvent& event) {
+            views::MouseEvent e(event, this, host_->GetScrollViewContainer());
+            host_->GetMenuItem()->GetMenuController()->OnMouseMoved(host_, e);
+        }
+
     private:
         // SubmenuView we were created for.
         SubmenuView* host_;
@@ -112,28 +117,6 @@ public:
     explicit MenuScrollView(MenuScrollViewContainer* container, View* child) {
         container_ = container;
         AddChildView(child);
-    }
-
-    virtual void ScrollRectToVisible(const gfx::Rect& rect) {
-        // NOTE: this assumes we only want to scroll in the y direction.
-
-        View* child = GetContents();
-        gfx::Size child_pref = child->GetPreferredSize();
-        int new_y = 0;
-
-        int top_visible = container_->scroll_up_button()->visible() ? container_->scroll_up_button()->height() : 0;
-        if (rect.y() < top_visible) {
-            new_y = std::min(0, top_visible - (rect.y() - child->y()));
-        }
-
-        int bottom_visible = container_->scroll_down_button()->visible() ? height() - container_->scroll_down_button()->height() : height();
-        if (rect.bottom() > bottom_visible) {
-            new_y = std::max(- (child_pref.height() - height()), bottom_visible - (rect.bottom() - child->y()));
-        }
-        child->SetY(new_y);
-
-        container_->scroll_up_button()->SetVisible(new_y < 0);
-        container_->scroll_down_button()->SetVisible(height() - new_y < child_pref.height());
     }
 
     // Returns the contents, which is the SubmenuView.
