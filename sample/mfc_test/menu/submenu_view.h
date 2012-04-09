@@ -59,8 +59,6 @@ public:
     // references to the MenuHost as the MenuHost is about to be deleted.
     void MenuHostDestroyed();
 
-    virtual bool OnMousePressed(const views::MouseEvent& event) override;
-
     void ScrollDown(int delta_y);
     virtual void ScrollRectToVisible(const gfx::Rect& rect) override;
 

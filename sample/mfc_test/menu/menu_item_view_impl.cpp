@@ -4,6 +4,7 @@
 #include "SkPaint.h"
 #include "SkCanvas.h"
 #include "ui\base\resource\resource_bundle.h"
+#include "ui\gfx\font.h"
 
 static const gfx::Font& GetFont() {
     ResourceBundle& rb = ResourceBundle::GetSharedInstance();
@@ -11,6 +12,8 @@ static const gfx::Font& GetFont() {
 }
 
 void TestMenuItemView::OnPaint(gfx::Canvas* canvas) {
+    static gfx::Font font;
+
 	//canvas->DrawStringInt(L"A sample item");
 	SkColor color1 = SkColorSetRGB(255, 255, 255);
 	canvas->FillRect(color1, gfx::Rect(2, 2, width() - 4 , height() - 4));
@@ -30,8 +33,8 @@ void TestMenuItemView::OnPaint(gfx::Canvas* canvas) {
         //CRect text_rect(20, 5, 170, 25);
         //DrawText(hdc, label_, -1, text_rect, DT_SINGLELINE | DT_NOCLIP | DT_VCENTER | DT_END_ELLIPSIS );       
         //canvas->EndPlatformPaint();
-
-        canvas->DrawStringInt(label_.GetBuffer(), GetFont(), SK_ColorBLACK, 20, 5, 150, 20);
+        
+        canvas->DrawStringInt(label_.GetBuffer(), font, SK_ColorBLACK, 20, 5, 150, 20);
     }
 
     if (IsSelected()) {

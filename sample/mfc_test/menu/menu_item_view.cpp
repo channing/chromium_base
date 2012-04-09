@@ -85,12 +85,3 @@ void MenuItemView::DestroyAllMenuHosts() {
 bool MenuItemView::HasSubmenu() const {
     return (submenu_ != NULL);
 }
-
-void MenuItemView::OnMouseMoved(const views::MouseEvent& event) {
-    views::View::OnMouseMoved(event);
-    if (GetParentMenuItem()) {
-        SubmenuView* parent_submenu = GetParentMenuItem()->GetSubmenu();
-        views::MouseEvent e(event, this, parent_submenu->GetScrollViewContainer());
-        GetMenuController()->OnMouseMoved(parent_submenu, e);
-    }
-}

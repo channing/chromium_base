@@ -67,8 +67,6 @@ public:
     // the windows used to display all descendants.
     void DestroyAllMenuHosts();
 
-    virtual void OnMouseMoved(const views::MouseEvent& event);
-
 protected:
     // Used by MenuController to cache the menu position in use by the
     // active menu.

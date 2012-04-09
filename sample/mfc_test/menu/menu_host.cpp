@@ -4,6 +4,7 @@
 #include "ui/views/widget/native_widget_private.h"
 #include "ui/views/widget/widget.h"
 #include "submenu_view.h"
+#include "menu_host_root_view.h"
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -40,6 +41,7 @@ void MenuHost::HideMenuHost() {
 void MenuHost::DestroyMenuHost() {
     HideMenuHost();
     destroying_ = true;
+  static_cast<MenuHostRootView*>(GetRootView())->ClearSubmenu();
     Close();
 }
 
@@ -49,6 +51,10 @@ void MenuHost::SetMenuHostBounds(const gfx::Rect& bounds) {
 
 ////////////////////////////////////////////////////////////////////////////////
 // MenuHost, Widget overrides:
+
+views::internal::RootView* MenuHost::CreateRootView() {
+  return new MenuHostRootView(this, submenu_);
+}
 
 void MenuHost::OnNativeWidgetDestroyed() {
     if (!destroying_) {

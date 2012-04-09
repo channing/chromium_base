@@ -144,15 +144,6 @@ void SubmenuView::MenuHostDestroyed() {
     host_ = NULL;
 }
 
-bool SubmenuView::OnMousePressed(const views::MouseEvent& event) {
-    if (!views::View::OnMousePressed(event)) {
-        // convert mouse location
-        views::MouseEvent e(event, this, scroll_view_container_);
-        GetMenuItem()->GetMenuController()->OnMousePressed(this, e);
-    }
-    return true;
-}
-
 void SubmenuView::ScrollDown(int delta_y) {
     int new_y = y() - delta_y;
     // height() - parent()->height() <= y <= 0
