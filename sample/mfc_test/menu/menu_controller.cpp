@@ -6,6 +6,7 @@
 #include "menu_scroll_view_container.h"
 #include "ui\gfx\screen.h"
 #include "ui\base\events.h"
+#include "ui/views/widget/widget.h"
 
 using base::Time;
 using base::TimeDelta;
@@ -254,6 +255,18 @@ void MenuController::OnMouseMoved(SubmenuView* source,
     const views::MouseEvent& event)
 {
     HandleMouseLocation(source, event.location());
+}
+
+
+void MenuController::UpdateSubmenuSelection(SubmenuView* submenu) {
+  if (submenu->IsShowing()) {
+    gfx::Point point = gfx::Screen::GetCursorScreenPoint();
+    const SubmenuView* root_submenu =
+        submenu->GetMenuItem()->GetRootMenuItem()->GetSubmenu();
+    views::View::ConvertPointFromScreen(
+        root_submenu->GetWidget()->GetRootView(), &point);
+    HandleMouseLocation(submenu, point);
+  }
 }
 
 void MenuController::SetSelection(MenuItemView* menu_item, int selection_types) {

@@ -32,11 +32,14 @@ public:
     MenuItemView(MenuItemView* parent, MenuItemDelegate* delegate);
     virtual ~MenuItemView();
 
-    MenuItemDelegate* GetDelegate() {
-        return delegate_.get();
-    }
+    MenuItemDelegate* GetDelegate() const {return delegate_;}
 
     void AppendMenuItem(views::View* view);
+
+    // Remove an item from the menu at a specified index.
+    // ChildrenChanged() should be called after removing menu items (whether
+    // the menu may be active or not).
+    void RemoveMenuItemAt(int index);
 
     // Returns the view that contains child menu items. If the submenu has
     // not been creates, this creates it.
@@ -58,6 +61,10 @@ public:
     // Returns true if the item is selected.
     bool IsSelected() const { return selected_; }
 
+
+    // Returns the preferred size of this item.
+    virtual gfx::Size GetPreferredSize() OVERRIDE;
+
     // Returns the object responsible for controlling showing the menu.
     MenuController* GetMenuController();
     const MenuController* GetMenuController() const;
@@ -68,11 +75,20 @@ public:
     MenuItemView* GetRootMenuItem();
     const MenuItemView* GetRootMenuItem() const;
 
+
+    // Invoke if you remove/add children to the menu while it's showing. This
+    // recalculates the bounds.
+    void ChildrenChanged();
+
     // Destroys the window used to display this menu and recursively destroys
     // the windows used to display all descendants.
     void DestroyAllMenuHosts();
 
 protected:
+
+    // Calculates the preferred size.
+    virtual gfx::Size CalculatePreferredSize();
+
     // Used by MenuController to cache the menu position in use by the
     // active menu.
     MenuPosition actual_menu_position() const { return actual_menu_position_; }
@@ -94,6 +110,14 @@ protected:
 
     // Submenu, created via CreateSubmenu.
     SubmenuView* submenu_;
+
+
+    // Previously calculated preferred size to reduce GetStringWidth calls in
+    // GetPreferredSize.
+    gfx::Size pref_size_;
+
+    // Removed items to be deleted in ChildrenChanged().
+    std::vector<View*> removed_items_;
 
     // |menu_position_| is the requested position with respect to the bounds.
     // |actual_menu_position_| is used by the controller to cache the

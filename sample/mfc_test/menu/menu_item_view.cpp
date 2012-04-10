@@ -4,6 +4,7 @@
 #include "submenu_view.h"
 #include "menu_controller.h"
 #include "menu_scroll_view_container.h"
+#include "base/stl_util.h"
 
 const int MenuItemView::kMenuItemViewID = 1201;
 
@@ -19,15 +20,6 @@ MenuItemView::MenuItemView(MenuItemView* parent, MenuItemDelegate* delegate)
 	set_id(kMenuItemViewID);
 }
 
-MenuItemView::~MenuItemView() {
-	delete submenu_;
-}
-
-void MenuItemView::SetSelected(bool selected) {
-	selected_ = selected;
-    SchedulePaint();
-}
-
 void MenuItemView::AppendMenuItem(views::View* view) {
     if (view->id() == kMenuItemViewID) {
         MenuItemView* menu_item = static_cast<MenuItemView*>(view);
@@ -38,16 +30,53 @@ void MenuItemView::AppendMenuItem(views::View* view) {
 	submenu_->AddChildView(view);
 }
 
+void MenuItemView::RemoveMenuItemAt(int index) {
+    DCHECK(submenu_);
+    DCHECK_LE(0, index);
+    DCHECK_GT(submenu_->child_count(), index);
+
+    View* item = submenu_->child_at(index);
+    DCHECK(item);
+    submenu_->RemoveChildView(item);
+
+    // RemoveChildView() does not delete the item, which is a good thing
+    // in case a submenu is being displayed while items are being removed.
+    // Deletion will be done by ChildrenChanged() or at destruction.
+    removed_items_.push_back(item);
+}
+
 SubmenuView* MenuItemView::CreateSubmenu() {
 	if (!submenu_)
 		submenu_ = new SubmenuView(this);
 	return submenu_;
 }
 
+bool MenuItemView::HasSubmenu() const {
+    return (submenu_ != NULL);
+}
 SubmenuView* MenuItemView::GetSubmenu() const {
 	return submenu_;
 }
 
+void MenuItemView::SetSelected(bool selected) {
+	selected_ = selected;
+    SchedulePaint();
+}
+
+
+gfx::Size MenuItemView::GetPreferredSize() {
+  if (pref_size_.IsEmpty())
+    pref_size_ = CalculatePreferredSize();
+  return pref_size_;
+}
+
+MenuController* MenuItemView::GetMenuController() {
+	return GetRootMenuItem()->controller_;
+}
+
+const MenuController* MenuItemView::GetMenuController() const {
+	return GetRootMenuItem()->controller_;
+}
 MenuItemView* MenuItemView::GetRootMenuItem() {
 	return const_cast<MenuItemView*>(
 		static_cast<const MenuItemView*>(this)->GetRootMenuItem());
@@ -61,16 +90,36 @@ const MenuItemView* MenuItemView::GetRootMenuItem() const {
 	return item;
 }
 
-MenuController* MenuItemView::GetMenuController() {
-	return GetRootMenuItem()->controller_;
-}
+void MenuItemView::ChildrenChanged() {
+  MenuController* controller = GetMenuController();
+  if (controller) {
+    //// Handles the case where we were empty and are no longer empty.
+    //RemoveEmptyMenus();
 
-const MenuController* MenuItemView::GetMenuController() const {
-	return GetRootMenuItem()->controller_;
-}
+    //// Handles the case where we were not empty, but now are.
+    //AddEmptyMenus();
 
+    controller->MenuChildrenChanged(this);
+
+    if (submenu_) {
+      // Force a paint and layout. This handles the case of the top
+      // level window's size remaining the same, resulting in no
+      // change to the submenu's size and no layout.
+      submenu_->Layout();
+      submenu_->SchedulePaint();
+      // Update the menu selection after layout.
+      controller->UpdateSubmenuSelection(submenu_);
+    }
+  }
+
+  STLDeleteElements(&removed_items_);
+}
 void MenuItemView::SetMenuController(MenuController* controller) {
     controller_ = controller;
+}
+
+MenuItemView::~MenuItemView() {
+	delete submenu_;
 }
 
 void MenuItemView::DestroyAllMenuHosts() {
@@ -84,6 +133,6 @@ void MenuItemView::DestroyAllMenuHosts() {
     }
 }
 
-bool MenuItemView::HasSubmenu() const {
-    return (submenu_ != NULL);
+gfx::Size MenuItemView::CalculatePreferredSize() {
+    return gfx::Size();
 }

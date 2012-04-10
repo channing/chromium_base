@@ -48,7 +48,14 @@ public:
     void OnMousePressed(SubmenuView* source, const views::MouseEvent& event);
     void OnMouseReleased(SubmenuView* source, const views::MouseEvent& event);
     void OnMouseMoved(SubmenuView* source, const views::MouseEvent& event);
+
+  // Update the submenu's selection based on the current mouse location
+  void UpdateSubmenuSelection(SubmenuView* source);
+
 private:
+  friend class MenuHostRootView;
+  friend class MenuItemView;
+  friend class SubmenuView;
 
     class MenuScrollTask;
 
