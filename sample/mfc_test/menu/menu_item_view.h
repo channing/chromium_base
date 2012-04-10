@@ -1,7 +1,6 @@
 #pragma once
 
 #include "ui/views/view.h"
-#include "menu_item_delegate.h"
 
 class SubmenuView;
 class MenuController;
@@ -82,7 +81,7 @@ protected:
     }
 
     // Delegate
-    scoped_ptr<MenuItemDelegate> delegate_;
+    MenuItemDelegate* delegate_;
 
     // The controller for the run operation, or NULL if the menu isn't showing.
     MenuController* controller_;
