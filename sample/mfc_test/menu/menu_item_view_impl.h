@@ -1,11 +1,11 @@
 #pragma once
 
 #include "menu_item_view.h"
-#include "menu_item_delegate.h"
+#include "menu_item_model.h"
 
-class TestMenuItemDelegate : public MenuItemDelegate {
+class TestMenuItemModel : public MenuItemModel {
 public:
-    TestMenuItemDelegate(CString label) : label_(label) {}
+    TestMenuItemModel(CString label) : label_(label) {}
 
     virtual void Execute() {
         AfxMessageBox(L"You executed " + label_);
@@ -18,12 +18,12 @@ private:
 class TestMenuItemView : public MenuItemView {
 public:
     TestMenuItemView(MenuItemView* parent)
-        : MenuItemView(parent, new TestMenuItemDelegate(L"Empty item"))
+        : MenuItemView(parent, new TestMenuItemModel(L"Empty item"))
     {
     }
 
     TestMenuItemView(MenuItemView* parent, CString label)
-        : MenuItemView(parent, new TestMenuItemDelegate(label)),
+        : MenuItemView(parent, new TestMenuItemModel(label)),
         label_(label)
     {
     }

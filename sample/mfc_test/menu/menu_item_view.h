@@ -4,7 +4,7 @@
 
 class SubmenuView;
 class MenuController;
-class MenuItemDelegate;
+class MenuItemModel;
 
 class MenuItemView : public views::View {
 public:
@@ -29,10 +29,10 @@ public:
     // ID used to identify menu items.
     static const int kMenuItemViewID;
 
-    MenuItemView(MenuItemView* parent, MenuItemDelegate* delegate);
+    MenuItemView(MenuItemView* parent, MenuItemModel* model);
     virtual ~MenuItemView();
 
-    MenuItemDelegate* GetDelegate() const {return delegate_;}
+    MenuItemModel* GetDelegate() const {return model_;}
 
     void AppendMenuItem(views::View* view);
 
@@ -96,8 +96,8 @@ protected:
         actual_menu_position_ = actual_menu_position;
     }
 
-    // Delegate
-    MenuItemDelegate* delegate_;
+    // Model
+    MenuItemModel* model_;
 
     // The controller for the run operation, or NULL if the menu isn't showing.
     MenuController* controller_;

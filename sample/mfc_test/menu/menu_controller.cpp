@@ -1,7 +1,7 @@
 #include "stdafx.h"
 #include "menu_controller.h"
 #include "menu_item_view.h"
-#include "menu_item_delegate.h"
+#include "menu_item_model.h"
 #include "submenu_view.h"
 #include "menu_scroll_view_container.h"
 #include "ui\gfx\screen.h"
