@@ -70,6 +70,8 @@
     'grit_defines': ['-D', 'toolkit_views'],
 
     'clang': 0,
+
+    'use_aura': 0,
   },
 
   'target_defaults': {
