@@ -44,6 +44,9 @@ void LayoutTestWidget::DeleteDelegate() {
 void LayoutTestWidget::Init() {
     contents_ = new views::View();
 
+    contents_->set_background(views::Background::CreateSolidBackground(gfx::NativeTheme::instance()->GetSystemColor(
+        gfx::NativeTheme::kColorId_DialogBackground)));
+
     // Yummy layout code.
     views::GridLayout* layout = views::GridLayout::CreatePanel(contents_);
     contents_->SetLayoutManager(layout);
@@ -58,8 +61,8 @@ void LayoutTestWidget::Init() {
     column_set->AddColumn(GridLayout::LEADING, GridLayout::CENTER, 0,
         GridLayout::USE_PREF, 0, 0);
     column_set->AddPaddingColumn(0, views::kRelatedControlHorizontalSpacing);
-    column_set->AddColumn(GridLayout::LEADING, GridLayout::CENTER, 1,
-        GridLayout::USE_PREF, 0, 0);
+    column_set->AddColumn(GridLayout::FILL, GridLayout::CENTER, 1,
+        GridLayout::FIXED, 200, 0);
     column_set->AddPaddingColumn(0, views::kRelatedControlHorizontalSpacing);
     column_set->AddColumn(GridLayout::CENTER, GridLayout::CENTER, 0,
         GridLayout::USE_PREF, 0, 0);

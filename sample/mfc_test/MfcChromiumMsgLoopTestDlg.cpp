@@ -15,6 +15,7 @@
 #include "ui/views/controls/menu/menu_delegate.h"
 #include "ui/views/controls/menu/menu_runner.h"
 #include "menu/menu_test.h"
+#include "layout_test.h"
 
 
 #ifdef _DEBUG
@@ -78,6 +79,7 @@ BEGIN_MESSAGE_MAP(CMfcChromiumMsgLoopTestDlg, CDialogEx)
 	ON_BN_CLICKED(IDC_BTN_SHOWDIALOG, &CMfcChromiumMsgLoopTestDlg::OnBnClickedBtnShowdialog)
 	ON_BN_CLICKED(IDC_BTN_SHOWMENU, &CMfcChromiumMsgLoopTestDlg::OnBnClickedBtnShowmenu)
 	ON_WM_HOTKEY()
+    ON_BN_CLICKED(IDC_BTN_LAYOUTTEST, &CMfcChromiumMsgLoopTestDlg::OnBnClickedBtnLayouttest)
 END_MESSAGE_MAP()
 
 
@@ -396,4 +398,11 @@ void CMfcChromiumMsgLoopTestDlg::OnHotKey(UINT nHotKeyId, UINT nKey1, UINT nKey2
 	ShowTestMenu();
 
 	CDialogEx::OnHotKey(nHotKeyId, nKey1, nKey2);
+}
+
+
+void CMfcChromiumMsgLoopTestDlg::OnBnClickedBtnLayouttest()
+{
+    // TODO: Add your control notification handler code here
+    LayoutTestWidget::Show();
 }

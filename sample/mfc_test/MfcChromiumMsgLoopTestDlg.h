@@ -39,6 +39,7 @@ public:
 	afx_msg void OnBnClickedBtnShowdialog();
 	afx_msg void OnBnClickedBtnShowmenu();
 	afx_msg void OnHotKey(UINT nHotKeyId, UINT nKey1, UINT nKey2);
+    afx_msg void OnBnClickedBtnLayouttest();
 };
 
 
