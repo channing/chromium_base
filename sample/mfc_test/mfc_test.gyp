@@ -25,6 +25,8 @@
         'Resource.h',
         'cef_thread.cc',
         'cef_thread.h',
+        'layout_test.cpp',
+        'layout_test.h',
         'menu/menu_controller.cpp',
         'menu/menu_controller.h',
         'menu/menu_host.cpp',
@@ -50,6 +52,8 @@
         'stdafx.cpp',
         'stdafx.h',
         'targetver.h',
+        'toolbar_test.cpp',
+        'toolbar_test.h',
       ],
       'msvs_settings': {
         'VCLinkerTool': {
