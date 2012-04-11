@@ -30,33 +30,36 @@ public:
 		: id_(identifier) {
 	}
 
-	// MessageLoopProxy implementation.
-	virtual bool PostTask(const tracked_objects::Location& from_here,
-		const base::Closure& task) {
-			return CefThread::PostTask(id_, from_here, task);
-	}
+    // MessageLoopProxy implementation.
+    virtual bool PostDelayedTask(
+        const tracked_objects::Location& from_here,
+        const base::Closure& task, int64 delay_ms) OVERRIDE {
+            return CefThread::PostDelayedTask(id_, from_here, task, delay_ms);
+    }
+    virtual bool PostDelayedTask(
+        const tracked_objects::Location& from_here,
+        const base::Closure& task, base::TimeDelta delay) OVERRIDE {
+            return CefThread::PostDelayedTask(id_, from_here, task, delay);
+    }
 
-	virtual bool PostDelayedTask(const tracked_objects::Location& from_here,
-		const base::Closure& task, int64 delay_ms) {
-			return CefThread::PostDelayedTask(id_, from_here, task, delay_ms);
-	}
+    virtual bool PostNonNestableDelayedTask(
+        const tracked_objects::Location& from_here,
+        const base::Closure& task,
+        int64 delay_ms) OVERRIDE {
+            return CefThread::PostNonNestableDelayedTask(id_, from_here, task,
+                delay_ms);
+    }
+    virtual bool PostNonNestableDelayedTask(
+        const tracked_objects::Location& from_here,
+        const base::Closure& task,
+        base::TimeDelta delay) OVERRIDE {
+            return CefThread::PostNonNestableDelayedTask(id_, from_here, task,
+                delay);
+    }
 
-	virtual bool PostNonNestableTask(const tracked_objects::Location& from_here,
-		const base::Closure& task) {
-			return CefThread::PostNonNestableTask(id_, from_here, task);
-	}
-
-	virtual bool PostNonNestableDelayedTask(
-		const tracked_objects::Location& from_here,
-		const base::Closure& task,
-		int64 delay_ms) {
-			return CefThread::PostNonNestableDelayedTask(id_, from_here, task,
-				delay_ms);
-	}
-
-	virtual bool BelongsToCurrentThread() {
-		return CefThread::CurrentlyOn(id_);
-	}
+    virtual bool RunsTasksOnCurrentThread() const OVERRIDE {
+        return CefThread::CurrentlyOn(id_);
+    }
 
 private:
 	CefThread::ID id_;
@@ -152,7 +155,7 @@ bool CefThread::CurrentlyOn(ID identifier) {
 bool CefThread::PostTask(ID identifier,
                          const tracked_objects::Location& from_here,
                          const base::Closure& task) {
-  return PostTaskHelper(identifier, from_here, task, 0, true);
+  return PostTaskHelper(identifier, from_here, task, base::TimeDelta(), true);
 }
 
 // static
@@ -160,15 +163,21 @@ bool CefThread::PostDelayedTask(ID identifier,
                                 const tracked_objects::Location& from_here,
                                 const base::Closure& task,
                                 int64 delay_ms) {
-  return PostTaskHelper(identifier, from_here, task, delay_ms, true);
+                                    
+  return PostTaskHelper(identifier, from_here, task, base::TimeDelta::FromMilliseconds(delay_ms), true);
 }
+
+bool CefThread::PostDelayedTask(ID identifier, const tracked_objects::Location& from_here, const base::Closure& task, base::TimeDelta delay) {
+    return PostTaskHelper(identifier, from_here, task, delay, true);
+}
+
 
 // static
 bool CefThread::PostNonNestableTask(
     ID identifier,
     const tracked_objects::Location& from_here,
     const base::Closure& task) {
-  return PostTaskHelper(identifier, from_here, task, 0, false);
+  return PostTaskHelper(identifier, from_here, task, base::TimeDelta(), false);
 }
 
 // static
@@ -177,8 +186,13 @@ bool CefThread::PostNonNestableDelayedTask(
     const tracked_objects::Location& from_here,
     const base::Closure& task,
     int64 delay_ms) {
-  return PostTaskHelper(identifier, from_here, task, delay_ms, false);
+  return PostTaskHelper(identifier, from_here, task, base::TimeDelta::FromMilliseconds(delay_ms), false);
 }
+
+bool CefThread::PostNonNestableDelayedTask(ID identifier, const tracked_objects::Location& from_here, const base::Closure& task, base::TimeDelta delay) {
+    return PostTaskHelper(identifier, from_here, task, delay, false);
+}
+
 
 // static
 bool CefThread::GetCurrentThreadIdentifier(ID* identifier) {
@@ -207,7 +221,7 @@ bool CefThread::PostTaskHelper(
     ID identifier,
     const tracked_objects::Location& from_here,
     const base::Closure& task,
-    int64 delay_ms,
+    base::TimeDelta delay,
     bool nestable) {
   DCHECK(identifier >= 0 && identifier < ID_COUNT);
   // Optimization: to avoid unnecessary locks, we listed the ID enumeration in
@@ -228,9 +242,9 @@ bool CefThread::PostTaskHelper(
       cef_threads_[identifier]->message_loop() : NULL;
   if (message_loop) {
     if (nestable) {
-      message_loop->PostDelayedTask(from_here, task, delay_ms);
+      message_loop->PostDelayedTask(from_here, task, delay);
     } else {
-      message_loop->PostNonNestableDelayedTask(from_here, task, delay_ms);
+      message_loop->PostNonNestableDelayedTask(from_here, task, delay);
     }
   }
 
