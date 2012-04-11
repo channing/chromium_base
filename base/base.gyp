@@ -135,6 +135,8 @@
 		'profiler/scoped_profile.h',
 		'profiler/tracked_time.cc',
 		'profiler/tracked_time.h',
+          'shared_memory.h',
+          'shared_memory_win.cc',
 		'stack_container.h',
 		'stl_util.h',
 		'string16.cc',
