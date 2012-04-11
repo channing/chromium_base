@@ -135,47 +135,6 @@ BOOL CMfcChromiumMsgLoopTestApp::InitInstance()
 	ui::ResourceBundle::CleanupSharedInstance();
 	CommandLine::Reset();
 
-	//scoped_ptr<base::Thread> thread(new base::Thread("my name"));
-	//base::Thread::Options options;
-	////options.message_loop_type = MessageLoop::TYPE_DEFAULT;
-	//thread->StartWithOptions(options);
-
-	//process.RunMessageLoop();
-
-
-	//using namespace logging;
-
-	//base::AtExitManager atexit;
-
-
-	//// Platform thread test
-	//base::PlatformThreadHandle thread_handle = NULL;
-	//MyThread my_thread;
-	//base::PlatformThread::Create( 0, &my_thread, &thread_handle );
-	//ASSERT(thread_handle);
-	//base::PlatformThread::Join(thread_handle);
-
-
-
-
-
-	//CommandLine::Init(argc, argv);
-
-	//InitLogging(L"debug.log", 
-	//	LOG_TO_BOTH_FILE_AND_SYSTEM_DEBUG_LOG, 
-	//	LOCK_LOG_FILE,
-	//	DELETE_OLD_LOG_FILE,
-	//	DISABLE_DCHECK_FOR_NON_OFFICIAL_RELEASE_BUILDS);
-
-	//MessageLoop* messageloop = thread.message_loop();
-	//scoped_refptr<Foo> foo(new Foo());
-	//messageloop->PostTask(FROM_HERE, 
-	//	base::Bind(&Foo::Test0, foo.get()));
-	//messageloop->PostTask(FROM_HERE, 
-	//	base::Bind(&Foo::Test1, foo.get(), 10));
-	//base::PlatformThread::Sleep(2000);
-	//thread.Stop();
-
 
 	// Delete the shell manager created above.
 	//if (pShellManager != NULL)
