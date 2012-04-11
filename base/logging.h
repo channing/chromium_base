@@ -438,7 +438,6 @@ const LogSeverity LOG_0 = LOG_ERROR;
 // PLOG_STREAM is used by PLOG, which is the usual error logging macro
 // for each platform.
 #define PLOG_STREAM(severity) LOG_ERRNO_STREAM(severity)
-// TODO(tschmelcher): Should we add OSStatus logging for Mac?
 #endif
 
 #define PLOG(severity)                                          \
@@ -964,7 +963,7 @@ inline std::ostream& operator<<(std::ostream& out, const std::wstring& wstr) {
 #endif
 
 #if NOTIMPLEMENTED_POLICY == 0
-#define NOTIMPLEMENTED() ;
+#define NOTIMPLEMENTED() EAT_STREAM_PARAMETERS
 #elif NOTIMPLEMENTED_POLICY == 1
 // TODO, figure out how to generate a warning
 #define NOTIMPLEMENTED() COMPILE_ASSERT(false, NOT_IMPLEMENTED)
