@@ -4,6 +4,7 @@
 .gclient_entries
 #generate folder
 Release/
+Debug/
 Purify/
 #visual studio files
 *.vcproj
