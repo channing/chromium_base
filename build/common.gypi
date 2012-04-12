@@ -72,6 +72,8 @@
     'clang': 0,
 
     'use_aura': 0,
+    'os_bsd': 0,
+    'chromeos': 0,
   },
 
   'target_defaults': {

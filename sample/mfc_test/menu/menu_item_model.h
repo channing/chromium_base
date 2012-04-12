@@ -9,6 +9,7 @@ class MenuItemView;
 
 class MenuItemModel {
 public:
+    MenuItemModel();
     virtual ~MenuItemModel();
 
     void SetView(MenuItemView* view);

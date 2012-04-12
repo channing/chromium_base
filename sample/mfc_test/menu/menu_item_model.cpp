@@ -4,6 +4,12 @@
 #include "base\stl_util.h"
 #include "base\logging.h"
 
+MenuItemModel::MenuItemModel()
+    : view_(NULL)
+{
+
+}
+
 MenuItemModel::~MenuItemModel() {
     STLDeleteElements(&children_);
 }
